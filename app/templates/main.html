@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<html>
+  <body onload="loadFilterByKey(['#service_type', '#pi_name', '#sort'])">
+    <!--FUNCTIONS-->
+    <script>
+    function saveFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        localStorage.setItem(key, $select.value);
+      }
+    }
+    function getSavedValue  (v){
+            if (!localStorage.getItem(v)) {
+                return "";// You can change this to your defualt value. 
+            }
+            return localStorage.getItem(v);
+        }
+    function loadFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        $select.value = getSavedValue(key);
+      }
+    }
+  </script>
+    <div class="header" id="gradheader">
+      <h1 class="header_text">Orders</h1>
+      <h2 class="header_text">List of all orders and their details</h2>
+    </div>
+    <div class="paddingdiv">
+      <div class="rowdiv">
+        <div class="columndiv">
+        </div>
+        <!-- FILTERING -->
+        <div class="columndiv">
+          <form method="POST" action="/orders">
+            <div class="leftdiv">
+              <label class="formlabel">Service Type</label>
+              <select class="tableselect" name="service_type" id="service_type">
+                <option value>All</option>
+                <option value="RNA">RNA-Seq analysis</option>
+                <option value="DNA">DNA-Seq analysis</option>
+                <option value="Protein">Protein analysis</option>
+                <option value="Metabolite">Metabolite analysis</option>
+              </select>
+            </div>
+            <div class="leftdiv">
+              <label class="formlabel">PI Name</label>
+              <input class="tableinput" type="text" name="pi_name" id="pi_name"
+                placeholder="PI Name">
+            </div>
+            <div class="leftdiv">
+              <label class="formlabel">Sort by</label>
+              <select class="tableselect" name="sort" id="sort">
+                <option value="Original">Original order</option>
+                <option value="Project ID">Project ID</option>
+                <option value="Reponsible Person">Reponsible Person</option>
+                <option value="Request Date">Request Date</option>
+                <option value="PI Name">PI Name</option>
+              </select>
+            </div>
+            <button class="filterbutton"
+              onclick="saveFilterByKey(['#service_type', '#pi_name', '#sort'])">Filter</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="noback_centerdiv">
+      {% if data == [] %}
+      <h2>No data to be displayed</h2>
+      {% else %}
+    </div>
+    <div class="paddingdiv-border">
+      <div
+        style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+        {{ pagination.links }}
+      </div>
+
+      <div class="orderdiv">
+        <table class="table_round_bottom">
+
+          <!-- TABLE HEADER WIDTH BASED ON HEADER LENGTH -->
+          <thead>
+            <tr>
+              {% for header in data[0].keys() %}
+              <th>
+                {% if len(header) >= 28 %}
+                <h4 style="margin-top: 0px; margin-bottom: 0px; width: 250px;">{{
+                  header}}</h4>
+                {% else %}
+                {% if len(header) >= 17 %}
+                <h4 style="margin-top: 0px; margin-bottom: 0px; width: 180px;">{{
+                  header}}</h4>
+                {% else %}
+                {% if len(header) >= 7 %}
+                <h4 style="margin-top: 0px; margin-bottom: 0px; width: 120px;">{{
+                  header}}</h4>
+                {% else %}
+                <h4 style="margin-top: 0px; margin-bottom: 0px;">{{ header}}</h4>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for row in range(0, len(data)) %} <!-- For each row-->
+            <tr id="{{row}}">
+              {% for col in range(0, len(list(data[row].values()))) %} <!-- For each col in specified row-->
+              <td>
+                {% if col == 0 %} <!-- If first column (Project ID) -->
+                {% if current_user.is_authenticated %}
+                <div class="rowdiv">
+                  <div class="columndiv"
+                    style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-top: 11px; border-top-left-radius: 10px; border-bottom-left-radius: 10px;">
+                    <a
+                      href="/delete?order_num={{list(data[row].values())[col]}}"><button
+                        class="deletebutton"
+                        onclick="return confirm('Are you sure You want to delete this order?')">X</button></a>
+                  </div>
+                  <div class="columndiv"
+                    style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-right: 7px; padding-top: 11px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
+                    {% if len(list(data[row].values())[col]) <= 3%} <!-- If too short then its not a Project ID so need asignment-->
+                    <a
+                      href="/update?order_num={{list(data[row].values())[col]}}">ASIGN
+                    </a>
+                    {% else %}
+                    <a
+                      href="/update?order_num={{list(data[row].values())[col]}}">{{
+                      list(data[row].values())[col]}}</a>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- FORM TO PASS DATA TO INVOICE (NOT VISIBLE)-->
+                <div class="rowdiv">
+                  <form method="POST" action="/invoice">
+                    <input type="hidden" name="order_num"
+                      value="{{list(data[row].values())[col]}}" />
+                    <input type="hidden" name="acc_num"
+                      value="{{list(data[row].values())[10]}}" />
+                    <input type="hidden" name="service_type"
+                      value="{{list(data[row].values())[13]}}" />
+                    <input type="hidden" name="sample_num"
+                      value="{{list(data[row].values())[21]}}" />
+                    {% if list(data[row].values())[13] == "RNA-Seq analysis" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[14]}}" />
+                    {% else %}
+                    {% if list(data[row].values())[13] == "DNA-Seq analysis" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[15]}}" />
+                    {% else %}
+                    {% if list(data[row].values())[13] == "Protein analysis" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[16]}}" />
+                    {% else %}
+                    {% endif %}
+                    {% endif %}
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[17]}}" />
+                    {% endif %}
+                    {% if list(data[row].values())[0] != "-" %} <!-- If Project ID assigned -->
+                    <button class="filterbutton">Invoice PDF</button>              
+                    {% endif %}
+                  </form>
+                </div>
+
+                {% else %}
+                {{ list(data[row].values())[col] }}
+                {% endif %}
+                {% else %}
+                {% if col == 8 %} <!-- PI info -->
+                {% if current_user.is_authenticated %}
+                {% if list(data[row].values())[0] == "-" %} <!-- If Project ID assigned -->
+                {{list(data[row].values())[col]}}
+                {% else %}
+                <a href="/information?order_num={{list(data[row].values())[0]}}">{{
+                  list(data[row].values())[col] }}</a>
+                {% endif %}
+                {% else %}
+                {{ list(data[row].values())[col] }}
+                {% endif %}
+                {% else %}
+                {{ list(data[row].values())[col] }}
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+                {% endfor%}
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </body>
+</html>
+{% endblock %}

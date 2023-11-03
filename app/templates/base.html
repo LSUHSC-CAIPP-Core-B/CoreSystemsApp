@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css"
+            href="{{ url_for('static',filename='styles/page_style.css') }}">
+        <title>FlaskApp</title>
+    </head>
+
+    <body>
+        <!-- NAVIGATION BAR -->
+        <div class='navbar'>
+            <a href="/login"><img
+                    src="{{ url_for('static', filename='images/LSU.png') }}"
+                    style="width: 250px; padding-right: 50px; float: left" /></a>
+            {% if current_user.is_authenticated %}
+            {% if not (current_user.is_core_b and current_user.is_core_c)%}
+            <!-- if not access to both Core B and C-->
+            {% if current_user.is_core_b %} <!-- if access to Core B -->
+            <a href="/orders"><h2 class="base-heading">Orders</h2></a>
+            <a href="/invoices_list"><h2 class="base-heading">Invoices</h2></a>
+            <a href="/graphs"><h2 class="base-heading">Graphs</h2></a>
+            {% endif %}
+            {% if current_user.is_core_c %} <!-- if access to Core C -->
+            <a href="/stock"><h2 class="base-heading">Stock</h2></a>
+            {% endif %}
+            {% else %} <!-- if access to both Core B and C-->
+            <div class="dropdown">
+                <h2 class="base-heading">Core B
+                </h2>
+                <div class="dropdown-content">
+                    <a href="/orders" class="adrop">Orders</a>
+                    <a href="/invoices_list" class="adrop">Invoices</a>
+                    <a href="/graphs" class="adrop">Graphs</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <h2 class="base-heading">Core C
+                </h2>
+                <div class="dropdown-content">
+                    <a href="/stock" class="adrop">Stock</a>
+                </div>
+            </div>
+            {% endif %}
+            {% if current_user.is_admin %}
+            <a href="/pilist"><h2 class="base-heading">PI list</h2></a>
+            {% endif %}
+            {% endif %}
+
+            <div class="dropdown">
+                <h2 class="base-heading">Authentication
+                </h2>
+                <div class="dropdown-content">
+                    <a class="adrop" href="/login">Login</a>
+                    <a class="adrop" href="/signup">Admin panel</a>
+                    {% if current_user.is_authenticated %}
+                    <a class="adrop" href="/logout">Logout</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="rightdiv"> <img
+                    src="{{ url_for('static', filename='images/caipp.png') }}"
+                    style="width: 65px; margin-right: 50px; vertical-align: middle;" /></div>
+            <div class="rightdiv"
+                style=" padding-right: 40px; padding-top: 15px;">
+                <h1 class="title" style="font-size: 25px;">CORE Manager</h1>
+                <p class="title" style="font-size: 12px;">by CAIPP
+                    Bioinformatics and Modeling
+                    Core B</p>
+            </div>
+            {% if current_user.is_authenticated %}
+            <h3 style="color: white; padding-left: 10px; font-size: 15px;">
+                Currently logged in: {{ current_user.name }}</h3>
+            {% endif %}
+        </div>
+        <div>
+            {% block content %} {% endblock %}
+        </div>
+    </body>
+
+</html>

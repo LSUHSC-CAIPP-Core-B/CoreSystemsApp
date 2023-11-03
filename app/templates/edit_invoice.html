@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <html>
+        <head>
+            <link rel="stylesheet" type="text/css"
+                href="{{ url_for('static',filename='styles/page_style.css') }}">
+        </head>
+        <body>
+            <div class="header" id="gradheader">
+                <h1 class="header_text">Edit invoice</h1>
+                <h2 class="header_text">Create PDF with generate button</h2>
+              </div>
+              <div class="updatediv one">
+                <h1> Project {{order_num}} for {{service_type}} </h1>
+            </div>
+            <form method="POST" action="/gen_invoice">
+                {% for key, val in fields_hidden.items() %}
+                <div>
+                    <div class="updatediv two">
+                        <input type = "hidden" name = "{{ key }}" value = "{{ val }}">
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="updatediv one">
+                    <h2> Services </h2>
+                </div>
+                
+                <input type = "hidden" name = "Services Number" value = "{{ len(services_data) }}">
+                {% for val in range(0, len(services_data)) %}
+                <div>
+                    <div class="updatediv one" style="padding-top: 50px;">
+                        <h3> {{services_data[val]}} </h3>
+                    </div>
+                    <div class="updatediv one">
+                        <h4> Service samples number</h4>
+                    </div>
+                    <div class="updatediv two">
+                        <input type = "hidden" name = "service {{ val }} name" value = "{{ services_data[val] }}">
+                        {% if val == 0%}
+                        <input type = "number" name = "service {{ val }} qty" value = "{{ sample_num }}" min="0" style="margin: auto;">
+                        {% else %}
+                        <input type = "number" name = "service {{ val }} qty" value = "" min="0" style="margin: auto;">
+                        {% endif %}
+                    </div>
+
+                    <div class="updatediv one">
+                        <h4> Discount reason</h4>
+                    </div>
+                    <div class="updatediv two">
+<!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
+<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given"></textarea>
+                    </div>
+
+                    <div class="updatediv one">
+                        <h4> Discounted samples number</h4>
+                    </div>
+                    <div class="updatediv two">
+                        <input type = "number" name = "service {{ val }} discount qty" value = "" min="0" style="margin: auto;">
+                    </div>
+
+                    <div class="updatediv one">
+                        <h4> Discount amount per sample</h4>
+                    </div>
+                    <div class="updatediv two">
+                        <input type = "number" name = "service {{ val }} discount amount" value = "" min="0" style="margin: auto;">
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="updatediv one" style="padding-top: 50px;">
+                    <h3> Whole project discount </h3>
+                </div>
+                <div class="updatediv one">
+                    <h4> Discount reason</h4>
+                </div>
+                <div class="updatediv two">
+<!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
+<textarea name="Whole project discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given"></textarea>
+                </div>
+
+                <div class="updatediv one">
+                    <h4> Discount amount</h4>
+                </div>
+                <div class="updatediv two">
+                    <input type = "number" name = "Whole project discount amount" value = "" min="0" style="margin: auto;">
+                </div>
+
+                <div class="updatediv one">
+                    <button class="updatebutton">Generate</button>
+                </div>
+            </form>
+        </body>
+
+    </html>

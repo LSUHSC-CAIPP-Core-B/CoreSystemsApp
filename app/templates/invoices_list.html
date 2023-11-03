@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+  <body onload="loadFilterByKey(['#service_type', '#sort'])">
+    <!--FUNCTIONS-->
+    <script>
+        function saveFilterByKey(keys) {
+            for (key of keys){
+            const $select = document.querySelector(key);
+            localStorage.setItem(key, $select.value);
+            }
+        }
+        function getSavedValue  (v){
+                if (!localStorage.getItem(v)) {
+                    return "";// You can change this to your defualt value. 
+                }
+                return localStorage.getItem(v);
+            }
+        function loadFilterByKey(keys) {
+            for (key of keys){
+            const $select = document.querySelector(key);
+            $select.value = getSavedValue(key);
+            }
+        }
+        </script>
+
+    <div class="header" id="gradheader">
+      <h1 class="header_text">Invoice prices history</h1>
+      <h2 class="header_text">List of all details about past service prices</h2>
+    </div>
+    <div class="paddingdiv">
+        <div class="rowdiv">
+          <div class="columndiv"></div>
+          <div class="columndiv">
+            <form method="POST" action="/invoices_list">
+              <div class="leftdiv">
+                <label class="formlabel">Service type</label>
+                <input class="tableinput" type="text" name="service_type" id="service_type"
+                  placeholder="Service type"
+                  autofocus>
+              </div>
+              <div class="leftdiv">
+                <label class="formlabel">Sort by</label>
+                <select class="tableselect" name="sort" id="sort">
+                  <option value="Original">Original order</option>
+                  <option value="Project ID">Project ID</option>
+                  <option value="Service type">Service type</option>
+                  <option value="Total price">Total price</option>
+                  <option value="Total discount">Total discount</option>
+                </select>
+              </div>
+              <div class="leftdiv">
+                <button class="filterbutton"
+                  onclick="saveFilterByKey(['#service_type', '#sort'])">Filter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="noback_centerdiv">
+        {% if data == [] %}
+          <h2>No data to be displayed</h2>
+          {% else %}
+      <div class="div-border-min">
+          <div style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+            {{ pagination.links }}
+          </div>
+          <div class="orderdiv">
+          <table class="table_round_bottom">
+            <thead>
+              <tr>
+                {% for header in data[0].keys() %}
+                <th>
+                  <h4>{{ header }}</h4>
+                </th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in range(0, len(data)) %}
+              <tr id="{{row}}">
+                {% for col in range(0, len(list(data[row].values()))) %}
+                <td>
+  
+                  {{ list(data[row].values())[col] }}
+  
+                  {% endfor %}
+                  {% endfor %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
+{% endblock %}

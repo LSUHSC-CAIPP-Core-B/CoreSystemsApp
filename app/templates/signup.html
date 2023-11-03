@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+    <body>
+        <div class="header" id="gradheader">
+            <h1 class="header_text">Admin panel</h1>
+            <h2 class="header_text">Access administrative functions</h2>
+        </div>
+        <div class="rowdiv">
+            <div class="columndiv">
+                <h3 style="margin-left: 20px;">Add admin privilages to provided user credentials</h3>
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="updatediv one">
+                    <h3>{{ messages[0] }}</h3>
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="centerdiv">
+                    <form method="POST" action="/signup">
+                        <input class="logininput" type="email" name="email"
+                            placeholder="Email"
+                            autofocus>
+                        <input class="logininput" type="text" name="name"
+                            placeholder="Name"
+                            autofocus>
+                        <input class="logininput" type="password"
+                            name="password"
+                            placeholder="Password">
+                        <select name="permision" id="permision">
+                            <option value="u">User</option>
+                            <option value="a">Admin</option>
+                        </select>
+                        <select name="core" id="core">
+                            <option value="B">Core B</option>
+                            <option value="C">Core C</option>
+                            <option value="BC">Core B and C</option>
+                        </select>
+                        <div class="updatediv one">
+                            <button class="updatebutton">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="columndiv">
+                <h3 style="margin-left: 20px;">Edit admin privilages of current users</h3>
+                {% if data == [] %}
+                <h3>No data to be displayed</h3>
+                {% else %}
+                <div class="noback_centerdiv">
+                    <div class="div-border-min">
+                        <div style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+                            {{ pagination.links }}
+                          </div>
+                        <table class="table_round_bottom">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <h4>Name</h4>
+                                    </th>
+                                    <th>
+                                        <h4>Email</h4>
+                                    </th>
+                                    <th>
+                                        <h4>Admin</h4>
+                                    </th>
+                                    <th>
+                                        <h4>Core B</h4>
+                                    </th>
+                                    <th>
+                                        <h4>Core C</h4>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td><div class="rowdiv">
+                                            <div class="columndiv"
+                                                style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-top: 11px; border-top-left-radius: 10px; border-bottom-left-radius: 10px;">
+                                                <a
+                                                    href="/deleteUser?email={{user.email}}"><button
+                                                        class="deletebutton"
+                                                        onclick="return confirm('Are you sure You want to delete this admin user?')">X</button></a>
+                                            </div>
+                                            <div class="columndiv"
+                                                style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-right: 7px; padding-top: 11px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
+                                                {{user.name}}
+                                            </div>
+                                        </div></td>
+                                    <td>{{user.email}}</td>
+
+                                    {%if user.is_admin%}
+                                    <td>X</td>
+                                    {% else %}
+                                    <td></td>
+                                    {% endif %}
+
+                                    {%if user.is_core_b%}
+                                    <td>X</td>
+                                    {% else %}
+                                    <td></td>
+                                    {% endif %}
+
+                                    {%if user.is_core_c%}
+                                    <td>X</td>
+                                    {% else %}
+                                    <td></td>
+                                    {% endif %}
+
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </body>
+</html>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+    <body>
+      <div class="header" id="gradheader">
+        <h1 class="header_text">{{order_num}} PI details</h1>
+        <h2 class="header_text">List of all details about the PI</h2>
+      </div>
+      <div class="noback_centerdiv">
+      <div class="div-border-min">
+        <table class="table_round_all">
+            <thead>
+              <tr>
+                {% for header in data.keys() %}
+                <th>
+                  {{ header }}
+                </th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {% for col in range(0, len(list(data.values()))) %}
+                <td>
+                 
+                  {{ list(data.values())[col] }}
+
+                </td>
+                {% endfor %}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </body>
+</html>
+{% endblock %}

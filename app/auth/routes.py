@@ -28,6 +28,7 @@ def login():
         return redirect(url_for('orders.orders'))
 
 @bp.route('/signup', methods=['GET', 'POST'])
+@login_required(role=["admin"])
 def signup():
     if request.method == 'GET':
         # get all admin users
@@ -40,8 +41,14 @@ def signup():
         pagination_users = users[offset: offset + per_page]
         pagination = Pagination(page=page, per_page=per_page, total=total)
 
+        # use to prevent user from caching pages
+        response = make_response(render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
-        return render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination)
+        #return render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination)
     
     elif request.method == 'POST':
         email = request.form.get('email')

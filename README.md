@@ -1,5 +1,5 @@
 # Order Form Automation
-Web App to manage systems in Bioinformatics and Modeling Cores A and B.
+Web App to manage systems in Bioinformatics and Modeling Cores B and C.
 
 ## Setup
 Install requirements with 

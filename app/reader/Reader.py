@@ -28,7 +28,7 @@ class Reader:
                 df = df.to_dict('records')
 
         return df
-    
+
     def formatRawData(self, df, nRows=1, nCols=1):
         """
         Custom function to format CAIPP_Order.csv file

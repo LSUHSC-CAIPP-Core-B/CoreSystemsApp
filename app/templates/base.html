@@ -53,8 +53,8 @@
                 </h2>
                 <div class="dropdown-content">
                     <a class="adrop" href="/login">Login</a>
-                    <a class="adrop" href="/signup">Admin panel</a>
                     {% if current_user.is_authenticated %}
+                    <a class="adrop" href="/signup">Admin panel</a>
                     <a class="adrop" href="/logout">Logout</a>
                     {% endif %}
                 </div>

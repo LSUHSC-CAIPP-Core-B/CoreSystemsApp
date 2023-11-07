@@ -33,8 +33,7 @@ def invoice():
         # check what services are selected and put them into array
         services_to_find = ["one", "two", "RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis"]
         services_data = list_services(services_str, services_to_find)
-
-        print(sample_num)
+        services_num = len(services_data)
 
         # pass dict with hidden data just to pass it to the next request
         hidden_data = {
@@ -43,7 +42,7 @@ def invoice():
             "Order Number": order_num
         }
 
-        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, services_data = services_data, len=len)
+        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, services_data = services_data, services_num = services_num, len=len)
 
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
@@ -70,6 +69,8 @@ def gen_invoice():
         # initial grand total prices
         grand_total_discount = 0.0
         grand_total = 0.0
+        total_service_amount = 0.0
+        total_discount_amount = 0.0
         # loop all services
         for i in range(0, int(services_num)):
             # get needed values from invoice form
@@ -78,15 +79,13 @@ def gen_invoice():
             get_discount_reason_key = "service " + str(i) + " discount reason"
             get_discount_qty_key = "service " + str(i) + " discount qty"
             get_discount_amount_key = "service " + str(i) + " discount amount"
-            whole_project_discount_reason_key = "Whole project discount reason"
-            whole_project_discount_amount_key = "Whole project discount amount"
+            service_price_key = "service " + str(i) + " price"
             service_name_detail = request.form.get(get_name_key)
             service_qty_detail = request.form.get(get_qty_key)
             service_discount_reason_detail = request.form.get(get_discount_reason_key)
             service_discount_qty_detail = request.form.get(get_discount_qty_key)
             service_discount_amount_detail = request.form.get(get_discount_amount_key)
-            whole_project_discount_reason_detail = request.form.get(whole_project_discount_reason_key)
-            whole_project_discount_amount_detail = request.form.get(whole_project_discount_amount_key)
+            service_price_detail = request.form.get(service_price_key)
 
             # Service details keys
             item_key = "ITEM Row" + str(service_row)
@@ -104,16 +103,14 @@ def gen_invoice():
             service_discount_amount_key = "UNIT COSTRow" + str(service_row + 1)
             service_discount_total_key = "TOTALRow" + str(service_row + 1)
 
-            #TODO TEMPORARY VAR
-            service_amount_detail = 150.0
-
             # Service details values
+            service_price_detail = float(service_price_detail)
             dict_data[item_key] = str(item_number)
             dict_data[qty_key] = service_qty_detail
             dict_data[unit_key] = "ea"
             dict_data[service_name_key] = service_name_detail
-            dict_data[service_amount_key] = str(service_amount_detail) + " $"
-            total_service_amount = float(service_qty_detail) * service_amount_detail
+            dict_data[service_amount_key] = str(service_price_detail) + " $"
+            total_service_amount = float(service_qty_detail) * service_price_detail
             grand_total += total_service_amount
             dict_data[service_total_key] = str(total_service_amount) + " $"
 
@@ -150,6 +147,11 @@ def gen_invoice():
             # increment row to put data info into
             service_row += 2
             item_number += 2
+
+        whole_project_discount_reason_key = "Whole project discount reason"
+        whole_project_discount_amount_key = "Whole project discount amount"
+        whole_project_discount_reason_detail = request.form.get(whole_project_discount_reason_key) or ""
+        whole_project_discount_amount_detail = request.form.get(whole_project_discount_amount_key) or 0
 
         # grand discount to the whole service
         if whole_project_discount_reason_detail != None and len(whole_project_discount_reason_detail) != 0:

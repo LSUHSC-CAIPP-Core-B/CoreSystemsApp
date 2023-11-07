@@ -3,27 +3,6 @@
 {% block content %}
 <html>
   <body onload="loadFilterByKey(['#department', '#pi_name', '#sort'])">
-    <!--FUNCTIONS-->
-    <script>
-    function saveFilterByKey(keys) {
-      for (key of keys){
-        const $select = document.querySelector(key);
-        localStorage.setItem(key, $select.value);
-      }
-    }
-    function getSavedValue  (v){
-            if (!localStorage.getItem(v)) {
-                return "";// You can change this to your defualt value. 
-            }
-            return localStorage.getItem(v);
-        }
-    function loadFilterByKey(keys) {
-      for (key of keys){
-        const $select = document.querySelector(key);
-        $select.value = getSavedValue(key);
-      }
-    }
-  </script>
     <div class="header" id="gradheader">
       <h1 class="header_text">Order PI list</h1>
       <h2 class="header_text">List of all details about all the PI</h2>
@@ -99,6 +78,27 @@
     </div>
     {% endif %}
   </div>
+  <!--FUNCTIONS-->
+  <script>
+    function saveFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        localStorage.setItem(key, $select.value);
+      }
+    }
+    function getSavedValue  (v){
+            if (!localStorage.getItem(v)) {
+                return "";// You can change this to your defualt value. 
+            }
+            return localStorage.getItem(v);
+        }
+    function loadFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        $select.value = getSavedValue(key);
+      }
+    }
+  </script>
   </body>
 </html>
 {% endblock %}

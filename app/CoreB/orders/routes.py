@@ -4,9 +4,12 @@ from app.CoreB.orders import bp
 from app.reader import Reader
 from app import login_required
 from app import db
+import redis
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
+
+r = redis.Redis(decode_responses=True)
 
 
 def find(lst, key, value):
@@ -50,6 +53,9 @@ def orders():
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     if request.method == 'GET':
+        if r.get("download_refresh") == "True":
+            flash('Please refresh download script')
+
         # use to prevent user from caching pages
         response = make_response(render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

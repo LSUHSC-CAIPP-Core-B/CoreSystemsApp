@@ -39,7 +39,7 @@ def invoice():
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
         # check what services are selected and put them into array
-        services_to_find = ["one", "two", "RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis"]
+        services_to_find = ["one", "two", "RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis"]
         services_data = list_services(services_str, services_to_find)
         services_num = len(services_data)
 

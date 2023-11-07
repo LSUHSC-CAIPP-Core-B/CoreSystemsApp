@@ -4,7 +4,14 @@ Web App to manage systems in Bioinformatics and Modeling Cores B and C.
 ## Setup
 Install requirements with 
 `pip install -r requirements.txt`
-Python version used: 3.9.6
+Python version required: 3.9.*
+
+### Mac OS
+`brew install redis`
+`brew services start redis`
+
+### Ubuntu
+`sudo apt-get install redis`
 
 ## Web App
 ### Login

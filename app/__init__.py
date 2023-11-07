@@ -34,7 +34,7 @@ def login_required(role=[]):
                 elif any(ur.role == r for ur in urole):
                     pass
                 else:
-                    return login_manager.unauthorized()  # TODO: change to screen showing not enough permisions
+                    return login_manager.unauthorized()
             return fn(*args, **kwargs)
         return decorated_view
     return wrapper

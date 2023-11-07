@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
+from flask import render_template, request, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.invoices_list import bp
 from app import login_required
@@ -10,6 +10,14 @@ from app.pdfwriter import PdfWriter
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
 
 def list_services(services_str, services_to_find):
+    """
+    Find what services are requested
+
+    services_str (str): string with services requested
+    services_to_find (list(str)): list of possible services to find
+
+    return (list(str)): list of services found 
+    """
     services = []
 
     for service_to_find in services_to_find:
@@ -148,6 +156,7 @@ def gen_invoice():
             service_row += 2
             item_number += 2
 
+        #whole discount keys and values
         whole_project_discount_reason_key = "Whole project discount reason"
         whole_project_discount_amount_key = "Whole project discount amount"
         whole_project_discount_reason_detail = request.form.get(whole_project_discount_reason_key) or ""

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <html>
+        <head>
+            <link rel="stylesheet" type="text/css"
+                href="{{ url_for('static',filename='styles/page_style.css') }}">
+        </head>
+        <body>
+            <div class="header" id="gradheader">
+                <h1 class="header_text">Add new PI</h1>
+                <h2 class="header_text">Add new PI information to the database</h2>
+              </div>
+            <form method="POST" action="/add_pi">
+                {% for key, val in fields.items() %}
+                <div>
+                    <div class="updatediv one">
+                        <h4> {{key}} </h4>
+                    </div>
+                    <div class="updatediv two">
+<!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
+<textarea name="{{key}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"'>{{ val }}</textarea>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="updatediv one">
+                    <button class="updatebutton">Add</button>
+                </div>
+            </form>
+        </body>
+
+    </html>

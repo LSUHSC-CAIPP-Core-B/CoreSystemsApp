@@ -183,3 +183,29 @@ def pilist():
 
     #return render_template('pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
+@bp.route('/add_pi', methods=['GET', 'POST'])
+@login_required(role=["admin"])
+def add_pi():
+    if request.method == 'GET':
+        pi_data = {
+            "PI first name": "",
+            "PI last name": "",
+            "PI ID": "",
+            "PI email": "",
+            "PI departamnet": ""
+        }
+        # use to prevent user from caching pages
+        response = make_response(render_template('add_pi.html', fields = pi_data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
+    elif request.method == 'POST':
+        department = request.form.get('PI Name') or ""
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('pi_list.html')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

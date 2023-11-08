@@ -70,12 +70,13 @@ class Reader:
         df.columns = headers
 
         # erase unnecessary square brackets and apostrophes but keep the comas where need be
-        # transformstring that has an opening square bracket into list of strings separated w ith comas (ex. ["'qw'"," 'we'"," 'rty'"], type: list)
-        df = df.map(lambda x : str(x)[1:-1].split(",") if str(x)[:2] == "['" else x)
-        # transform every list; clear apostrophes and white spaces; visual transformations (ex. ['qw, ', 'we, ', 'rty, '], type: list)
-        df = df.map(lambda x :  [e.strip()[1:-1] + ", " for e in x] if type(x) == list else x)
-        # join each list into string (ex. qw, we, rty, type: str)
-        df = df.map(lambda x :  "".join(x)[:-2] if type(x) == list else x)
+        # transformstring that has an opening square bracket into list of strings separated with comas
+        df = df.map(lambda x : str(x)[2:-2].split(",") if str(x)[:2] == "['" else x)
+        # transform every list; clear apostrophes and white spaces; visual transformations
+        df = df.map(lambda x :  [e.strip("' ") + ", " for e in x] if type(x) == list and len(x) > 1 else x)
+        # join each list into string
+        df = df.map(lambda x :  "".join(x)[:-2] if type(x) == list and len(x) > 1 else x)
+        df = df.map(lambda x :  "".join(x) if type(x) == list and len(x) == 1 else x)
         # replace nan to blank space
         df = df.map(lambda x : '-' if str(x) == 'nan' else x)
 

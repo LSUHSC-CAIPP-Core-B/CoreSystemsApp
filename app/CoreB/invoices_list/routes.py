@@ -1,4 +1,4 @@
-from flask import render_template, request, make_response, send_from_directory
+from flask import render_template, request, make_response, send_from_directory, flash, redirect, url_for
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.invoices_list import bp
 from app import login_required
@@ -112,6 +112,11 @@ def gen_invoice():
             service_discount_total_key = "TOTALRow" + str(service_row + 1)
 
             # Service details values
+            if service_price_detail == "":
+                return render_template('error_invoice.html', error_msg="Service price must be provided")
+            elif service_qty_detail == "":
+                return render_template('error_invoice.html', error_msg="Service samples must be provided")
+            
             service_price_detail = float(service_price_detail)
             dict_data[item_key] = str(item_number)
             dict_data[qty_key] = service_qty_detail
@@ -127,6 +132,10 @@ def gen_invoice():
 
             # Discount details values
             if service_discount_reason_detail != None and len(service_discount_reason_detail) != 0:
+                if service_discount_amount_detail == "":
+                    return render_template('error_invoice.html', error_msg="Discount amount must be provided")
+                elif service_discount_qty_detail == "":
+                    return render_template('error_invoice.html', error_msg="Discounted sample number must be provided")
                 service_discount_amount_detail = float(service_discount_amount_detail)
                 dict_data[item_discount_key] = str(item_number+1)
                 dict_data[qty_discount_key] = service_discount_qty_detail
@@ -164,6 +173,9 @@ def gen_invoice():
 
         # grand discount to the whole service
         if whole_project_discount_reason_detail != None and len(whole_project_discount_reason_detail) != 0:
+            if whole_project_discount_amount_detail == "":
+                return render_template('error_invoice.html', error_msg="Whole discount amount must be provided")
+
             # Discount details keys
             total_discount_row = 22
             item_whole_discount_key = "ITEM Row" + str(total_discount_row)

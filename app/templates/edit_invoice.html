@@ -49,7 +49,7 @@
                         <h4> Service price per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} price" id="service_{{val}}_price_{{order_num}}" value = "" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} price" id="service_{{val}}_price_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
                     </div>
 
                     <div class="updatediv one">
@@ -71,7 +71,7 @@
                         <h4> Discount amount per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount amount" id="service_{{val}}_discount_amount_{{order_num}}" value = "" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount amount" id="service_{{val}}_discount_amount_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
                     </div>
                 </div>
                 {% endfor %}
@@ -91,7 +91,7 @@
                     <h4> Discount amount</h4>
                 </div>
                 <div class="updatediv two">
-                    <input type = "number" name = "Whole project discount amount" id="Whole_project_discount_amount_{{order_num}}" value = "" min="0" style="margin: auto;">
+                    <input type = "number" name = "Whole project discount amount" id="Whole_project_discount_amount_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
                 </div>
 
                 <div class="updatediv one">

@@ -183,3 +183,62 @@ def pilist():
 
     #return render_template('pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
+@bp.route('/add_pi', methods=['GET', 'POST'])
+@login_required(role=["admin"])
+def add_pi():
+    if request.method == 'GET':
+        pi_data = {
+            "PI_first_name": "",
+            "PI_last_name": "",
+            "PI_ID": "",
+            "PI_email": "",
+            "PI_departmnet": ""
+        }
+        # use to prevent user from caching pages
+        response = make_response(render_template('add_pi.html', fields = pi_data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
+    elif request.method == 'POST':
+        first_name = request.form.get('PI_first_name')
+        last_name = request.form.get('PI_last_name')
+        pi_id = request.form.get('PI_ID')
+        email = request.form.get('PI_email')
+        department = request.form.get('PI_departmnet')
+
+        # fields cannot be empty
+        if first_name == "" or last_name == "" or pi_id == "" or email == "" or department == "":
+            flash('Fields cannot be empty')
+            return redirect(url_for('orders.add_pi'))
+        
+        # get csv data
+        data = information_reader.getRawDataCSV(headers=True, dict=True)
+
+        for d in data:
+            if pi_id == d["PI ID"]:
+                flash('PI with this ID already exists, please pick a new one.')
+                return redirect(url_for('orders.add_pi'))
+            
+
+        # new row
+        row = {
+            'PI full name':first_name + "_" + last_name,
+            'PI ID':pi_id,
+            'email':email,
+            'Department':department
+        }
+
+        data.append(row)
+
+        print(data)
+
+        information_reader.saveRawDataCSV(data)
+                
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('orders.pilist')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

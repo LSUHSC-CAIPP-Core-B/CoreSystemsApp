@@ -129,6 +129,18 @@ class Reader:
 
         # save to file, header and index configuration ot match CAIPP_Order.csv format
         output_df.to_csv(self.filename, header=True, index=False)
+
+    def saveRawDataCSV(self, updated_dict):
+        """
+        Update data in csv file with new dict
+
+        updated_dict (dict): dict with updated data
+        """
+        # save updated data
+        output_df = pd.DataFrame.from_dict(updated_dict)
+
+        # save to file, header and index configuration ot match CAIPP_Order.csv format
+        output_df.to_csv(self.filename, header=True, index=False)
         
     def deleteDataCSV(self, unprocessed_df, id):
         """

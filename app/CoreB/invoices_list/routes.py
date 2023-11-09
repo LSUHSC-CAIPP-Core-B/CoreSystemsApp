@@ -41,7 +41,6 @@ def invoice():
         # check what services are selected and put them into array
         services_to_find = ["one", "two", "RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis"]
         services_data = list_services(services_str, services_to_find)
-        services_num = len(services_data)
 
         # pass dict with hidden data just to pass it to the next request
         hidden_data = {
@@ -50,7 +49,40 @@ def invoice():
             "Order Number": order_num
         }
 
-        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, services_data = services_data, services_num = services_num, len=len)
+        # get invoice data from DB for each service or make arecord if none exists
+        invoices = []
+        for service_data in services_data:
+            invoice = Invoice.query.filter_by(project_id = order_num, service_type=service_data).first()
+            if invoice == None:
+                invoice = Invoice(project_id = order_num, 
+                                service_type = service_data,
+                                service_sample_number = 0.0,
+                                service_sample_price = 0.0, 
+                                total_price = 0.0,
+                                discount_sample_number = 0.0,
+                                discount_sample_amount = 0.0,
+                                discount_reason = "", 
+                                total_discount = 0.0)
+                db.session.add(invoice)
+            invoices.append(invoice)
+
+        invoice = Invoice.query.filter_by(project_id = order_num, service_type="All services discount").first()
+        if invoice == None:
+            invoice = Invoice(project_id = order_num, 
+                            service_type = "All services discount",
+                            service_sample_number = 0.0,
+                            service_sample_price = 0.0, 
+                            total_price = 0.0,
+                            discount_sample_number = 0.0,
+                            discount_sample_amount = 0.0,
+                            discount_reason = "", 
+                            total_discount = 0.0)
+            
+            db.session.add(invoice)
+        invoices.append(invoice)
+        db.session.commit()
+
+        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, len=len)
 
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
@@ -78,7 +110,6 @@ def gen_invoice():
         grand_total_discount = 0.0
         grand_total = 0.0
         total_service_amount = 0.0
-        total_discount_amount = 0.0
         # loop all services
         for i in range(0, int(services_num)):
             # get needed values from invoice form
@@ -95,13 +126,8 @@ def gen_invoice():
             service_discount_amount_detail = request.form.get(get_discount_amount_key)
             service_price_detail = request.form.get(service_price_key)
 
-            # Service details keys
-            item_key = "ITEM Row" + str(service_row)
-            qty_key = "QTYRow" + str(service_row)
-            unit_key = "UNITRow" + str(service_row)
-            service_name_key = "DESCRIPTIONRow" + str(service_row)
-            service_amount_key = "UNIT COSTRow" + str(service_row)
-            service_total_key = "TOTALRow" + str(service_row)
+            if service_name_detail == "All services discount":
+                service_row = 21
 
             # Discount details keys
             item_discount_key = "ITEM Row" + str(service_row + 1)
@@ -111,21 +137,30 @@ def gen_invoice():
             service_discount_amount_key = "UNIT COSTRow" + str(service_row + 1)
             service_discount_total_key = "TOTALRow" + str(service_row + 1)
 
-            # Service details values
-            if service_price_detail == "":
-                return render_template('error_invoice.html', error_msg="Service price must be provided")
-            elif service_qty_detail == "":
-                return render_template('error_invoice.html', error_msg="Service samples must be provided")
+            if service_name_detail != "All services discount":
+                # Service details keys
+                item_key = "ITEM Row" + str(service_row)
+                qty_key = "QTYRow" + str(service_row)
+                unit_key = "UNITRow" + str(service_row)
+                service_name_key = "DESCRIPTIONRow" + str(service_row)
+                service_amount_key = "UNIT COSTRow" + str(service_row)
+                service_total_key = "TOTALRow" + str(service_row)
+
+                # Service details values
+                if service_price_detail == "":
+                    return render_template('error_invoice.html', error_msg="Service price must be provided")
+                elif service_qty_detail == "":
+                    return render_template('error_invoice.html', error_msg="Service samples must be provided")
             
-            service_price_detail = float(service_price_detail)
-            dict_data[item_key] = str(item_number)
-            dict_data[qty_key] = service_qty_detail
-            dict_data[unit_key] = "ea"
-            dict_data[service_name_key] = service_name_detail
-            dict_data[service_amount_key] = str(service_price_detail) + " $"
-            total_service_amount = float(service_qty_detail) * service_price_detail
-            grand_total += total_service_amount
-            dict_data[service_total_key] = str(total_service_amount) + " $"
+                service_price_detail = float(service_price_detail)
+                dict_data[item_key] = str(item_number)
+                dict_data[qty_key] = service_qty_detail
+                dict_data[unit_key] = "ea"
+                dict_data[service_name_key] = service_name_detail
+                dict_data[service_amount_key] = str(service_price_detail) + " $"
+                total_service_amount = float(service_qty_detail) * service_price_detail
+                grand_total += total_service_amount
+                dict_data[service_total_key] = str(total_service_amount) + " $"
 
             # var to insert total discount amount to DB
             total_discount_amount = 0.0
@@ -142,22 +177,23 @@ def gen_invoice():
                 dict_data[unit_discount_key] = "ea"
                 dict_data[service_discount_reason_key] = service_discount_reason_detail
                 dict_data[service_discount_amount_key] = str(-service_discount_amount_detail) + " $"
+                if service_name_detail == "All services discount":
+                    service_discount_qty_detail = 1.0
+                    total_service_amount = 0.0
                 total_discount_amount = float(service_discount_qty_detail) * service_discount_amount_detail
                 grand_total_discount += total_discount_amount
                 dict_data[service_discount_total_key] = str(-total_discount_amount) + " $"
 
-            # if invoice for a service already exists
+            # change values of invoice record
             existing_invoice = Invoice.query.filter_by(project_id = order_num, service_type = service_name_detail).first()
 
-            if existing_invoice == None:
-                service_invoice = Invoice(project_id = order_num, 
-                                        service_type = service_name_detail, 
-                                        total_price = total_service_amount, 
-                                        total_discount = total_discount_amount)
-                db.session.add(service_invoice)
-            else:
-                existing_invoice.total_price = total_service_amount
-                existing_invoice.total_discount = total_discount_amount
+            existing_invoice.service_sample_number = float(service_qty_detail)
+            existing_invoice.service_sample_price = service_price_detail
+            existing_invoice.total_price = total_service_amount
+            existing_invoice.discount_sample_number = float(service_discount_qty_detail)
+            existing_invoice.discount_sample_amount = service_discount_amount_detail
+            existing_invoice.discount_reason = service_discount_reason_detail
+            existing_invoice.total_discount = total_discount_amount
             db.session.commit()
 
 
@@ -165,55 +201,9 @@ def gen_invoice():
             service_row += 2
             item_number += 2
 
-        #whole discount keys and values
-        whole_project_discount_reason_key = "Whole project discount reason"
-        whole_project_discount_amount_key = "Whole project discount amount"
-        whole_project_discount_reason_detail = request.form.get(whole_project_discount_reason_key) or ""
-        whole_project_discount_amount_detail = request.form.get(whole_project_discount_amount_key) or 0
-
-        # grand discount to the whole service
-        if whole_project_discount_reason_detail != None and len(whole_project_discount_reason_detail) != 0:
-            if whole_project_discount_amount_detail == "":
-                return render_template('error_invoice.html', error_msg="Whole discount amount must be provided")
-
-            # Discount details keys
-            total_discount_row = 22
-            item_whole_discount_key = "ITEM Row" + str(total_discount_row)
-            qty_whole_discount_key = "QTYRow" + str(total_discount_row)
-            unit_whole_discount_key = "UNITRow" + str(total_discount_row)
-            whole_discount_reason_key = "DESCRIPTIONRow" + str(total_discount_row)
-            whole_discount_amount_key = "UNIT COSTRow" + str(total_discount_row)
-            whole_discount_total_key = "TOTALRow" + str(total_discount_row)
-
-            #Discount details values
-            whole_project_discount_amount_detail = float(whole_project_discount_amount_detail)
-            dict_data[item_whole_discount_key] = str(total_discount_row)
-            dict_data[qty_whole_discount_key] = str(1)
-            dict_data[unit_whole_discount_key] = "ea"
-            dict_data[whole_discount_reason_key] = whole_project_discount_reason_detail
-            dict_data[whole_discount_amount_key] = str(-whole_project_discount_amount_detail) + " $"
-            grand_total_discount += whole_project_discount_amount_detail
-            dict_data[whole_discount_total_key] = str(-whole_project_discount_amount_detail) + " $"
-
-            # if invoice for a service already exists
-            existing_whole_discount_invoice = Invoice.query.filter_by(project_id = order_num, service_type = "All services").first()
-
-            if existing_whole_discount_invoice == None:
-                whole_discount_invoice = Invoice(project_id = order_num, 
-                                        service_type = "All services", 
-                                        total_price = 0.0, 
-                                        total_discount = whole_project_discount_amount_detail)
-                db.session.add(whole_discount_invoice)
-            else:
-                existing_whole_discount_invoice.total_price = total_service_amount
-                existing_whole_discount_invoice.total_discount = total_discount_amount
-            db.session.commit()
-
-
         # grand total price of service
         service_grand_total_key = "TOTALGRAND TOTAL"
         dict_data[service_grand_total_key] = str(grand_total - grand_total_discount) + " $"
-
 
         pdfWriter.fillForm(dict_data)
         return send_from_directory('static', "filled-out-v2.pdf")

@@ -55,12 +55,17 @@ class UserHasRole(db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
 
-# Database models for invoices TODO
+# Database models for invoices TODO join with User table to follow changes in project id
 
 class Invoice(db.Model):
     __tablename__ = "invoices"
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.String(50))
     service_type = db.Column(db.String(100))
+    service_sample_number = db.Column(db.Integer)
+    service_sample_price = db.Column(db.Integer)
     total_price = db.Column(db.Integer)
+    discount_sample_number = db.Column(db.Integer)
+    discount_sample_amount = db.Column(db.Integer)
+    discount_reason = db.Column(db.String(250))
     total_discount = db.Column(db.Integer)

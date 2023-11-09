@@ -6,7 +6,7 @@
             <link rel="stylesheet" type="text/css"
                 href="{{ url_for('static',filename='styles/page_style.css') }}">
         </head>
-        <body onload="loadFilterByKey(remember_keys)">
+        <body>
             <div class="header" id="gradheader">
                 <h1 class="header_text">Edit invoice</h1>
                 <h2 class="header_text">Create PDF with generate button</h2>
@@ -22,122 +22,75 @@
                     </div>
                 </div>
                 {% endfor %}
-
-                <div class="updatediv one">
-                    <h2> Services </h2>
-                </div>
                 
-                <input type = "hidden" name = "Services Number" value = "{{ len(services_data) }}">
-                {% for val in range(0, len(services_data)) %}
+                <input type = "hidden" name = "Services Number" value = "{{ len(invoices) }}">
+                {% for val in range(0, len(invoices)) %}
+                <input type = "hidden" name = "service {{ val }} name" value = "{{ invoices[val].service_type }}">
                 <div>
                     <div class="updatediv one" style="padding-top: 50px;">
-                        <h3> {{services_data[val]}} </h3>
+                        <h3> {{invoices[val].service_type}} </h3>
                     </div>
+                    {% if invoices[val].service_type != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Service samples number</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "hidden" name = "service {{ val }} name" value = "{{ services_data[val] }}">
                         {% if val == 0%}
-                        <input type = "number" name = "service {{ val }} qty" id="service_{{val}}_qty_{{order_num}}" value = "{{ sample_num }}" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} qty"  value = "{{ sample_num }}" min="0" style="margin: auto;">
                         {% else %}
-                        <input type = "number" name = "service {{ val }} qty" id="service_{{val}}_qty_{{order_num}}" value = "" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} qty"  value = "{{ invoices[val].service_sample_number }}" min="0" style="margin: auto;">
                         {% endif %}
+                    {% else %}
+                    <input type = "hidden" name = "service {{ val }} qty"  value = "{{ invoices[val].service_sample_number }}" min="0" style="margin: auto;">
+                    {% endif %}
                     </div>
-
+                    {% if invoices[val].service_type != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Service price per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} price" id="service_{{val}}_price_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} price" value = "{{ invoices[val].service_sample_price }}" min="0" step=".01" style="margin: auto;">
                     </div>
-
+                    {% else %}
+                    <input type = "hidden" name = "service {{ val }} price" value = "{{ invoices[val].service_sample_price }}" min="0" step=".01" style="margin: auto;">
+                    {% endif %}
                     <div class="updatediv one">
                         <h4> Discount reason</h4>
                     </div>
                     <div class="updatediv two">
 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
-<textarea name="service {{ val }} discount reason" id="service_{{val}}_discount_reason_{{order_num}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given"></textarea>
+<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given">{{ invoices[val].discount_reason }}</textarea>
                     </div>
-
+                    {% if invoices[val].service_type != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Discounted samples number</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount qty" id="service_{{val}}_discount_qty_{{order_num}}" value = "" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount qty" value = "{{ invoices[val].discount_sample_number }}" min="0" style="margin: auto;">
                     </div>
-
                     <div class="updatediv one">
                         <h4> Discount amount per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount amount" id="service_{{val}}_discount_amount_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ invoices[val].discount_sample_amount }}" min="0" step=".01" style="margin: auto;">
                     </div>
+                    {% else %}
+                    <input type = "hidden" name = "service {{ val }} discount qty" value = "{{ invoices[val].discount_sample_number }}" min="0" style="margin: auto;">
+                    <div class="updatediv one">
+                        <h4> Discount amount</h4>
+                    </div>
+                    <div class="updatediv two">
+                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ invoices[val].discount_sample_amount }}" min="0" step=".01" style="margin: auto;">
+                    </div>
+                    {% endif %}
+
                 </div>
                 {% endfor %}
 
-                <div class="updatediv one" style="padding-top: 50px;">
-                    <h3> Whole project discount </h3>
-                </div>
                 <div class="updatediv one">
-                    <h4> Discount reason</h4>
-                </div>
-                <div class="updatediv two">
-<!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
-<textarea name="Whole project discount reason" id="Whole_project_discount_reason_{{order_num}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given"></textarea>
-                </div>
-
-                <div class="updatediv one">
-                    <h4> Discount amount</h4>
-                </div>
-                <div class="updatediv two">
-                    <input type = "number" name = "Whole project discount amount" id="Whole_project_discount_amount_{{order_num}}" value = "" min="0" step=".01" style="margin: auto;">
-                </div>
-
-                <div class="updatediv one">
-                    <button class="updatebutton" onclick="saveFilterByKey(remember_keys)">Generate</button>
+                    <button class="updatebutton">Generate</button>
                 </div>
             </form>
-            <!--FUNCTIONS-->
-            <script>
-                var remember_keys = ['#Whole_project_discount_amount_{{order_num}}', '#Whole_project_discount_reason_{{order_num}}'];
-                var services_num_var = "{{services_num}}"
-                var services_num_var_int = parseInt(services_num_var)
-                for (let val = 0; val < services_num_var_int; val++) {
-                    var val_str = val.toString();
-                    var service_qty = '#service_' + val + '_qty_{{order_num}}';
-                    var service_price = '#service_' + val + '_price_{{order_num}}';
-                    var discount_reason = '#service_' + val + '_discount_reason_{{order_num}}';
-                    var discount_amount = '#service_' + val + '_discount_amount_{{order_num}}';
-                    var discount_qty = '#service_' + val + '_discount_qty_{{order_num}}';
-
-                    remember_keys.push(service_qty)
-                    remember_keys.push(service_price)
-                    remember_keys.push(discount_reason)
-                    remember_keys.push(discount_amount)
-                    remember_keys.push(discount_qty)
-                }
-            </script>
-             <script>
-                function saveFilterByKey(keys) {
-                  for (key of keys){
-                    const $select = document.querySelector(key);
-                    localStorage.setItem(key, $select.value);
-                  }
-                }
-                function getSavedValue  (v){
-                        if (!localStorage.getItem(v)) {
-                            return "";// You can change this to your defualt value. 
-                        }
-                        return localStorage.getItem(v);
-                    }
-                function loadFilterByKey(keys) {
-                  for (key of keys){
-                    const $select = document.querySelector(key);
-                    $select.value = getSavedValue(key);
-                  }
-                }
-              </script>
         </body>
 
     </html>

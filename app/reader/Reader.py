@@ -28,31 +28,8 @@ class Reader:
                 df = df.to_dict('records')
 
         return df
-
-    def formatRawData(self, df, nRows=1, nCols=1):
-        """
-        Custom function to format CAIPP_Order.csv file
-
-        df (pandas.DataFrame): data to format
-        nRows (int): number of rows to ommit during read
-        nCols (int): number of cols to ommit during read
-
-        return: formatted DataFrame data
-        """
-        # erase first col and row (data not for view)
-        df = df.T.iloc[nRows: , nCols:]
-        headers = df.iloc[0]
-        df = df[1:]
-        df.columns = headers
-
-        # erase unnecessary square brackets
-        df = df.map(lambda x : str(x)[2:-2] if str(x)[:2] == "['" else x)
-        # replace nan to blank space
-        df = df.map(lambda x : '-' if str(x) == 'nan' else x)
-
-        return df
     
-    def formatRawData2(self, df, nRows=1, nCols=1):
+    def formatRawData2(self, df, nRows=0, nCols=1):
         """
         Custom function to format CAIPP_Order.csv file
 
@@ -62,8 +39,8 @@ class Reader:
 
         return: formatted DataFrame data
         """
-        # erase first col and row (data not for view)
-        df = df.T.iloc[nRows: , nCols:]
+        # erase given number of cols and rows (data not for view)
+        df = df.T.iloc[nCols: , nRows:]
         headers = df.iloc[0]
         df = df[1:]
 
@@ -117,19 +94,13 @@ class Reader:
 
         # enter QID back to new data
         first_column = []
-        for index in unprocessed_df.iloc[1:, 0]:
+        for index in unprocessed_df.iloc[0:, 0]:
             first_column.append(str(index))
         output_df = output_df.set_axis(first_column)
         output_df.reset_index(inplace=True)
 
-        # enter Question# back to new data
-        first_row = []
-        for header in unprocessed_df.iloc[0, :]:
-            first_row.append(str(header))
-        output_df.columns.values[:] = first_row
-
         # save to file, header and index configuration ot match CAIPP_Order.csv format
-        output_df.to_csv(self.filename, header=True, index=False)
+        output_df.to_csv(self.filename, header=False, index=False)
 
     def saveRawDataCSV(self, updated_dict):
         """

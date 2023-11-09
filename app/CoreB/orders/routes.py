@@ -75,8 +75,8 @@ def update():
         # variable to hold CSV data
         data = reader.getFormattedDataCSV()
 
-        order_num = request.args.get('order_num')
-        data = [dict for dict in data if dict['Project ID'].__contains__(order_num)]
+        question_id = request.args.get('question_id')
+        data = [dict for dict in data if dict['Question'].__contains__(question_id)]
         update_data = data[0]
 
         return render_template('update.html', fields = update_data)
@@ -91,8 +91,8 @@ def update():
         for key, val in dict(request.form).items():
             row[key] = val
 
-        order_num = request.args.get('order_num')
-        id = find(data, "Project ID", order_num)
+        question_id = request.args.get('question_id')
+        id = find(data, "Question", question_id)
 
         if id != None:
             data[int(id)] = row
@@ -109,11 +109,11 @@ def delete():
     if request.method == 'GET':
         # variable to hold CSV data
         data = reader.getFormattedDataCSV()
-        unprocessed_df = reader.getRawDataCSV()
-        order_num = request.args.get('order_num')
+        unprocessed_df = reader.getRawDataCSV(headers=True)
+        question_id = request.args.get('question_id')
 
         # id has to be +2 to match CAIPP_Order.csv format
-        id = find(data, "Project ID", order_num)
+        id = find(data, "Question", question_id)
         if id != None:
             id = id + 2
         # Error if id None
@@ -134,9 +134,11 @@ def information():
 
         # get specific PI data
         data = [dict for dict in data if dict['PI ID'].lower().__contains__(order_num.lower())]
-        #if len(data) == 0:
-        #else:
-        pi_data = data[0]
+        if len(data) == 0:
+            flash('There is no PI with given ID in Project ID')
+            return redirect(url_for('orders.orders'))
+        else:
+            pi_data = data[0]
 
         # use to prevent user from caching pages
         response = make_response(render_template('information.html', data=pi_data, order_num=order_num, list=list, len=len, str=str))

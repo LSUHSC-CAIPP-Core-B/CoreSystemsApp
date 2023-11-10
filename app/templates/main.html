@@ -10,7 +10,9 @@
     <div class="paddingdiv">
       <div class="rowdiv">
         <div class="columndiv">
-          <button class="filterbutton" style="width: 150px;"> To order form </button>
+          <a href="https://drive.google.com/drive/folders/1vFguIuqYrvoZKfqUR8n0HgC4esv2smP-">
+            <button class="filterbutton" style="width: 175px;"> To Core B Google Drive </button>
+          </a>
         </div>
         <!-- FILTERING -->
         <div class="columndiv">
@@ -75,6 +77,8 @@
           <thead>
             <tr>
               {% for header in data[0].keys() %}
+              {% if header == "Question" %}
+              {% else %}
               <th>
                 {% if len(header) >= 28 %}
                 <h4 style="margin-top: 0px; margin-bottom: 0px; width: 250px;">{{
@@ -93,6 +97,7 @@
                 {% endif %}
                 {% endif %}
               </th>
+              {% endif %}
               {% endfor %}
             </tr>
           </thead>
@@ -100,15 +105,15 @@
           <tbody>
             {% for row in range(0, len(data)) %} <!-- For each row-->
             <tr id="{{row}}">
-              {% for col in range(0, len(list(data[row].values()))) %} <!-- For each col in specified row-->
+              {% for col in range(1, len(list(data[row].values()))) %} <!-- For each col in specified row-->
               <td>
-                {% if col == 0 %} <!-- If first column (Project ID) -->
+                {% if col == 1 %} <!-- If first column (Project ID) -->
                 {% if current_user.is_authenticated %}
                 <div class="rowdiv">
                   <div class="columndiv"
                     style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-top: 11px; border-top-left-radius: 10px; border-bottom-left-radius: 10px;">
                     <a
-                      href="/delete?order_num={{list(data[row].values())[col]}}"><button
+                      href="/delete?question_id={{list(data[row].values())[0]}}"><button
                         class="deletebutton"
                         onclick="return confirm('Are you sure You want to delete this order?')">X</button></a>
                   </div>
@@ -116,11 +121,11 @@
                     style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-right: 7px; padding-top: 11px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
                     {% if len(list(data[row].values())[col]) <= 3%} <!-- If too short then its not a Project ID so need asignment-->
                     <a
-                      href="/update?order_num={{list(data[row].values())[col]}}">ASIGN
+                      href="/update?question_id={{list(data[row].values())[0]}}">ASIGN
                     </a>
                     {% else %}
                     <a
-                      href="/update?order_num={{list(data[row].values())[col]}}">{{
+                      href="/update?question_id={{list(data[row].values())[0]}}">{{
                       list(data[row].values())[col]}}</a>
                     {% endif %}
                   </div>
@@ -132,27 +137,27 @@
                     <input type="hidden" name="order_num"
                       value="{{list(data[row].values())[col]}}" />
                     <input type="hidden" name="acc_num"
-                      value="{{list(data[row].values())[10]}}" />
+                      value="{{list(data[row].values())[11]}}" />
                     <input type="hidden" name="service_type"
-                      value="{{list(data[row].values())[13]}}" />
-                    <input type="hidden" name="sample_num"
-                      value="{{list(data[row].values())[21]}}" />
-                    {% if list(data[row].values())[13] == "RNA-Seq analysis" %} <!-- Check for apropriate service details -->
-                    <input type="hidden" name="services"
                       value="{{list(data[row].values())[14]}}" />
-                    {% else %}
-                    {% if list(data[row].values())[13] == "DNA-Seq analysis" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="sample_num"
+                      value="{{list(data[row].values())[22]}}" />
+                    {% if list(data[row].values())[14] == "RNA-Seq analysis" %} <!-- Check for apropriate service details -->
                     <input type="hidden" name="services"
                       value="{{list(data[row].values())[15]}}" />
                     {% else %}
-                    {% if list(data[row].values())[13] == "Protein analysis" %} <!-- Check for apropriate service details -->
+                    {% if list(data[row].values())[14] == "DNA-Seq analysis" %} <!-- Check for apropriate service details -->
                     <input type="hidden" name="services"
                       value="{{list(data[row].values())[16]}}" />
+                    {% else %}
+                    {% if list(data[row].values())[14] == "Protein analysis" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[17]}}" />
                     {% else %}
                     {% endif %}
                     {% endif %}
                     <input type="hidden" name="services"
-                      value="{{list(data[row].values())[17]}}" />
+                      value="{{list(data[row].values())[18]}}" />
                     {% endif %}
                     {% if list(data[row].values())[0] != "-" %} <!-- If Project ID assigned -->
                     <button class="filterbutton">Invoice PDF</button>              
@@ -164,12 +169,12 @@
                 {{ list(data[row].values())[col] }}
                 {% endif %}
                 {% else %}
-                {% if col == 8 %} <!-- PI info -->
+                {% if col == 9 %} <!-- PI info -->
                 {% if current_user.is_authenticated %}
-                {% if list(data[row].values())[0] == "-" %} <!-- If Project ID assigned -->
+                {% if list(data[row].values())[1] == "-" %} <!-- If Project ID assigned -->
                 {{list(data[row].values())[col]}}
                 {% else %}
-                <a href="/information?order_num={{list(data[row].values())[0]}}">{{
+                <a href="/information?order_num={{list(data[row].values())[1]}}">{{
                   list(data[row].values())[col] }}</a>
                 {% endif %}
                 {% else %}

@@ -165,6 +165,10 @@ def gen_invoice():
             # var to insert total discount amount to DB
             total_discount_amount = 0.0
 
+            if service_name_detail == "All services discount":
+                service_discount_qty_detail = 1.0
+                total_service_amount = 0.0
+
             # Discount details values
             if service_discount_reason_detail != None and len(service_discount_reason_detail) != 0:
                 if service_discount_amount_detail == "":
@@ -177,9 +181,6 @@ def gen_invoice():
                 dict_data[unit_discount_key] = "ea"
                 dict_data[service_discount_reason_key] = service_discount_reason_detail
                 dict_data[service_discount_amount_key] = str(-service_discount_amount_detail) + " $"
-                if service_name_detail == "All services discount":
-                    service_discount_qty_detail = 1.0
-                    total_service_amount = 0.0
                 total_discount_amount = float(service_discount_qty_detail) * service_discount_amount_detail
                 grand_total_discount += total_discount_amount
                 dict_data[service_discount_total_key] = str(-total_discount_amount) + " $"

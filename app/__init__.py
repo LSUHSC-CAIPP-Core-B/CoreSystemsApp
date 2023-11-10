@@ -85,6 +85,9 @@ def create_app(config_class=Config):
     from app.CoreB.invoices_list import bp as invoices_bp
     app.register_blueprint(invoices_bp)
 
+    from app.CoreB.pi_list import bp as pi_bp
+    app.register_blueprint(pi_bp)
+
     from app.CoreB.graphs import bp as graphs_bp
     app.register_blueprint(graphs_bp)
 

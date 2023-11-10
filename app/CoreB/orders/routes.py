@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, make_respo
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.orders import bp
 from app.reader import Reader
+from app.models import Invoice
 from app import login_required
 from app import db
 import redis
@@ -91,11 +92,18 @@ def update():
         for key, val in dict(request.form).items():
             row[key] = val
 
+        order_num = request.args.get('order_num')
         question_id = request.args.get('question_id')
         id = find(data, "Question", question_id)
 
         if id != None:
             data[int(id)] = row
+            # change IDs in invoices
+            invoices = Invoice.query.filter_by(project_id = order_num).all()
+            if invoices != None:
+                for invoice in invoices:
+                    invoice.project_id = row["Project ID"]
+                db.session.commit()
         # Error if id None
         else:
             return redirect(url_for('orders.orders'))

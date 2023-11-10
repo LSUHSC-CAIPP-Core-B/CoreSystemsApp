@@ -121,11 +121,11 @@
                     style="background-color: rgb(199, 199, 199); height: 36px; padding-left: 7px; padding-right: 7px; padding-top: 11px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
                     {% if len(list(data[row].values())[col]) <= 3%} <!-- If too short then its not a Project ID so need asignment-->
                     <a
-                      href="/update?question_id={{list(data[row].values())[0]}}">ASIGN
+                      href="/update?question_id={{list(data[row].values())[0]}}&order_num={{list(data[row].values())[1]}}">ASIGN
                     </a>
                     {% else %}
                     <a
-                      href="/update?question_id={{list(data[row].values())[0]}}">{{
+                      href="/update?question_id={{list(data[row].values())[0]}}&order_num={{list(data[row].values())[1]}}">{{
                       list(data[row].values())[col]}}</a>
                     {% endif %}
                   </div>
@@ -159,7 +159,7 @@
                     <input type="hidden" name="services"
                       value="{{list(data[row].values())[18]}}" />
                     {% endif %}
-                    {% if list(data[row].values())[0] != "-" %} <!-- If Project ID assigned -->
+                    {% if list(data[row].values())[1] != "-" %} <!-- If Project ID assigned -->
                     <button class="filterbutton">Invoice PDF</button>              
                     {% endif %}
                   </form>

@@ -157,10 +157,10 @@ def gen_invoice():
                 dict_data[qty_key] = service_qty_detail
                 dict_data[unit_key] = "ea"
                 dict_data[service_name_key] = service_name_detail
-                dict_data[service_amount_key] = str(service_price_detail) + " $"
+                dict_data[service_amount_key] = "$ " + str(service_price_detail)
                 total_service_amount = float(service_qty_detail) * service_price_detail
                 grand_total += total_service_amount
-                dict_data[service_total_key] = str(total_service_amount) + " $"
+                dict_data[service_total_key] = "$ " + str(total_service_amount)
 
             # var to insert total discount amount to DB
             total_discount_amount = 0.0
@@ -180,10 +180,10 @@ def gen_invoice():
                 dict_data[qty_discount_key] = service_discount_qty_detail
                 dict_data[unit_discount_key] = "ea"
                 dict_data[service_discount_reason_key] = service_discount_reason_detail
-                dict_data[service_discount_amount_key] = str(-service_discount_amount_detail) + " $"
+                dict_data[service_discount_amount_key] = "-$ " + str(service_discount_amount_detail)
                 total_discount_amount = float(service_discount_qty_detail) * service_discount_amount_detail
                 grand_total_discount += total_discount_amount
-                dict_data[service_discount_total_key] = str(-total_discount_amount) + " $"
+                dict_data[service_discount_total_key] = "-$ " + str(total_discount_amount)
 
             # change values of invoice record
             existing_invoice = Invoice.query.filter_by(project_id = order_num, service_type = service_name_detail).first()
@@ -204,7 +204,7 @@ def gen_invoice():
 
         # grand total price of service
         service_grand_total_key = "TOTALGRAND TOTAL"
-        dict_data[service_grand_total_key] = str(grand_total - grand_total_discount) + " $"
+        dict_data[service_grand_total_key] = "$ " + str(grand_total - grand_total_discount)
 
         pdfWriter.fillForm(dict_data)
         return send_from_directory('static', "filled-out-v2.pdf")

@@ -39,7 +39,7 @@ def invoice():
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
         # check what services are selected and put them into array
-        services_to_find = ["one", "two", "RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis"]
+        services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
         services_data = list_services(services_str, services_to_find)
 
         # pass dict with hidden data just to pass it to the next request
@@ -110,6 +110,8 @@ def gen_invoice():
         grand_total_discount = 0.0
         grand_total = 0.0
         total_service_amount = 0.0
+        # services to not caount per sample
+        services_no_unit_price = ["DNA Methylation-Seq"]
         # loop all services
         for i in range(0, int(services_num)):
             # get needed values from invoice form
@@ -158,7 +160,10 @@ def gen_invoice():
                 dict_data[unit_key] = "ea"
                 dict_data[service_name_key] = service_name_detail
                 dict_data[service_amount_key] = "$ " + str(service_price_detail)
-                total_service_amount = float(service_qty_detail) * service_price_detail
+                if service_name_detail in services_no_unit_price:
+                    total_service_amount = service_price_detail
+                else:
+                    total_service_amount = float(service_qty_detail) * service_price_detail
                 grand_total += total_service_amount
                 dict_data[service_total_key] = "$ " + str(total_service_amount)
 

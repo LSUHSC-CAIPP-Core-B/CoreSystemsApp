@@ -43,8 +43,10 @@ def orders():
         data = [dict for dict in data if dict['Service Type'].__contains__(service_type)]
         data = [dict for dict in data if dict['PI Name'].lower().__contains__(pi_name.lower())]
         # sort dict
-        if sort != 'Original':
+        if sort != 'Request Date':
             data = sorted(data, key=lambda d: d[sort])
+        else:
+            data = sorted(data, key=lambda d: d[sort], reverse=True)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')

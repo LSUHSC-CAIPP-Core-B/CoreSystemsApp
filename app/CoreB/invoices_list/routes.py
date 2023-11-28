@@ -6,8 +6,11 @@ from app.models import Invoice
 from app import db
 from datetime import datetime
 from app.pdfwriter import PdfWriter
+from app.reader import Reader
 
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
+services_reader = Reader("services.csv")
+services_no_price_reader = Reader("services_with_no_unit_price.csv")
 
 def list_services(services_str, services_to_find):
     """
@@ -21,7 +24,7 @@ def list_services(services_str, services_to_find):
     services = []
 
     for service_to_find in services_to_find:
-        if services_str.__contains__(service_to_find):
+        if services_str.__contains__(service_to_find["Service"]):
             services.append(service_to_find)
     
     return services
@@ -39,8 +42,9 @@ def invoice():
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
         # check what services are selected and put them into array
-        services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
-        services_data = list_services(services_str, services_to_find)
+        #services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
+        services_to_find_data = services_reader.getRawDataCSV(dict=True)
+        services_data = list_services(services_str, services_to_find_data)
 
         # pass dict with hidden data just to pass it to the next request
         hidden_data = {
@@ -52,12 +56,12 @@ def invoice():
         # get invoice data from DB for each service or make arecord if none exists
         invoices = []
         for service_data in services_data:
-            invoice = Invoice.query.filter_by(project_id = order_num, service_type=service_data).first()
+            invoice = Invoice.query.filter_by(project_id = order_num, service_type=service_data["Service"]).first()
             if invoice == None:
                 invoice = Invoice(project_id = order_num, 
-                                service_type = service_data,
+                                service_type = service_data["Service"],
                                 service_sample_number = 0.0,
-                                service_sample_price = 0.0, 
+                                service_sample_price = float(service_data["Price"]), 
                                 total_price = 0.0,
                                 discount_sample_number = 0.0,
                                 discount_sample_amount = 0.0,
@@ -111,7 +115,8 @@ def gen_invoice():
         grand_total = 0.0
         total_service_amount = 0.0
         # services to not caount per sample
-        services_no_unit_price = ["DNA Methylation-Seq"]
+        services_no_unit_price_data = services_no_price_reader.getRawDataCSV(dict=True)
+        services_no_unit_price = [snop["Service"] for snop in services_no_unit_price_data]
         # loop all services
         for i in range(0, int(services_num)):
             # get needed values from invoice form

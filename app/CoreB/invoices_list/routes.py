@@ -55,6 +55,7 @@ def invoice():
 
         # get invoice data from DB for each service or make arecord if none exists
         invoices = []
+        total_price_sum = 0.0
         for service_data in services_data:
             invoice = Invoice.query.filter_by(project_id = order_num, service_type=service_data["Service"]).first()
             if invoice == None:
@@ -69,6 +70,7 @@ def invoice():
                                 total_discount = 0.0)
                 db.session.add(invoice)
             invoices.append(invoice)
+            total_price_sum += invoice.total_price
 
         invoice = Invoice.query.filter_by(project_id = order_num, service_type="All services discount").first()
         if invoice == None:
@@ -86,7 +88,12 @@ def invoice():
         invoices.append(invoice)
         db.session.commit()
 
-        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, len=len)
+        if total_price_sum == 0:
+            percent_discount = 0
+        else:
+            percent_discount = (invoice.total_discount/total_price_sum) * 100.0
+
+        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len)
 
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
@@ -190,6 +197,8 @@ def gen_invoice():
                 dict_data[qty_discount_key] = service_discount_qty_detail
                 dict_data[unit_discount_key] = "ea"
                 dict_data[service_discount_reason_key] = service_discount_reason_detail
+                if service_name_detail == "All services discount":
+                    service_discount_amount_detail = grand_total * (service_discount_amount_detail/100)
                 dict_data[service_discount_amount_key] = "-$ " + str(service_discount_amount_detail)
                 total_discount_amount = float(service_discount_qty_detail) * service_discount_amount_detail
                 grand_total_discount += total_discount_amount

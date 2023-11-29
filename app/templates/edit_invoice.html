@@ -77,10 +77,10 @@
                     {% else %}
                     <input type = "hidden" name = "service {{ val }} discount qty" value = "{{ invoices[val].discount_sample_number }}" min="0" style="margin: auto;">
                     <div class="updatediv one">
-                        <h4> Discount amount </h4>
+                        <h4> Discount amount [%] </h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ invoices[val].discount_sample_amount }}" min="0" step=".01" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ percent_discount }}" min="0" max="100" step="1" style="margin: auto;">
                     </div>
                     {% endif %}
 

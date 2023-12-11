@@ -95,7 +95,7 @@ def add_pi():
         # fields cannot be empty
         if first_name == "" or last_name == "" or pi_id == "" or email == "" or department == "":
             flash('Fields cannot be empty')
-            return redirect(url_for('orders.add_pi'))
+            return redirect(url_for('pi_list.add_pi'))
         
         # get csv data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
@@ -103,7 +103,7 @@ def add_pi():
         for d in data:
             if pi_id == d["PI ID"]:
                 flash('PI with this ID already exists, please pick a new one.')
-                return redirect(url_for('orders.add_pi'))
+                return redirect(url_for('pi_list.add_pi'))
             
 
         # new row
@@ -119,7 +119,7 @@ def add_pi():
         information_reader.saveRawDataCSV(data)
                 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('orders.pilist')))
+        response = make_response(redirect(url_for('pi_list.pilist')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

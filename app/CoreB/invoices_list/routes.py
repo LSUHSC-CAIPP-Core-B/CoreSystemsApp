@@ -35,9 +35,13 @@ def invoice():
     if request.method == 'POST':
         # get order data to input automatically into invoice (passed to POST)
         order_num = request.form.get('order_num')
-        acc_num = request.form.get('acc_num')
-        # get account number from account field (format: acc_num,additional info)
-        acc_num = acc_num.split(",")[0]
+        bm_info = request.form.get('bm_info')
+        # get account number and manager name from bm_info field (format: acc_num,additional info)
+        bm_info_split = bm_info.split(",")
+        if len(bm_info) != 3:
+            return render_template('error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
+        acc_num = bm_info_split[0]
+        manager_name = bm_info_split[1]
         service_type = request.form.get('service_type')
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
@@ -50,7 +54,8 @@ def invoice():
         hidden_data = {
             "Account Number": acc_num,
             "Quantity" : sample_num,
-            "Order Number": order_num
+            "Order Number": order_num,
+            "Manager Name": manager_name
         }
 
         # get invoice data from DB for each service or make arecord if none exists
@@ -102,6 +107,7 @@ def gen_invoice():
         # get order data to input automatically into invoice
         order_num = request.form.get("Order Number") or ""
         acc_num = request.form.get('Account Number') or ""
+        manager_name = request.form.get('Manager Name') or ""
         services_num = request.form.get('Services Number') or 0
 
         # based on order data prepare inputs
@@ -110,7 +116,8 @@ def gen_invoice():
         dict_data = {
             'DEBIT ACCOUNTRow1': acc_num,
             'DEPT REQUISITION Row1': order_num,
-            'Date5_af_date': date
+            'Date5_af_date': date,
+            'CARE OFRow1': manager_name
         }
 
         # services details

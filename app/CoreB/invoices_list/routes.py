@@ -38,7 +38,8 @@ def invoice():
         bm_info = request.form.get('bm_info')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
-        if len(bm_info) != 3:
+
+        if len(bm_info_split) != 3:
             return render_template('error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
         acc_num = bm_info_split[0]
         manager_name = bm_info_split[1]

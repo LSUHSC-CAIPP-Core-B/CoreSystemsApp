@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+    <body>
+        <div class="header" id="gradheader">
+            <h1 class="header_text">Panels</h1>
+            <h2 class="header_text">Antibody Panels for Research</h2>
+        </div>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="div-border-min">
+            <h3>{{ messages[0] }}</h3>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </body>
+</html>
+{% endblock %}

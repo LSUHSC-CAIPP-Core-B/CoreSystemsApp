@@ -60,3 +60,9 @@ def panels():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/addAntibody', methods=['GET'])
+@login_required(role=["user", "coreC"])
+def addAntibody():
+    if request.method == 'GET':
+        return render_template('add_antibody.html')

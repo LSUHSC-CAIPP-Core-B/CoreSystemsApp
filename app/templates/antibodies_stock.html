@@ -2,10 +2,13 @@
 
 {% block content %}
 <html>
+    <head>
+      <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    </head>
     <body>
         <div class="header" id="gradheader">
-            <h1 class="header_text">Stock</h1>
-            <h2 class="header_text">Stock information about used supplies and equipment</h2>
+            <h1 class="header_text">Antibodies</h1>
+            <h2 class="header_text">Antibody information</h2>
         </div>
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -14,6 +17,55 @@
         </div>
         {% endif %}
         {% endwith %}
+        <div class="paddingdiv">
+          <div class="rowdiv">
+            <div class="columndiv">
+              <button id="addsuppliesButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
+            </div>
+            <script>
+              $(document).ready(function() {
+                // click event to the button
+                $('#addsuppliesButton').click(function() {
+                    // Redirect to a new webpage
+                    window.location.href = '/addAntibody';
+                });
+              });
+            </script>
+            <!-- FILTERING -->
+            <div class="columndiv">
+              <form method="POST" action="/orders">
+                <div class="leftdiv">
+                  <label class="formlabel">Company</label>
+                  <select class="tableselect" name="company" id="company">
+                    <option value selected>All</option>
+                    <option value="Biologend">Biologend</option>
+                    <option value="Invitrogen">Invitrogen</option>
+                    <option value="BD_Bio">BD Biosciences</option>
+                    <option value="R&D">R&D Systems</option>
+                  </select>
+                </div>
+                <div class="leftdiv">
+                  <label class="formlabel">Target</label>
+                  <input class="tableinput" type="text" name="pi_name" id="pi_name"
+                    placeholder="Target Name">
+                </div>
+                <div class="leftdiv">
+                  <label class="formlabel">Sort by</label>
+                  <select class="tableselect" name="sort" id="sort">
+                    <option value="Catalog Number" selected>Catalog Number</option>
+                    <option value="Expiration Date">Expiration Date</option>
+                    <option value="Price">Price</option>
+                    <option value="PricePerSample">Price Per Sample</option>
+                  </select>
+                </div>
+                <button class="filterbutton"
+                  onclick="saveFilterByKey(['#service_type', '#pi_name', '#sort'])">Filter</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <br>
+        <br>
         <div class="paddingdiv-border">
         <div class="orderdiv">
         <table class="table_round_bottom">

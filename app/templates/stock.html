@@ -14,6 +14,50 @@
         </div>
         {% endif %}
         {% endwith %}
+        <div class="paddingdiv">
+          <div class="rowdiv">
+            <div class="columndiv">
+              <button id="addsuppliesButton" class="filterbutton" style="width: 175px;"> Add Supplies </button>
+            </div>
+            <script>
+              $(document).ready(function() {
+                // click event to the button
+                $('#addsuppliesButton').click(function() {
+                    // Redirect to a new webpage
+                    window.location.href = '/addsupplies';
+                });
+              });
+            </script>
+            <!-- FILTERING -->
+            <div class="columndiv">
+              <form method="POST" action="/orders">
+                <div class="leftdiv">
+                  <label class="formlabel">Company Name</label>
+                  <select class="tableselect" name="company" id="company">
+                    <option value selected>All</option>
+                    <option value="KIMTECH">KIMTECH</option>
+                    <option value="Whitney">Whitney Medical Solutions	</option>
+                    <option value="ThermoFisher">Thermo Fisher Scientific</option>
+                    <option value="CURIOX">CURIOX</option>
+                  </select>
+                </div>
+                <div class="leftdiv">
+                  <label class="formlabel">Product</label>
+                  <input class="tableinput" type="text" name="p_name" id="p_name"
+                    placeholder="Product Name">
+                </div>
+                <div class="leftdiv">
+                  <label class="formlabel">Sort by</label>
+                  <select class="tableselect" name="sort" id="sort">
+                    <option value="Quantity" selected>Quantity</option>
+                  </select>
+                </div>
+                <button class="filterbutton"
+                  onclick="saveFilterByKey(['#service_type', '#pi_name', '#sort'])">Filter</button>
+              </form>
+            </div>
+          </div>
+        </div>
         <div class="noback_centerdiv">
         <div class="div-border-min">
         <div class="orderdiv">

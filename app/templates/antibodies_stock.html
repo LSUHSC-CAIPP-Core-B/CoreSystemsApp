@@ -33,7 +33,7 @@
             </script>
             <!-- FILTERING -->
             <div class="columndiv">
-              <form method="POST" action="/orders">
+              <form method="POST" action="/antibodies">
                 <div class="leftdiv">
                   <label class="formlabel">Company</label>
                   <select class="tableselect" name="company" id="company">
@@ -46,8 +46,13 @@
                 </div>
                 <div class="leftdiv">
                   <label class="formlabel">Target</label>
-                  <input class="tableinput" type="text" name="pi_name" id="pi_name"
+                  <input class="tableinput" type="text" name="target_name" id="target_name"
                     placeholder="Target Name">
+                </div>
+                <div class="leftdiv">
+                  <label class="formlabel">Target Species</label>
+                  <input class="tableinput" type="text" name="target_species" id="target_species"
+                    placeholder="Species Name">
                 </div>
                 <div class="leftdiv">
                   <label class="formlabel">Sort by</label>
@@ -59,7 +64,7 @@
                   </select>
                 </div>
                 <button class="filterbutton"
-                  onclick="saveFilterByKey(['#service_type', '#pi_name', '#sort'])">Filter</button>
+                  onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
               </form>
             </div>
           </div>

@@ -6,15 +6,18 @@ from app import login_required
 import mysql.connector as connection
 import pandas as pd
 
-def toDataframe(query, database_name):
+def toDataframe(query, database_name, params=None):
     try:
-        mydb = connection.connect(host="127.0.0.1", database = database_name,user="root", passwd="FrdL#7329",use_pure=True, auth_plugin='mysql_native_password')
-        result_dataFrame = pd.read_sql(query,mydb)
-        mydb.close() #close the connection
+        mydb = connection.connect(host="127.0.0.1", database=database_name, user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        
+        # Using bind parameters to prevent SQL injection
+        result_dataFrame = pd.read_sql(query, mydb, params=params)
+        
+        mydb.close()  # close the connection
         return result_dataFrame
     except Exception as e:
+        print(str(e))
         mydb.close()
-        return(str(e))
 
 #information_reader = Reader("PI_ID - PI_ID.csv")
 
@@ -33,20 +36,39 @@ def stock():
         response.headers["Expires"] = "0" # Proxies.
         return response
     
-@bp.route('/antibodies', methods=['GET'])
+@bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
-    if request.method == 'GET':
-        dataFrame = toDataframe("SELECT Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1;", 'antibodies')
-        dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
-        data = dataFrame.to_dict('records')
+    if request.method == 'POST':
+        target_name = request.form.get('target_name') or ""
+        target_species = request.form.get('target_species') or ""
 
-        # use to prevent user from caching pages
-        response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
+        # Checks if value is given
+        if target_name:
+            params = (target_name,)
+            dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Name = %s ORDER BY Target_Name;", 'antibodies', params)
+            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+            data = dataFrame.to_dict('records')
+        elif target_species:
+            params = (target_species,)
+            dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Species = %s ORDER BY Target_Name;", 'antibodies', params)
+            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+            data = dataFrame.to_dict('records')
+        else:
+            # TODO Add else for multiple values given
+            pass
+
+    if request.method == 'GET':
+        dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
+        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+        data = dataFrame.to_dict('records')
+    
+    # use to prevent user from caching pages
+    response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
 
 @bp.route('/panels', methods=['GET'])
 @login_required(role=["user", "coreC"])
@@ -61,8 +83,10 @@ def panels():
         response.headers["Expires"] = "0" # Proxies.
         return response
     
-@bp.route('/addAntibody', methods=['GET'])
+@bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def addAntibody():
     if request.method == 'GET':
+        return render_template('add_antibody.html')
+    elif request.method == 'POST':
         return render_template('add_antibody.html')

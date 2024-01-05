@@ -1,5 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, make_response
 from flask_paginate import Pagination, get_page_args
+from jinja2 import UndefinedError
 from app.CoreC.stock import bp
 from app.reader import Reader
 from app import login_required
@@ -40,11 +41,18 @@ def stock():
 @login_required(role=["user", "coreC"])
 def antibodies_route():
     if request.method == 'POST':
+        company_name = request.form.get('company_name') or ""
         target_name = request.form.get('target_name') or ""
         target_species = request.form.get('target_species') or ""
-
+        sort = request.form.get('sort') or 'Original'
+        
         # Checks if value is given
-        if target_name:
+        if company_name:
+            params = (company_name,)
+            dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %s ORDER BY Target_Name;", 'antibodies', params)
+            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+            data = dataFrame.to_dict('records')
+        elif target_name:
             params = (target_name,)
             dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Name = %s ORDER BY Target_Name;", 'antibodies', params)
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
@@ -55,20 +63,35 @@ def antibodies_route():
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
-            # TODO Add else for multiple values given
-            pass
+            # When fields are empty
+            dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
+            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+            data = dataFrame.to_dict('records')
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
         data = dataFrame.to_dict('records')
     
-    # use to prevent user from caching pages
-    response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-    response.headers["Expires"] = "0" # Proxies.
-    return response
+    try:
+        # use to prevent user from caching pages
+        response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    except UndefinedError:
+        print("jinja2.exceptions.UndefinedError: list object has no element 0")
+        
+        dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 0;", 'antibodies')
+        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+        data = dataFrame.to_dict('records')
+        # use to prevent user from caching pages
+        response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
 @bp.route('/panels', methods=['GET'])
 @login_required(role=["user", "coreC"])

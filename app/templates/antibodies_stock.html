@@ -36,13 +36,8 @@
               <form method="POST" action="/antibodies">
                 <div class="leftdiv">
                   <label class="formlabel">Company</label>
-                  <select class="tableselect" name="company" id="company">
-                    <option value selected>All</option>
-                    <option value="Biologend">Biologend</option>
-                    <option value="Invitrogen">Invitrogen</option>
-                    <option value="BD_Bio">BD Biosciences</option>
-                    <option value="R&D">R&D Systems</option>
-                  </select>
+                  <input class="tableinput" type="text" name="company_name" id="company_name"
+                    placeholder="Company Name">
                 </div>
                 <div class="leftdiv">
                   <label class="formlabel">Target</label>
@@ -57,10 +52,10 @@
                 <div class="leftdiv">
                   <label class="formlabel">Sort by</label>
                   <select class="tableselect" name="sort" id="sort">
-                    <option value="Catalog Number" selected>Catalog Number</option>
+                    <option value="Target Name" selected>Target Name</option>
+                    <option value="Catalog Number">Catalog Number</option>
                     <option value="Expiration Date">Expiration Date</option>
                     <option value="Price">Price</option>
-                    <option value="PricePerSample">Price Per Sample</option>
                   </select>
                 </div>
                 <button class="filterbutton"

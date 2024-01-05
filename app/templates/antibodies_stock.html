@@ -8,7 +8,6 @@
     <body>
         <div class="header" id="gradheader">
             <h1 class="header_text">Antibodies</h1>
-            <h2 class="header_text">Antibody information</h2>
         </div>
         {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -20,12 +19,12 @@
         <div class="paddingdiv">
           <div class="rowdiv">
             <div class="columndiv">
-              <button id="addsuppliesButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
+              <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
             </div>
             <script>
               $(document).ready(function() {
                 // click event to the button
-                $('#addsuppliesButton').click(function() {
+                $('#addAntibodyButton').click(function() {
                     // Redirect to a new webpage
                     window.location.href = '/addAntibody';
                 });

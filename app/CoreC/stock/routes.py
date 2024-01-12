@@ -21,21 +21,6 @@ def toDataframe(query, database_name, params=None):
         mydb.close()
 
 #information_reader = Reader("PI_ID - PI_ID.csv")
-
-@bp.route('/stock', methods=['GET'])
-@login_required(role=["user", "coreC"])
-def stock():
-    if request.method == 'GET':
-        dataFrame = toDataframe("SELECT o.Product_Name, o.Company_Name, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num;", 'new_schema')
-        dataFrame.rename(columns={'Product_Name': 'Product', 'Company_Name': 'Company Name'}, inplace=True)
-        data = dataFrame.to_dict('records')
-
-        # use to prevent user from caching pages
-        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
     
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -63,11 +48,11 @@ def antibodies_route():
         params = {'CompanyParam': company_name, 'TargetParam': target_name, 'TargerSpeciesParam': target_species}
         
         if company_name and target_name and target_species:
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND Target_Name = %(TargetParam)s AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         elif company_name and target_name:
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND Target_Name = %(TargetParam)s ORDER BY {order_by};", 'antibodies', params)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) ORDER BY {order_by};", 'antibodies', params)
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         elif company_name and target_species:
@@ -75,7 +60,7 @@ def antibodies_route():
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         elif target_name and target_species:
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Name = %(TargetParam)s AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         # Checks if value is given
@@ -86,7 +71,7 @@ def antibodies_route():
             data = dataFrame.to_dict('records')
         elif target_name:
             param = (target_name,)
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Name = %s ORDER BY {order_by};", 'antibodies', param)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) ORDER BY {order_by};", 'antibodies', params)
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
             data = dataFrame.to_dict('records')
         elif target_species:
@@ -150,3 +135,18 @@ def addAntibody():
 
     if request.method == 'GET':
         return render_template('add_antibody.html')
+
+@bp.route('/stock', methods=['GET'])
+@login_required(role=["admin", "coreC"])
+def stock():
+    if request.method == 'GET':
+        dataFrame = toDataframe("SELECT o.Product_Name, o.catlog_num ,o.Company_Name, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num;", 'new_schema')
+        dataFrame.rename(columns={'Product_Name': 'Product', 'Catlog_Num': 'Catalog Number','Company_Name': 'Company Name'}, inplace=True)
+        data = dataFrame.to_dict('records')
+
+        # use to prevent user from caching pages
+        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

@@ -140,8 +140,8 @@ def addAntibody():
 @login_required(role=["admin", "coreC"])
 def stock():
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT o.Product_Name, o.catlog_num ,o.Company_Name, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num;", 'new_schema')
-        dataFrame.rename(columns={'Product_Name': 'Product', 'Catlog_Num': 'Catalog Number','Company_Name': 'Company Name'}, inplace=True)
+        dataFrame = toDataframe("SELECT o.Product_Name, o.catlog_num ,o.Company_Name, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity;", 'new_schema')
+        dataFrame.rename(columns={'Product_Name': 'Product', 'catlog_num': 'Catalog Number','Company_Name': 'Company Name'}, inplace=True)
         data = dataFrame.to_dict('records')
 
         # use to prevent user from caching pages

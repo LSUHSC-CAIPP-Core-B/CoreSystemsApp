@@ -30,26 +30,26 @@
             </script>
             <!-- FILTERING -->
             <div class="columndiv">
-              <form method="POST" action="/orders">
+              <form method="POST" action="/stock">
                 <div class="leftdiv">
-                  <label class="formlabel">Company Name</label>
-                  <select class="tableselect" name="company" id="company">
-                    <option value selected>All</option>
-                    <option value="KIMTECH">KIMTECH</option>
-                    <option value="Whitney">Whitney Medical Solutions	</option>
-                    <option value="ThermoFisher">Thermo Fisher Scientific</option>
-                    <option value="CURIOX">CURIOX</option>
-                  </select>
+                  <div class="leftdiv">
+                    <label class="formlabel">Company</label>
+                    <input class="tableinput" type="text" name="Company" id="p_name"
+                      placeholder="Company Name">
+                  </div>
                 </div>
-                <div class="leftdiv">
-                  <label class="formlabel">Product</label>
-                  <input class="tableinput" type="text" name="p_name" id="p_name"
-                    placeholder="Product Name">
-                </div>
+                  <div class="leftdiv">
+                    <label class="formlabel">Product</label>
+                    <input class="tableinput" type="text" name="p_name" id="p_name"
+                      placeholder="Product Name">
+                  </div>
                 <div class="leftdiv">
                   <label class="formlabel">Sort by</label>
                   <select class="tableselect" name="sort" id="sort">
-                    <option value="Quantity" selected>Quantity</option>
+                    <option value="QuantityAscending" selected>Quantity Ascending</option>
+                    <option value="QuantityDescending">Quantity Descending</option>
+                    <option value="Product">Product</option>
+                    <option value="Catalog Number">Catalog Number</option>
                   </select>
                 </div>
                 <button class="filterbutton"

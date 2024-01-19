@@ -65,8 +65,7 @@ def antibodies_route():
         elif target_species:
             param = (target_species,)
             dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Target_Species = %s ORDER BY {order_by};", 'antibodies', param)
-        else:
-            # When fields are empty or only sorting
+        else:# When fields are empty or only sorting
             dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};", 'antibodies')
 
         # renaming columns and setting data variable
@@ -140,8 +139,15 @@ def stock():
         if order_by not in sort_orders.values():
             order_by = 'Quantity'  
         
-        if company:
-            pass
+        # Dictionary of Parameters
+        params = {'CompanyParam': company, 'ProductParam': product}
+
+        if company and product:
+            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name COLLATE utf8mb4_general_ci LIKE %(CompanyParam)s AND Product_Name COLLATE utf8mb4_general_ci LIKE %(ProductParam)s ORDER BY {order_by};", 'new_schema', params)
+        elif company:
+            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name COLLATE utf8mb4_general_ci LIKE %(CompanyParam)s ORDER BY {order_by};", 'new_schema', params)
+        elif product:
+            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Product_Name COLLATE utf8mb4_general_ci LIKE %(ProductParam)s ORDER BY {order_by};", 'new_schema', params)
         elif sort == "QuantityDescending":
             dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity DESC;", 'new_schema')
         else: # Default if all fields are empty or sort

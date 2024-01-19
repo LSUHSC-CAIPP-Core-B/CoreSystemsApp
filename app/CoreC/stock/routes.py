@@ -8,6 +8,15 @@ import mysql.connector as connection
 import pandas as pd
 
 def toDataframe(query, database_name, params=None):
+    """
+    Takes in query, database, and parameter and converts query to a dataframe.
+    
+    query(str): query to convert to dataframe
+    database_name(str): database name for connection
+    param(str)or(None): Parameter to put in query
+
+    return: dataframe from the query passed
+    """
     try:
         mydb = connection.connect(host="127.0.0.1", database=database_name, user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
         

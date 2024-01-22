@@ -82,9 +82,14 @@
               <tr id="{{row}}">
                 {% for col in range(0, len(list(data[row].values()))) %}
                 <td>
-  
                   {{ list(data[row].values())[col] }}
-  
+                  <form method="POST" action="/antibodies">
+                    {% if current_user.is_admin %}
+                    {% if col == 0%}
+                    <button class="filterbutton">Change Info</button>
+                    {% endif %}
+                    {% endif %}
+                  </form>
                   {% endfor %}
                   {% endfor %}
                 </td>

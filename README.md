@@ -1,5 +1,5 @@
 # Order Form Automation
-![App flow](docs/title.png.png)
+![Title](docs/title.png)
 Web App to manage systems in Bioinformatics and Modeling Cores B and C.
 
 ## Setup

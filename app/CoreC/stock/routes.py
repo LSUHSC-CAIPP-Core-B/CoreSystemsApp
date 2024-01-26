@@ -78,12 +78,12 @@ def antibodies_route():
             dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};", 'antibodies')
 
         # renaming columns and setting data variable
-        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
-        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
 
     try:
@@ -97,7 +97,7 @@ def antibodies_route():
         print("jinja2.exceptions.UndefinedError: list object has no element 0")
         
         dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 0;", 'antibodies')
-        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date'}, inplace=True)
+        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
         # use to prevent user from caching pages
         response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
@@ -123,19 +123,20 @@ def panels():
 @login_required(role=["admin"])
 def addAntibody():
     if request.method == 'POST':
-        box_name = request.form.get('Box') or ""
-        company_name = request.form.get('Company') or ""
+        box_name = request.form.get('Box')
+        company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
-        target_name = request.form.get('Target') or ""
-        target_species = request.form.get('Target Species') or ""
+        target_name = request.form.get('Target')
+        target_species = request.form.get('Target Species')
         fluorophore = request.form.get('Fluorophore')
-        clone = request.form.get('Clone') or ""
-        isotype = request.form.get('Isotype') or ""
-        size = request.form.get('Clone') or ""
-        concentration = request.form.get('Concentration') or ""
-        expiration_date = request.form.get('Expiration Date') or ""
-        titration = request.form.get('Titration') or ""
-        included = request.form.get('Included') or ""
+        clone = request.form.get('Clone')
+        isotype = request.form.get('Isotype')
+        size = request.form.get('Clone')
+        concentration = request.form.get('Concentration')
+        expiration_date = request.form.get('Expiration Date')
+        titration = request.form.get('Titration')
+        included = request.form.get('Included')
+        print(catalog_num)
 
         if catalog_num == "":
             flash('Fields cannot be empty')

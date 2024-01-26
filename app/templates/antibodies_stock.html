@@ -18,9 +18,11 @@
         {% endwith %}
         <div class="paddingdiv">
           <div class="rowdiv">
+            {% if current_user.is_admin %}
             <div class="columndiv">
               <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
             </div>
+            {% endif %}
             <script>
               $(document).ready(function() {
                 // click event to the button
@@ -71,9 +73,17 @@
             <thead>
               <tr>
                 {% for header in data[0].keys() %}
+                {% if current_user.is_admin %}
                 <th>
                   <h4>{{ header }}</h4>
                 </th>
+                {% else %}
+                {% if header != "Box Name" %}
+                <th>
+                  <h4>{{ header }}</h4>
+                </th>
+                {% endif %}
+                {% endif %}
                 {% endfor %}
               </tr>
             </thead>
@@ -81,18 +91,25 @@
               {% for row in range(0, len(data)) %}
               <tr id="{{row}}">
                 {% for col in range(0, len(list(data[row].values()))) %}
+                {% if current_user.is_admin %}
+                {% if list(data[row].keys())[col] == "Box Name" %}
                 <td>
                   {{ list(data[row].values())[col] }}
                   <form method="POST" action="/antibodies">
-                    {% if current_user.is_admin %}
-                    {% if col == 0%}
+                    {% if col == 0 %}
                     <button class="filterbutton">Change Info</button>
                     {% endif %}
-                    {% endif %}
                   </form>
-                  {% endfor %}
-                  {% endfor %}
                 </td>
+                {% endif %}
+                {% endif %}
+                {% if list(data[row].keys())[col] != "Box Name" %}
+                <td>
+                  {{ list(data[row].values())[col] }}
+                </td>
+                {% endif %}
+                {% endfor %}
+                {% endfor %}
               </tr>
             </tbody>
           </table>

@@ -54,7 +54,7 @@ def antibodies_route():
             order_by = 'Target_Name'  
 
         # Dictionary of Parameters
-        params = {'CompanyParam': company_name, 'TargetParam': target_name, 'TargerSpeciesParam': target_species}
+        params = {'CompanyParam': company_name, 'TargetParam': target_name, 'TargetSpeciesParam': target_species}
         
         # Checks if value is given
         if company_name and target_name and target_species:
@@ -62,9 +62,9 @@ def antibodies_route():
         elif company_name and target_name:
             dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) ORDER BY {order_by};", 'antibodies', params)
         elif company_name and target_species:
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %(CompanyParam)s AND Target_Species = %(TargetSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
         elif target_name and target_species:
-            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) AND Target_Species = %(TargerSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
+            dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND (Target_Name = %(TargetParam)s OR Target_Name REGEXP CONCAT('^', %(TargetParam)s, '[a-f]')) AND Target_Species = %(TargetSpeciesParam)s ORDER BY {order_by};", 'antibodies', params)
         elif company_name:
             param = (company_name,)
             dataFrame = toDataframe(f"SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 AND Company_name = %s ORDER BY {order_by};", 'antibodies', param)
@@ -170,10 +170,54 @@ def deleteAntibody():
     response.headers["Expires"] = "0" # Proxies.
     return response
 
-@bp.route('/changeAntibody', methods=['POST'])
+@bp.route('/changeAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def changeAntibody():
-    pass
+    if request.method == 'POST':
+        box_name = request.form.get('Box')
+        company_name = request.form.get('Company')
+        catalog_num = request.form.get('Catalog Number')
+        target_name = request.form.get('Target')
+        target_species = request.form.get('Target Species')
+        fluorophore = request.form.get('Fluorophore')
+        clone = request.form.get('Clone')
+        isotype = request.form.get('Isotype')
+        size = request.form.get('Clone')
+        concentration = request.form.get('Concentration')
+        expiration_date = request.form.get('Expiration Date')
+        titration = request.form.get('Titration')
+        included = request.form.get('Included')
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+    if request.method == 'GET':
+        data = {
+            "Box Name": "",
+            "Company": "",
+            "Catalog Number": "",
+            "Target": "",
+            "Target Species": "",
+            "Fluorophore": "",
+            "Clone": "",
+            "Isotype": "",
+            "Size": "",
+            "Concentration": "",
+            "Expiration Date": "",
+            "Titration": "",
+            "Included": ""
+        }
+
+        # use to prevent user from caching pages
+        response = make_response(render_template('change_antibody.html', fields = data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
 @bp.route('/panels', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])

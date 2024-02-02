@@ -44,7 +44,8 @@ def antibodies_route():
         sort_orders = {
             'Price': 'Cost',
             'Catalog Number': 'Catalog_Num',
-            'Expiration Date': 'Expiration_Date'
+            'Expiration Date': 'Expiration_Date',
+            'Box Name': 'Box_Name'
         }
         # Check if sort is in the dictionary, if not then uses default value
         order_by = sort_orders.get(sort, 'Target_Name')

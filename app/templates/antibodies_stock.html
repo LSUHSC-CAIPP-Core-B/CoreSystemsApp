@@ -57,6 +57,9 @@
                     <option value="Catalog Number">Catalog Number</option>
                     <option value="Expiration Date">Expiration Date</option>
                     <option value="Price">Price</option>
+                    {% if current_user.is_admin %}
+                    <option value="Box Name">Box Name</option>
+                    {% endif %}
                   </select>
                 </div>
                 <button class="filterbutton"
@@ -67,7 +70,8 @@
         </div>
         <br>
         <br>
-        <div class="paddingdiv-border">
+        <div class="noback_centerdiv">
+        <div class="div-border-min">
         <div class="orderdiv">
         <table class="table_round_bottom">
             <thead>
@@ -78,7 +82,7 @@
                   <h4>{{ header }}</h4>
                 </th>
                 {% else %}
-                {% if header != "Box Name" %}
+                {% if header not in ("Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
                 <th>
                   <h4>{{ header }}</h4>
                 </th>
@@ -106,7 +110,13 @@
                 </td>
                 {% endif %}
                 {% endif %}
-                {% if list(data[row].keys())[col] != "Box Name" %}
+                {% if not current_user.is_admin %}
+                {% if list(data[row].keys())[col] not in ("Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
+                <td>
+                  {{ list(data[row].values())[col] }}
+                </td>
+                {% endif %}
+                {% elif list(data[row].keys())[col] != "Box Name" %}
                 <td>
                   {{ list(data[row].values())[col] }}
                 </td>
@@ -116,6 +126,7 @@
               </tr>
             </tbody>
           </table>
+        </div>
         </div>
         </div>
     </body>

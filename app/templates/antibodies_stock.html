@@ -95,11 +95,14 @@
                 {% if list(data[row].keys())[col] == "Box Name" %}
                 <td>
                   {{ list(data[row].values())[col] }}
-                  <form method="POST" action="/antibodies">
-                    {% if col == 0 %}
-                    <button class="filterbutton">Change Info</button>
-                    {% endif %}
+                  {% if col == 0 %}
+                  <form method="POST" action="/deleteAntibody">
+                    <button class="deletebutton">X</button>
                   </form>
+                  <form method="POST" action="/antibodies">
+                    <button class="filterbutton">Change Info</button>
+                  </form>
+                  {% endif %}
                 </td>
                 {% endif %}
                 {% endif %}

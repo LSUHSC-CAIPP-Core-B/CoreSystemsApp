@@ -86,10 +86,13 @@ def antibodies_route():
         dataFrame = toDataframe("SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
+    
+    #number of rows in table
+    num_rows = len(data)
 
     try:
         # use to prevent user from caching pages
-        response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str))
+        response = make_response(render_template("antibodies_stock.html", data=data, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

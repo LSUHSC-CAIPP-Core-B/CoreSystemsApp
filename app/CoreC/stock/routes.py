@@ -105,19 +105,6 @@ def antibodies_route():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-
-@bp.route('/panels', methods=['GET'])
-@login_required(role=["user", "coreC"])
-def panels():
-    if request.method == 'GET':
-        dataFrame = toDataframe("SELECT * FROM panels", 'antibodies')
-        data = dataFrame.to_dict('records')
-        # use to prevent user from caching pages
-        response = make_response(render_template("panels.html", data=data, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
     
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -140,10 +127,10 @@ def addAntibody():
 
         if catalog_num == "":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.antibodies'))
+            return redirect(url_for('stock.antibodies_route'))
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies')))
+        response = make_response(redirect(url_for('stock.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -168,6 +155,34 @@ def addAntibody():
 
         # use to prevent user from caching pages
         response = make_response(render_template('add_antibody.html', fields = data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
+@bp.route('/deleteAntibody', methods=['POST'])
+@login_required(role=["admin"])
+def deleteAntibody():
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('stock.antibodies_route')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
+
+@bp.route('/changeAntibody', methods=['POST'])
+@login_required(role=["admin"])
+def changeAntibody():
+    pass
+
+@bp.route('/panels', methods=['GET', 'POST'])
+@login_required(role=["user", "coreC"])
+def panels():
+    if request.method == 'GET':
+        dataFrame = toDataframe("SELECT * FROM panels", 'antibodies')
+        data = dataFrame.to_dict('records')
+        # use to prevent user from caching pages
+        response = make_response(render_template("panels.html", data=data, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

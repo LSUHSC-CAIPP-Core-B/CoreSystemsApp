@@ -16,63 +16,67 @@
         </div>
         {% endif %}
         {% endwith %}
-        <div class="paddingdiv">
-          <div class="rowdiv">
-            {% if current_user.is_admin %}
-            <div class="columndiv">
-              <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
-            </div>
-            {% endif %}
-            <script>
-              $(document).ready(function() {
-                // click event to the button
-                $('#addAntibodyButton').click(function() {
-                    // Redirect to a new webpage
-                    window.location.href = '/addAntibody';
+        <div class="{% if not current_user.is_admin %}noback_centerdiv {%else%} {% endif %}">
+          <div class="paddingdiv">
+            <div class="rowdiv">
+              {% if current_user.is_admin %}
+              <div class="columndiv">
+                <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
+              </div>
+              {% endif %}
+              <script>
+                $(document).ready(function() {
+                  // click event to the button
+                  $('#addAntibodyButton').click(function() {
+                      // Redirect to a new webpage
+                      window.location.href = '/addAntibody';
+                  });
                 });
-              });
-            </script>
-            <!-- FILTERING -->
-            <div class="columndiv">
-              <form method="POST" action="/antibodies">
-                <div class="leftdiv">
-                  <label class="formlabel">Company</label>
-                  <input class="tableinput" type="text" name="company_name" id="company_name"
-                    placeholder="Company Name">
-                </div>
-                <div class="leftdiv">
-                  <label class="formlabel">Target</label>
-                  <input class="tableinput" type="text" name="target_name" id="target_name"
-                    placeholder="Target Name">
-                </div>
-                <div class="leftdiv">
-                  <label class="formlabel">Target Species</label>
-                  <input class="tableinput" type="text" name="target_species" id="target_species"
-                    placeholder="Species Name">
-                </div>
-                <div class="leftdiv">
-                  <label class="formlabel">Sort by</label>
-                  <select class="tableselect" name="sort" id="sort">
-                    <option value="Target Name" selected>Target Name</option>
-                    <option value="Catalog Number">Catalog Number</option>
-                    <option value="Expiration Date">Expiration Date</option>
-                    <option value="Price">Price</option>
-                    {% if current_user.is_admin %}
-                    <option value="Box Name">Box Name</option>
-                    {% endif %}
-                  </select>
-                </div>
-                <button class="filterbutton"
-                  onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
-              </form>
+              </script>
+              <!-- FILTERING -->
+              <div class="columndiv">
+                <form method="POST" action="/antibodies">
+                  <div class="leftdiv">
+                    <label class="formlabel">Company</label>
+                    <input class="tableinput" type="text" name="company_name" id="company_name"
+                      placeholder="Company Name">
+                  </div>
+                  <div class="leftdiv">
+                    <label class="formlabel">Target</label>
+                    <input class="tableinput" type="text" name="target_name" id="target_name"
+                      placeholder="Target Name">
+                  </div>
+                  <div class="leftdiv">
+                    <label class="formlabel">Target Species</label>
+                    <input class="tableinput" type="text" name="target_species" id="target_species"
+                      placeholder="Species Name">
+                  </div>
+                  <div class="leftdiv">
+                    <label class="formlabel">Sort by</label>
+                    <select class="tableselect" name="sort" id="sort">
+                      <option value="Target Name" selected>Target Name</option>
+                      <option value="Catalog Number">Catalog Number</option>
+                      <option value="Expiration Date">Expiration Date</option>
+                      <option value="Price">Price</option>
+                      {% if current_user.is_admin %}
+                      <option value="Box Name">Box Name</option>
+                      {% endif %}
+                    </select>
+                  </div>
+                  <button class="filterbutton"
+                    onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
         <br>
         <br>
         <div class="paddingdiv">
+          {% if current_user.is_admin %}
           <!-- Display the number of rows -->
           <p>Number of Antibodies: {{ num_rows }}</p>
+          {% endif %}
         </div>
         <div class="noback_centerdiv">
         <div class="div-border-min">

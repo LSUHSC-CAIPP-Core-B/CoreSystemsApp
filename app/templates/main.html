@@ -106,7 +106,7 @@
             <tr id="{{row}}">
               {% for col in range(1, len(list(data[row].values()))) %} <!-- For each col in specified row-->
               <td>
-                {% if col == 1 %} <!-- If first column (Project ID) -->
+                {% if col == 1 %} <!-- If first column (Project ID) --> 
                 {% if current_user.is_authenticated %}
                 <div class="rowdiv">
                   <div class="columndiv"

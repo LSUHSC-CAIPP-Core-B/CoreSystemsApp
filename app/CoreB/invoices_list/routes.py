@@ -48,6 +48,8 @@ def invoice():
         sample_num = request.form.get('sample_num')
         # check what services are selected and put them into array
         #services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
+        if service_type == "BioRender license":
+            services_str = service_type
         services_to_find_data = services_reader.getRawDataCSV(dict=True)
         services_data = list_services(services_str, services_to_find_data)
 

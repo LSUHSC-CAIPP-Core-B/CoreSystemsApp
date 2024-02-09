@@ -85,12 +85,12 @@
             <thead>
               <tr>
                 {% for header in data[0].keys() %}
-                {% if current_user.is_admin %}
+                {% if current_user.is_admin and header != "Stock_ID"%}
                 <th>
                   <h4>{{ header }}</h4>
                 </th>
                 {% else %}
-                {% if header not in ("Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
+                {% if header not in ("Stock_ID", "Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
                 <th>
                   <h4>{{ header }}</h4>
                 </th>
@@ -101,37 +101,37 @@
             </thead>
             <tbody>
               {% for row in range(0, len(data)) %}
-              <tr id="{{row}}">
-                {% for col in range(0, len(list(data[row].values()))) %}
-                {% if current_user.is_admin %}
-                {% if list(data[row].keys())[col] == "Box Name" %}
-                <td>
-                  {{ list(data[row].values())[col] }}
-                  {% if col == 0 %}
-                  <form method="POST" action="/deleteAntibody">
-                    <button class="deletebutton">X</button>
-                  </form>
-                  <form method="GET" action="/changeAntibody">
-                    <button class="filterbutton">Change Info</button>
-                  </form>
-                  {% endif %}
-                </td>
-                {% endif %}
-                {% endif %}
-                {% if not current_user.is_admin %}
-                {% if list(data[row].keys())[col] not in ("Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
-                <td>
-                  {{ list(data[row].values())[col] }}
-                </td>
-                {% endif %}
-                {% elif list(data[row].keys())[col] != "Box Name" %}
-                <td>
-                  {{ list(data[row].values())[col] }}
-                </td>
-                {% endif %}
-                {% endfor %}
-                {% endfor %}
-              </tr>
+                <tr id="{{row}}">
+                  {% for col in range(0, len(list(data[row].values()))) %}
+                    {% if current_user.is_admin %}
+                      {% if list(data[row].keys())[col] == "Box Name" %}
+                      <td>
+                        {{ list(data[row].values())[col] }}
+                        {% if col == 0 %}
+                        <form method="POST" action="/deleteAntibody">
+                          <button class="deletebutton">X</button>
+                        </form>
+                        <form method="GET" action="/changeAntibody">
+                          <button class="filterbutton">Change Info</button>
+                        </form>
+                        {% endif %}
+                      </td>
+                      {% endif %}
+                    {% endif %}
+                    {% if not current_user.is_admin %}
+                    {% if list(data[row].keys())[col] not in ("Stock_ID", "Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
+                    <td>
+                      {{ list(data[row].values())[col] }}
+                    </td>
+                    {% endif %}
+                    {% elif list(data[row].keys())[col] not in ("Stock_ID", "Box Name") %}
+                    <td>
+                      {{ list(data[row].values())[col] }}
+                    </td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>

@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, make_response
+from flask import render_template, request, redirect, url_for, flash, make_response, jsonify
 from flask_paginate import Pagination, get_page_args
 from jinja2 import UndefinedError
 from app.CoreC.stock import bp
@@ -100,7 +100,7 @@ def antibodies_route():
     except UndefinedError:
         print("jinja2.exceptions.UndefinedError: list object has no element 0")
         
-        dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y'), Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 0;", 'antibodies')
+        dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 0;", 'antibodies')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
         # use to prevent user from caching pages
@@ -167,12 +167,34 @@ def addAntibody():
 @bp.route('/deleteAntibody', methods=['POST'])
 @login_required(role=["admin"])
 def deleteAntibody():
-    # use to prevent user from caching pages
-    response = make_response(redirect(url_for('stock.antibodies_route')))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-    response.headers["Expires"] = "0" # Proxies.
-    return response
+    primary_key = request.form['primaryKey']
+    print(primary_key)
+
+    try:
+        mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        cursor = mydb.cursor()
+
+        # SQL DELETE query
+        query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
+
+        #Execute SQL query
+        cursor.execute(query, (primary_key,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    except Exception as e:
+        print("Something went wrong: {}".format(e))
+        return jsonify({'error': 'Failed to delete row.'}), 500
 
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])

@@ -107,13 +107,15 @@
                       {% if list(data[row].keys())[col] == "Box Name" %}
                       <td>
                         {{ list(data[row].values())[col] }}
-                        {% if col == 0 %}
-                        <form method="POST" action="/deleteAntibody">
-                          <button class="deletebutton">X</button>
-                        </form>
-                        <form method="GET" action="/changeAntibody">
-                          <button class="filterbutton">Change Info</button>
-                        </form>
+                        {% if col == 1 %}
+                          <form method="POST" action="/deleteAntibody">
+                            <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                            <button class="deletebutton">X</button>
+                          </form>
+                          <form method="GET" action="/changeAntibody">
+                            <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                            <button class="filterbutton">Change Info</button>
+                          </form>
                         {% endif %}
                       </td>
                       {% endif %}

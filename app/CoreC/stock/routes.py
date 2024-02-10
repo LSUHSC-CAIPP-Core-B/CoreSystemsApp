@@ -114,6 +114,7 @@ def antibodies_route():
 @login_required(role=["admin"])
 def addAntibody():
     if request.method == 'POST':
+        print("test")
         box_name = request.form.get('Box')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
@@ -122,16 +123,60 @@ def addAntibody():
         fluorophore = request.form.get('Fluorophore')
         clone = request.form.get('Clone')
         isotype = request.form.get('Isotype')
-        size = request.form.get('Clone')
+        size = request.form.get('Size')
         concentration = request.form.get('Concentration')
         expiration_date = request.form.get('Expiration Date')
         titration = request.form.get('Titration')
+        cost = request.form.get('Cost')
         included = request.form.get('Included')
+
         print(catalog_num)
 
         if catalog_num == "":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.antibodies_route'))
+            return redirect(url_for('stock.addAntibody'))
+
+        try:
+            mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+            cursor = mydb.cursor()
+
+            params = {'BoxParam': box_name,
+                      'CompanyParam': company_name, 
+                      'catalogNumParam': catalog_num , 
+                      'TargetParam': target_name, 
+                      'TargetSpeciesParam': target_species, 
+                      'flourParam': fluorophore, 
+                      'cloneParam': clone, 
+                      'isotypeParam': isotype, 
+                      'sizeParam': size, 
+                      'concentrationParam': concentration, 
+                      'DateParam': expiration_date, 
+                      'titrationParam': titration, 
+                      'costParam': cost, 
+                      'includedParam': included}
+
+            # SQL Add query
+            query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
+
+            #Execute SQL query
+            cursor.execute(query, params)
+
+            # Commit the transaction
+            mydb.commit()
+
+            # Close the cursor and connection
+            cursor.close()
+            mydb.close()
+
+            # use to prevent user from caching pages
+            response = make_response(redirect(url_for('stock.antibodies_route')))
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+            response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+            response.headers["Expires"] = "0" # Proxies.
+            return response
+        except Exception as e:
+            print("Something went wrong: {}".format(e))
+            return jsonify({'error': 'Failed to add row.'}), 500
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('stock.antibodies_route')))
@@ -154,6 +199,7 @@ def addAntibody():
             "Concentration": "",
             "Expiration Date": "",
             "Titration": "",
+            "Cost": "",
             "Included": ""
         }
 
@@ -186,6 +232,7 @@ def deleteAntibody():
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('stock.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
@@ -208,7 +255,7 @@ def changeAntibody():
         fluorophore = request.form.get('Fluorophore')
         clone = request.form.get('Clone')
         isotype = request.form.get('Isotype')
-        size = request.form.get('Clone')
+        size = request.form.get('Size')
         concentration = request.form.get('Concentration')
         expiration_date = request.form.get('Expiration Date')
         titration = request.form.get('Titration')

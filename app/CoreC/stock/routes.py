@@ -7,6 +7,13 @@ from app import login_required
 import mysql.connector as connection
 import pandas as pd
 
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+
+import re
+from datetime import datetime
+
+
 def toDataframe(query, database_name, params=None):
     """
     Takes in query, database, and parameter and converts query to a dataframe.
@@ -29,8 +36,6 @@ def toDataframe(query, database_name, params=None):
         print(str(e))
         mydb.close()
 
-#information_reader = Reader("PI_ID - PI_ID.csv")
-    
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
@@ -130,10 +135,42 @@ def addAntibody():
         cost = request.form.get('Cost')
         included = request.form.get('Included')
 
-        print(catalog_num)
-
-        if catalog_num == "":
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num.lower() == "n/a":
             flash('Fields cannot be empty')
+            return redirect(url_for('stock.addAntibody'))
+        
+        # TODO make date validation into a function
+        # Defines the regex pattern for "YYYY-MM-DD"
+        datePattern = r"^\d{4}-\d{2}-\d{2}$"
+        
+        # Checks if the string matches the pattern
+        if re.match(datePattern, expiration_date):
+            try:
+                # Tries to convert the string to a datetime object
+                datetime.strptime(expiration_date, "%Y-%m-%d")
+                pass  # It's a valid date in the correct format
+            except ValueError:
+                # The string is in the correct format but not a valid date
+                flash('Not a valid Date')
+                return redirect(url_for('stock.addAntibody'))
+        else:
+            # The string does not match the "YYYY-MM-DD" format
+            flash('Date must be in "YYYY-MM-DD" format')
+            return redirect(url_for('stock.addAntibody'))
+
+        # * Checking to see if included is Yes or No
+        # Finds match using fuzzywuzzy library
+        YesScore = fuzz.ratio("yes", included.lower())
+        NoScore = fuzz.ratio("no", included.lower())
+        threshold = 80
+        
+        if YesScore >= threshold:
+            included = 1
+        elif NoScore >= threshold:
+            included = 0
+        else:
+            flash('Included field must be "Yes" or "No"')
             return redirect(url_for('stock.addAntibody'))
 
         try:

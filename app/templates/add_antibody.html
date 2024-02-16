@@ -24,7 +24,13 @@
                 {% for key, val in fields.items() %}
                 <div>
                     <div class="updatediv one">
+                      {% if key == "Expiration Date" %}
+                        <h4> {{ key ~ " (format: YYYY-MM-DD)" }} </h4>
+                      {% elif key == "Included" %}
+                        <h4> {{ key ~ " (Yes or No)" }} </h4>
+                      {% else %}
                         <h4> {{key}} </h4>
+                      {% endif %}
                     </div>
                     <div class="updatediv two">
 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->

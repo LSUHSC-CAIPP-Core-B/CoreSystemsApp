@@ -63,8 +63,20 @@
                 {% endif %}
               </select>
             </div>
-            <button class="filterbutton"
+            <div class="leftdiv">
+              <label class="formlabel">Panels</label>
+              <select class="tableselect" name="panelSelect" id="panelSelect">
+                <option value="All" selected>All</option>
+                <option value="panel1">Panel 1</option>
+                <option value="panel2">Panel 2</option>
+                <option value="panel3">Panel 3</option>
+                {% if current_user.is_admin %}
+                <option value="privatePanel">Private Panel</option>
+                {% endif %}
+              </select>
+              <button class="filterbutton"
               onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
+            </div>
           </form>
         </div>
       </div>

@@ -46,8 +46,9 @@ def invoice():
         service_type = request.form.get('service_type')
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
-        # check what services are selected and put them into array
+        # check what services are selected and put them into array       
         #services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
+        # if service is BioRender license then make service_str the same as service_type to work the same way as the other servies
         if service_type == "BioRender license":
             services_str = service_type
         services_to_find_data = services_reader.getRawDataCSV(dict=True)

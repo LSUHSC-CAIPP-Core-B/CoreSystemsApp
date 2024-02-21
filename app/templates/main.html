@@ -134,7 +134,9 @@
                 <div class="rowdiv">
                   <form method="POST" action="/invoice">
                     <input type="hidden" name="order_num"
-                      value="{{list(data[row].values())[col]}}" />
+                      value="{{list(data[row].values())[1]}}" />
+                    <input type="hidden" name="pi_name"
+                      value="{{list(data[row].values())[9]}}" />
                     <input type="hidden" name="bm_info"
                       value="{{list(data[row].values())[11]}}" />
                     <input type="hidden" name="service_type"

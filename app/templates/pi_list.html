@@ -67,9 +67,19 @@
             <tr id="{{row}}">
               {% for col in range(0, len(list(data[row].values()))) %}
               <td>
-
-                {{ list(data[row].values())[col] }}
-
+              {% if col == 0%}
+              {% if current_user.is_authenticated %}
+              <a
+                      href="/delete_pi?pi_id={{list(data[row].values())[1]}}"><button
+                        class="deletebutton"
+                        onclick="return confirm('Are you sure You want to delete the PI?')">X</button></a>
+                {% endif %}
+                <a
+                      href="/update_pi?pi_id={{list(data[row].values())[1]}}">{{
+                      list(data[row].values())[col]}}</a>
+                {% else %}
+                  {{ list(data[row].values())[col] }}
+                {% endif %}
                 {% endfor %}
                 {% endfor %}
               </td>

@@ -35,6 +35,7 @@ def invoice():
     if request.method == 'POST':
         # get order data to input automatically into invoice (passed to POST)
         order_num = request.form.get('order_num')
+        pi_name = request.form.get('pi_name')
         bm_info = request.form.get('bm_info')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
@@ -59,7 +60,8 @@ def invoice():
             "Account Number": acc_num,
             "Quantity" : sample_num,
             "Order Number": order_num,
-            "Manager Name": manager_name
+            "Manager Name": manager_name,
+            "PI Name": pi_name
         }
 
         # get invoice data from DB for each service or make arecord if none exists
@@ -110,6 +112,8 @@ def gen_invoice():
     if request.method == 'POST':
         # get order data to input automatically into invoice
         order_num = request.form.get("Order Number") or ""
+        pi_name = request.form.get('PI Name') or ""
+        pi_name_line = "Service for " + pi_name
         acc_num = request.form.get('Account Number') or ""
         manager_name = request.form.get('Manager Name') or ""
         services_num = request.form.get('Services Number') or 0
@@ -121,12 +125,13 @@ def gen_invoice():
             'DEBIT ACCOUNTRow1': acc_num,
             'DEPT REQUISITION Row1': order_num,
             'Date5_af_date': date,
-            'CARE OFRow1': manager_name
+            'CARE OFRow1': manager_name,
+            'DESCRIPTIONRow2': pi_name_line
         }
 
         # services details
         # initial row number values to start from
-        service_row = 3
+        service_row = 4
         item_number = 1
         # initial grand total prices
         grand_total_discount = 0.0

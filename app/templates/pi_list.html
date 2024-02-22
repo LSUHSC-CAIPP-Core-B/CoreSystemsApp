@@ -73,10 +73,10 @@
                       href="/delete_pi?pi_id={{list(data[row].values())[1]}}"><button
                         class="deletebutton"
                         onclick="return confirm('Are you sure You want to delete the PI?')">X</button></a>
-                {% endif %}
                 <a
                       href="/update_pi?pi_id={{list(data[row].values())[1]}}">{{
                       list(data[row].values())[col]}}</a>
+                {% endif %}
                 {% else %}
                   {{ list(data[row].values())[col] }}
                 {% endif %}

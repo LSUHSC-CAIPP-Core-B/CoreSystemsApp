@@ -82,8 +82,17 @@
               <tr id="{{row}}">
                 {% for col in range(0, len(list(data[row].values()))) %}
                 <td>
+                  {% if col == 0 %}
+                    <a
+                      href="/delete_invoice?project_id={{list(data[row].values())[0]}}"><button
+                        class="deletebutton"
+                        onclick="return confirm('Are you sure You want to delete this invoice?')">X</button></a>
+                    {{ list(data[row].values())[col] }}
+                  {% else %}
   
                   {{ list(data[row].values())[col] }}
+
+                  {% endif %}
   
                   {% endfor %}
                   {% endfor %}

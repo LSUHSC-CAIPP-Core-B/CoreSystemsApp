@@ -104,7 +104,11 @@ def invoice():
         else:
             percent_discount = (invoice.total_discount/total_price_sum) * 100.0
 
-        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len)
+        response = make_response(render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
@@ -287,3 +291,21 @@ def invoices_list():
     return response
 
     #return render_template("invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
+
+@bp.route('/delete_invoice', methods=['GET'])
+@login_required(["admin"])
+def delete_invoice():
+    if request.method == 'GET':
+        project_id = request.args['project_id']
+
+        invoice = Invoice.query.filter_by(project_id=project_id).all()
+        if invoice:
+            for inv in invoice:
+                db.session.delete(inv)
+            db.session.commit()
+        
+        response = make_response(redirect(url_for('invoices_list.invoices_list')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

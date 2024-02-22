@@ -173,8 +173,6 @@ def update():
         if id != None:
             data[int(id)] = row
 
-        print(data)
-
         information_reader.saveRawDataCSV(data)
 
         # use to prevent user from caching pages

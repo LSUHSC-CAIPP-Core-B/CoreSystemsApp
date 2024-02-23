@@ -73,7 +73,6 @@ def antibodies_route():
 
         
         query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
-        # query = f"SELECT Stock_ID, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
         df = toDataframe(query, 'antibodies')
@@ -89,11 +88,11 @@ def antibodies_route():
 
             threshold = 67  # Threshold for a match
 
-            for query in Uinputs:
+            for i in Uinputs:
                 matches = []
                 for index, row in SqlData.iterrows():
                     for column in columns_to_check:
-                        if fuzz.ratio(query, row[column]) > threshold:
+                        if fuzz.ratio(i, row[column]) > threshold:
                             matches.append(index)
                             break  # Stops checking other columns if a match is found for this row
             
@@ -103,13 +102,13 @@ def antibodies_route():
             filtered_df = SqlData.loc[matches]
             # Converts to a list of dictionaries
             data = filtered_df.to_dict(orient='records')
-            print(pd.DataFrame(data))
+            #print(pd.DataFrame(data))
         else:
             # renaming columns and setting data variable
             SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             # Converts to a list of dictionaries
             data = SqlData.to_dict(orient='records')
-            print(pd.DataFrame(data))
+            #print(pd.DataFrame(data))
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')

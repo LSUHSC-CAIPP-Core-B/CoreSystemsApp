@@ -35,6 +35,7 @@ def invoice():
     if request.method == 'POST':
         # get order data to input automatically into invoice (passed to POST)
         order_num = request.form.get('order_num')
+        pi_name = request.form.get('pi_name')
         bm_info = request.form.get('bm_info')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
@@ -59,7 +60,8 @@ def invoice():
             "Account Number": acc_num,
             "Quantity" : sample_num,
             "Order Number": order_num,
-            "Manager Name": manager_name
+            "Manager Name": manager_name,
+            "PI Name": pi_name
         }
 
         # get invoice data from DB for each service or make arecord if none exists
@@ -102,7 +104,11 @@ def invoice():
         else:
             percent_discount = (invoice.total_discount/total_price_sum) * 100.0
 
-        return render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len)
+        response = make_response(render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
@@ -110,6 +116,8 @@ def gen_invoice():
     if request.method == 'POST':
         # get order data to input automatically into invoice
         order_num = request.form.get("Order Number") or ""
+        pi_name = request.form.get('PI Name') or ""
+        pi_name_line = "Service for " + pi_name
         acc_num = request.form.get('Account Number') or ""
         manager_name = request.form.get('Manager Name') or ""
         services_num = request.form.get('Services Number') or 0
@@ -121,12 +129,13 @@ def gen_invoice():
             'DEBIT ACCOUNTRow1': acc_num,
             'DEPT REQUISITION Row1': order_num,
             'Date5_af_date': date,
-            'CARE OFRow1': manager_name
+            'CARE OFRow1': manager_name,
+            'DESCRIPTIONRow2': pi_name_line
         }
 
         # services details
         # initial row number values to start from
-        service_row = 3
+        service_row = 4
         item_number = 1
         # initial grand total prices
         grand_total_discount = 0.0
@@ -282,3 +291,21 @@ def invoices_list():
     return response
 
     #return render_template("invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
+
+@bp.route('/delete_invoice', methods=['GET'])
+@login_required(["admin"])
+def delete_invoice():
+    if request.method == 'GET':
+        project_id = request.args['project_id']
+
+        invoice = Invoice.query.filter_by(project_id=project_id).all()
+        if invoice:
+            for inv in invoice:
+                db.session.delete(inv)
+            db.session.commit()
+        
+        response = make_response(redirect(url_for('invoices_list.invoices_list')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

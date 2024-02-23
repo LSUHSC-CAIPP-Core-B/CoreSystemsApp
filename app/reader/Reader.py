@@ -1,5 +1,20 @@
 import pandas as pd
 
+def find(lst, key, value):
+    """
+    Find dict in list of dicts that have a specified value of specified key
+
+    lst (list(dict)): list of dicts to check in
+    key (str): key of which value to check
+    value (var): value to look for in dict in key
+
+    return: index of found dict in list or None if nothing found
+    """
+    for i, dic in enumerate(lst):
+        if dic[key] == value:
+            return i
+    return None
+
 class Reader:
     """
     Class to read/save to/delete from .csv data file

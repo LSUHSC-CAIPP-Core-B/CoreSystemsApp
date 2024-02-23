@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.orders import bp
-from app.reader import Reader
+from app.reader import Reader, find
 from app.models import Invoice
 from app import login_required
 from app import db
@@ -11,22 +11,6 @@ reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
 
 r = redis.Redis(decode_responses=True)
-
-
-def find(lst, key, value):
-    """
-    Find dict in list of dicts that have a specified value of specified key
-
-    lst (list(dict)): list of dicts to check in
-    key (str): key of which value to check
-    value (var): value to look for in dict in key
-
-    return: index of found dict in list or None if nothing found
-    """
-    for i, dic in enumerate(lst):
-        if dic[key] == value:
-            return i
-    return None
 
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])

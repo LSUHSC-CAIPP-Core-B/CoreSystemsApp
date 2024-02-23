@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.pi_list import bp
-from app.reader import Reader
+from app.reader import Reader, find
 from app import login_required
 
 information_reader = Reader("PI_ID - PI_ID.csv")
@@ -118,6 +118,63 @@ def add_pi():
 
         information_reader.saveRawDataCSV(data)
                 
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('pi_list.pilist')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+@bp.route('/delete_pi', methods=['GET'])
+@login_required(role=["admin"])
+def delete_pi():
+    if request.method == 'GET':
+        # variable to hold CSV data
+        data = information_reader.getRawDataCSV(headers=True, dict=False)
+        pi_id = request.args.get('pi_id')
+        data = data[data["PI ID"].str.contains(pi_id) == False]
+        data_dict = data.to_dict()
+        information_reader.saveRawDataCSV(data_dict)
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('pi_list.pilist')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+@bp.route('/update_pi', methods=['GET', 'POST'])
+@login_required(role=["admin", "coreB"])
+def update():
+    # HTTP GET method
+    if request.method == 'GET':
+        # variable to hold CSV data
+        data = information_reader.getRawDataCSV(headers=True, dict=True)
+
+        pi_id = request.args.get('pi_id')
+        data = [dict for dict in data if dict['PI ID'].__contains__(pi_id)]
+        update_data = data[0]
+
+        return render_template('update_pi.html', fields = update_data)
+  
+    elif request.method == 'POST':
+        pi_id = request.args.get('pi_id')
+
+        # variable to hold CSV data
+        data = information_reader.getRawDataCSV(headers=True, dict=True)
+
+        # updated row
+        row = {}
+        
+        for key, val in dict(request.form).items():
+            row[key] = val
+
+        id = find(data, "PI ID", pi_id)
+        if id != None:
+            data[int(id)] = row
+
+        information_reader.saveRawDataCSV(data)
+
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('pi_list.pilist')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

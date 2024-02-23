@@ -30,7 +30,6 @@ def orders():
         if sort != 'Request Date':
             data = sorted(data, key=lambda d: d[sort])
         else:
-            print(type(data[0]["Request Date"]))
             data = sorted(data, key=lambda d: d[sort], reverse=True)
 
     page, per_page, offset = get_page_args(page_parameter='page', 

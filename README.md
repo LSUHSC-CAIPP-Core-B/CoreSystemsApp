@@ -34,7 +34,7 @@ This part has every system that Core B uses which are:
 In progress...
 
 ### Login access
-![App flow](docs/Core App entry flow.png)
+![App flow](docs/Core_App_entry_flow.png)
 
 ## Reader
 Extension to read specific .csv data files. Orders from the CAIPP request Google form are parsed byt his module to keep the prefered format for data edition and display and to keep the .csv updatable by keeping it in the same format as it is downloaded from the Google form.  

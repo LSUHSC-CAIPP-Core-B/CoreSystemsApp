@@ -6,13 +6,19 @@ from app.reader import Reader
 from app import login_required
 import mysql.connector as connection
 import pandas as pd
-
+import json
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+import pymysql
 
 import re
 from datetime import datetime
 
+with open('app/Credentials/Antibodies.json', 'r') as file:
+    config_data = json.load(file)
+db_config = config_data.get('db_config')
+db_config
+db_config = config_data.get('db_config', {})
 
 def toDataframe(query, database_name, params=None):
     """
@@ -25,10 +31,12 @@ def toDataframe(query, database_name, params=None):
     return: dataframe from the query passed
     """
     try:
-        mydb = connection.connect(host="127.0.0.1", database=database_name, user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        mydb = pymysql.connect(**db_config)
+        result_dataFrame = pd.read_sql_query(query, mydb)
+        # mydb = connection.connect(host="127.0.0.1", database=database_name, user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
         
         # Using bind parameters to prevent SQL injection
-        result_dataFrame = pd.read_sql(query, mydb, params=params)
+        #result_dataFrame = pd.read_sql(query, mydb, params=params)
         
         mydb.close()  # close the connection
         return result_dataFrame
@@ -86,7 +94,7 @@ def antibodies_route():
         if len(Uinputs) != 0:
             columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
 
-            threshold = 67  # Threshold for a match
+            threshold = 70  # Threshold for a match
 
             for i in Uinputs:
                 matches = []
@@ -102,7 +110,12 @@ def antibodies_route():
             filtered_df = SqlData.loc[matches]
             # Converts to a list of dictionaries
             data = filtered_df.to_dict(orient='records')
-            #print(pd.DataFrame(data))
+            
+            # If no match is found
+            if not data:
+                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = N/A ORDER BY Target_Name;", 'antibodies')
+                dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+                data = dataFrame.to_dict('records')
         else:
             # renaming columns and setting data variable
             SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
@@ -185,7 +198,7 @@ def addAntibody():
             return redirect(url_for('stock.addAntibody'))
 
         try:
-            mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+            mydb = pymysql.connect(**db_config)
             cursor = mydb.cursor()
 
             params = {'BoxParam': box_name,
@@ -265,7 +278,7 @@ def deleteAntibody():
     print(primary_key)
 
     try:
-        mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        mydb = pymysql.connect(**db_config)
         cursor = mydb.cursor()
 
         # SQL DELETE query
@@ -295,6 +308,7 @@ def deleteAntibody():
 @login_required(role=["admin"])
 def changeAntibody():
     if request.method == 'POST':
+        primary_key = request.form['primaryKey']
         box_name = request.form.get('Box')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
@@ -309,13 +323,30 @@ def changeAntibody():
         titration = request.form.get('Titration')
         included = request.form.get('Included')
 
+        mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        cursor = mydb.cursor()
+
+        if box_name:
+            params = {'BoxParam': box_name, 'Pkey': primary_key}
+            query = "UPDATE antibodies SET Box_Name = %(BoxParam)s WHERE Stock_ID = %(Pkey)s"
+        
+        #Execute SQL query
+        cursor.execute(query, (params,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('stock.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-    
+
     if request.method == 'GET':
         data = {
             "Box Name": "",

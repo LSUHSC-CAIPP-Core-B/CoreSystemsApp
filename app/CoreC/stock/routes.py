@@ -14,6 +14,12 @@ import pymysql
 import re
 from datetime import datetime
 
+with open('app/Credentials/Antibodies.json', 'r') as file:
+            config_data = json.load(file)
+db_config = config_data.get('db_config')
+db_config
+db_config = config_data.get('db_config', {})
+
 def toDataframe(query, database_name, params=None):
     """
     Takes in query, database, and parameter and converts query to a dataframe.
@@ -25,13 +31,7 @@ def toDataframe(query, database_name, params=None):
     return: dataframe from the query passed
     """
     # TODO: Make more scalable and flexible
-    if database_name.lower() == "antibodies":
-        with open('app/Credentials/Antibodies.json', 'r') as file:
-            config_data = json.load(file)
-        db_config = config_data.get('db_config')
-        db_config
-        db_config = config_data.get('db_config', {})
-    elif database_name.lower() == "new_schema":
+    if database_name.lower() == "new_schema":
         with open('app/Credentials/Stock.json', 'r') as file:
             config_data = json.load(file)
         db_config = config_data.get('db_config')
@@ -331,7 +331,7 @@ def changeAntibody():
         titration = request.form.get('Titration')
         included = request.form.get('Included')
 
-        mydb = connection.connect(host="127.0.0.1", database="antibodies", user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        mydb = pymysql.connect(**db_config)
         cursor = mydb.cursor()
 
         if box_name:

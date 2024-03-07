@@ -24,7 +24,10 @@ Login system is implemented with *flask_login* with added custom roles. The role
 - Core B
 - Core C
    
-Only super admins can add and delete users and other admins to the app. It can be done in the Authentication/Admin panel module.   
+Only super admins can add and delete users and other admins to the app. It can be done in the Authentication/Admin panel module. 
+
+#### Login access
+![App flow](docs/Core_App_entry_flow.png)
    
 ### Core B
 This part has every system that Core B uses which are:   
@@ -37,9 +40,6 @@ Part for displaying PI's information. There is an option to add new PIs and edit
    
 ### Core C
 In progress...
-
-### Login access
-![App flow](docs/Core_App_entry_flow.png)
 
 ## Reader
 Extension to read specific .csv data files. Orders from the CAIPP request Google form are parsed byt his module to keep the prefered format for data edition and display and to keep the .csv updatable by keeping it in the same format as it is downloaded from the Google form.  

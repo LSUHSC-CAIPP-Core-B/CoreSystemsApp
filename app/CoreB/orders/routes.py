@@ -15,6 +15,10 @@ r = redis.Redis(decode_responses=True)
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
 def orders():
+    """
+    GET: Display list of all orders made
+    POST: Display filtered list of all orders made
+    """
     # variable to hold CSV data
     data = reader.getFormattedDataCSV()
 
@@ -57,6 +61,10 @@ def orders():
 @bp.route('/update', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreB"])
 def update():
+    """
+    GET: Display edit screen of specified order
+    POST: Update values of specified order
+    """
     # HTTP GET method
     if request.method == 'GET':
         # variable to hold CSV data
@@ -100,6 +108,9 @@ def update():
 @bp.route('/delete', methods=['GET'])
 @login_required(role=["admin", "coreB"])
 def delete():
+    """
+    GET: Delete order
+    """
     if request.method == 'GET':
         # variable to hold CSV data
         data = reader.getFormattedDataCSV()

@@ -32,6 +32,9 @@ def list_services(services_str, services_to_find):
 @bp.route('/invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
 def invoice():
+    """
+    POST: Provide data to generate invoice
+    """
     if request.method == 'POST':
         # get order data to input automatically into invoice (passed to POST)
         order_num = request.form.get('order_num')
@@ -113,6 +116,9 @@ def invoice():
 @bp.route('/gen_invoice', methods=['POST'])
 @login_required(role=["admin", "coreB"])
 def gen_invoice(): 
+    """
+    POST: Generate invoice PDF file
+    """
     if request.method == 'POST':
         # get order data to input automatically into invoice
         order_num = request.form.get("Order Number") or ""
@@ -251,6 +257,10 @@ def gen_invoice():
 @bp.route('/invoices_list', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def invoices_list():
+    """
+    GET: Display list of all invoices made
+    POST: Display filtered list of all invoices made
+    """
     # get invoice list data
     invoices = Invoice.query.all()
     data = []
@@ -295,6 +305,9 @@ def invoices_list():
 @bp.route('/delete_invoice', methods=['GET'])
 @login_required(["admin"])
 def delete_invoice():
+    """
+    GET: Delete invoice
+    """
     if request.method == 'GET':
         project_id = request.args['project_id']
 

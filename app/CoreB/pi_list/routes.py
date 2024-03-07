@@ -9,6 +9,9 @@ information_reader = Reader("PI_ID - PI_ID.csv")
 @bp.route('/information', methods=['GET'])
 @login_required(role=["admin", "coreB"])
 def information():
+    """
+    GET: Show information on PI with specified ID
+    """
     if request.method == 'GET':
         # get PI list data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
@@ -34,6 +37,10 @@ def information():
 @bp.route('/pilist', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def pilist():
+    """
+    GET: Display list of all PIs
+    POST: Dispaly filtered list of all PIs
+    """
     # get PI list data
     data = information_reader.getRawDataCSV(headers=True, dict=True)
 
@@ -70,6 +77,10 @@ def pilist():
 @bp.route('/add_pi', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def add_pi():
+    """
+    GET: Display screen to input new PI information
+    POST: Add new PI with specified information
+    """
     if request.method == 'GET':
         pi_data = {
             "PI_first_name": "",
@@ -128,6 +139,9 @@ def add_pi():
 @bp.route('/delete_pi', methods=['GET'])
 @login_required(role=["admin"])
 def delete_pi():
+    """
+    GET: Delete PI
+    """
     if request.method == 'GET':
         # variable to hold CSV data
         data = information_reader.getRawDataCSV(headers=True, dict=False)
@@ -146,6 +160,10 @@ def delete_pi():
 @bp.route('/update_pi', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreB"])
 def update():
+    """
+    GET: Display edit screen of selected PI
+    POST: Update selected PI data
+    """
     # HTTP GET method
     if request.method == 'GET':
         # variable to hold CSV data

@@ -8,30 +8,40 @@
         </head>
         <body>
             <div class="header" id="gradheader">
-                <h1 class="header_text">Change Antibody</h1>
-                <h2 class="header_text">Change Antibody information in the database</h2>
-            </div>
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            <div class="updatediv one">
-                <h3>{{ messages[0] }}</h3>
-            </div>
-            {% endif %}
-            {% endwith %}
+                <h1 class="header_text">Add new Antibody</h1>
+                <h2 class="header_text">Add new Antibody information to the database</h2>
+              </div>
+
+              {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="updatediv one">
+                    <h3>{{ messages[0] }}</h3>
+                </div>
+                {% endif %}
+                {% endwith %}
+
             <form method="POST" action="/changeAntibody">
+              <input type = "hidden" name = "primary_key" value = "{{ pkey }}">
                 {% for key, val in fields.items() %}
                 <div>
+                  {% set first_val = val.values() | first %}
                     <div class="updatediv one">
+                      {% if key == "Expiration Date" %}
+                        <h4> {{ key ~ " (format: YYYY-MM-DD)" }} </h4>
+                      {% elif key == "Included" %}
+                        <h4> {{ key ~ " (Yes or No)" }} </h4>
+                      {% else %}
                         <h4> {{key}} </h4>
+                      {% endif %}
                     </div>
                     <div class="updatediv two">
 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
-<textarea name="{{key}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' id="{{key}}">{{ val }}</textarea>
+<textarea name="{{key}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' id="{{key}}">{{ first_val }}</textarea>
                     </div>
                 </div>
                 {% endfor %}
                 <div class="updatediv one">
-                    <button onclick="saveFilterByKey(['#PI_first_name', '#PI_last_name', '#PI_ID', '#PI_email', '#PI_departmnet'])" class="updatebutton">Add</button>
+                    <button onclick="saveFilterByKey(['#PI_first_name', '#PI_last_name', '#PI_ID', '#PI_email', '#PI_departmnet'])" class="updatebutton">Change</button>
                 </div>
             </form>
             <!--FUNCTIONS-->

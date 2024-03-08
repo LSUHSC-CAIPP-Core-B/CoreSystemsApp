@@ -31,17 +31,23 @@ def toDataframe(query, database_name, params=None):
     return: dataframe from the query passed
     """
     # TODO: Make more scalable and flexible
+    if database_name.lower() == "antibodies":
+        with open('app/Credentials/Antibodies.json', 'r') as file:
+            config_data = json.load(file)
+        db_config = config_data.get('db_config')
+        db_config
+        db_config = config_data.get('db_config', {})
     if database_name.lower() == "new_schema":
         with open('app/Credentials/Stock.json', 'r') as file:
             config_data = json.load(file)
         db_config = config_data.get('db_config')
         db_config
+        print(db_config)
         db_config = config_data.get('db_config', {})
 
     try:
         mydb = pymysql.connect(**db_config)
-        result_dataFrame = pd.read_sql_query(query, mydb)
-        # mydb = connection.connect(host="127.0.0.1", database=database_name, user="root", passwd="FrdL#7329", use_pure=True, auth_plugin='mysql_native_password')
+        result_dataFrame = pd.read_sql_query(query, mydb, params=params)
         
         # Using bind parameters to prevent SQL injection
         #result_dataFrame = pd.read_sql(query, mydb, params=params)
@@ -119,12 +125,12 @@ def antibodies_route():
             # Converts to a list of dictionaries
             data = filtered_df.to_dict(orient='records')
             
-            # If no match is found
+            # If no match is found displays empty row
             if not data:
-                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = N/A ORDER BY Target_Name;", 'antibodies')
+                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'antibodies')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
                 data = dataFrame.to_dict('records')
-        else:
+        else: # If no search filters are used
             # renaming columns and setting data variable
             SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             # Converts to a list of dictionaries
@@ -247,13 +253,6 @@ def addAntibody():
             print("Something went wrong: {}".format(e))
             return jsonify({'error': 'Failed to add row.'}), 500
 
-        # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies_route')))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-
     if request.method == 'GET':
         data = {
             "Box Name": "",
@@ -316,8 +315,8 @@ def deleteAntibody():
 @login_required(role=["admin"])
 def changeAntibody():
     if request.method == 'POST':
-        primary_key = request.form['primaryKey']
-        box_name = request.form.get('Box')
+        primary_key = request.form['primary_key']
+        box_name = request.form.get('Box Name')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
         target_name = request.form.get('Target')
@@ -329,17 +328,71 @@ def changeAntibody():
         concentration = request.form.get('Concentration')
         expiration_date = request.form.get('Expiration Date')
         titration = request.form.get('Titration')
+        cost = request.form.get('Cost ($)')
         included = request.form.get('Included')
 
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num == "N/A":
+            flash('Fields cannot be empty')
+            return redirect(url_for('stock.addAntibody'))
+        
+        # TODO make date validation into a function
+        # Defines the regex pattern for "YYYY-MM-DD"
+        datePattern = r"^\d{4}-\d{2}-\d{2}$"
+        
+        # Checks if the string matches the pattern
+        if re.match(datePattern, expiration_date):
+            try:
+                # Tries to convert the string to a datetime object
+                datetime.strptime(expiration_date, "%Y-%m-%d")
+                pass  # It's a valid date in the correct format
+            except ValueError:
+                # The string is in the correct format but not a valid date
+                flash('Not a valid Date')
+                return redirect(url_for('stock.addAntibody'))
+        else:
+            # The string does not match the "YYYY-MM-DD" format
+            flash('Date must be in "YYYY-MM-DD" format')
+            return redirect(url_for('stock.addAntibody'))
+
+        # * Checking to see if included is Yes or No
+        # Finds match using fuzzywuzzy library
+        YesScore = fuzz.ratio("yes", included.lower())
+        NoScore = fuzz.ratio("no", included.lower())
+        threshold = 80
+        
+        if YesScore >= threshold:
+            included = 1
+        elif NoScore >= threshold:
+            included = 0
+        else:
+            flash('Included field must be "Yes" or "No"')
+            return redirect(url_for('stock.addAntibody'))
+
+    #try:
         mydb = pymysql.connect(**db_config)
         cursor = mydb.cursor()
 
-        if box_name:
-            params = {'BoxParam': box_name, 'Pkey': primary_key}
-            query = "UPDATE antibodies SET Box_Name = %(BoxParam)s WHERE Stock_ID = %(Pkey)s"
-        
+        params = {'BoxParam': box_name,
+                    'CompanyParam': company_name, 
+                    'catalogNumParam': catalog_num , 
+                    'TargetParam': target_name, 
+                    'TargetSpeciesParam': target_species, 
+                    'flourParam': fluorophore, 
+                    'cloneParam': clone, 
+                    'isotypeParam': isotype, 
+                    'sizeParam': size, 
+                    'concentrationParam': concentration, 
+                    'DateParam': expiration_date, 
+                    'titrationParam': titration, 
+                    'costParam': cost, 
+                    'includedParam': included,
+                    'Pkey': primary_key}
+
+        # SQL Change query
+        query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
         #Execute SQL query
-        cursor.execute(query, (params,))
+        cursor.execute(query, params)
 
         # Commit the transaction
         mydb.commit()
@@ -354,8 +407,20 @@ def changeAntibody():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    #except Exception as e:
+        print("Something went wrong: {}".format(e))
+        return jsonify({'error': 'Failed to change row.'}), 500
 
     if request.method == 'GET':
+        primary_key = int(request.args.get('primaryKey'))
+        print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
+        query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
+        df = toDataframe(query, 'antibodies', (primary_key,))
+        df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+        print("Dataframe: ", df)
+        data = df.to_dict()
+        
+        '''
         data = {
             "Box Name": "",
             "Company": "",
@@ -371,9 +436,9 @@ def changeAntibody():
             "Titration": "",
             "Included": ""
         }
-
+        '''
         # use to prevent user from caching pages
-        response = make_response(render_template('change_antibody.html', fields = data))
+        response = make_response(render_template('change_antibody.html', fields = data, pkey = primary_key))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

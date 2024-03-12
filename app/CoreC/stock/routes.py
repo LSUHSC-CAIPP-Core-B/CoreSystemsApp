@@ -452,6 +452,17 @@ def stock():
         product = request.form.get('Product') or ""
         sort = request.form.get('sort') or "Original"
 
+        # Stores all possible Inputs
+        AllUinputs = [company, product]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs = []
+        # Checks which input fields are being used
+        for i in AllUinputs:
+            if i:
+                Uinputs.append(i)
+        print(Uinputs)
+
         # Maps sorting options to their corresponding SQL names
         sort_orders = {
             'Product': 'Product_Name',
@@ -466,44 +477,58 @@ def stock():
         
         # Dictionary of Parameters
         params = {'CompanyParam': company, 'ProductParam': product}
-
-        if company and product:
-            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name COLLATE utf8mb4_general_ci LIKE %(CompanyParam)s AND Product_Name COLLATE utf8mb4_general_ci LIKE %(ProductParam)s ORDER BY {order_by};", 'new_schema', params)
-        elif company:
-            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name COLLATE utf8mb4_general_ci LIKE %(CompanyParam)s ORDER BY {order_by};", 'new_schema', params)
-        elif product:
-            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Product_Name COLLATE utf8mb4_general_ci LIKE %(ProductParam)s ORDER BY {order_by};", 'new_schema', params)
-        elif sort == "QuantityDescending":
-            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity DESC;", 'new_schema')
-        else: # Default if all fields are empty or sort
-            dataFrame = toDataframe(f"SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY {order_by};", 'new_schema')
         
-        # renaming columns and setting data variable
-        dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        data = dataFrame.to_dict('records')
+        query = "SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name != '0' ORDER BY Quantity;"
+        df = toDataframe(query, 'new_schema')
+        SqlData = df
+        
+        # TODO fix sorting
+        # * Fuzzy Search *
+        # Checks whether filters are being used
+        # If filters are used then implements fuzzy matching
+        if len(Uinputs) != 0:
+            columns_to_check = ["Company_Name", "Product_Name"]
+
+            threshold = 45  # Threshold for a match
+
+            for i in Uinputs:
+                matches = []
+                for index, row in SqlData.iterrows():
+                    for column in columns_to_check:
+                        if fuzz.ratio(i, row[column]) > threshold:
+                            matches.append(index)
+                            break  # Stops checking other columns if a match is found for this row
+            
+            # renaming columns and setting data variable
+            df.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+            # Gets the filtered dataframe
+            filtered_df = SqlData.loc[matches]
+            # Converts to a list of dictionaries
+            data = filtered_df.to_dict(orient='records')
+            
+            # If no match is found displays empty row
+            if not data:
+                dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name = '0' ORDER BY Quantity;", 'new_schema')
+                dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+                data = dataFrame.to_dict('records')
+        else: # If no search filters are used
+            # renaming columns and setting data variable
+            SqlData.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+            # Converts to a list of dictionaries
+            data = SqlData.to_dict(orient='records')
+            #print(pd.DataFrame(data))
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity;", 'new_schema')
         dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        data = dataFrame.to_dict('records')
-        #number of rows in table
-        num_rows = len(data)
-    try:
-        # use to prevent user from caching pages
-        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str, num_rows=num_rows))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-    except UndefinedError:
-        print("jinja2.exceptions.UndefinedError: list object has no element 0")
-        
-        dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity;", 'new_schema')
-        dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        data = dataFrame.to_dict('records')
-        # use to prevent user from caching pages
-        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
+        data = dataFrame.to_dict('records') 
+    
+    #number of rows in table
+    num_rows = len(data)
+
+    # use to prevent user from caching pages
+    response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str, num_rows=num_rows))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response

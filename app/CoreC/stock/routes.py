@@ -532,3 +532,77 @@ def stock():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+@bp.route('/addSupply', methods=['GET', 'POST'])
+@login_required(role=["admin"])
+def addSupply():
+    if request.method == 'POST':
+        print("test")
+        Company_Name = request.form.get('Company Name')
+        catalog_num = request.form.get('Catalog Number')
+        cost = request.form.get('Cost')
+        Product_Name = request.form.get('Product Name')
+        Quantity = request.form.get('Quantity')
+
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num.lower() == "n/a":
+            flash('Fields cannot be empty')
+            return redirect(url_for('stock.addSupply'))
+
+        try:
+            with open('app/Credentials/Stock.json', 'r') as file:
+                config_data = json.load(file)
+            db_config = config_data.get('db_config')
+            
+            print(db_config)
+
+            db_config = config_data.get('db_config', {})
+            mydb = pymysql.connect(**db_config)
+            cursor = mydb.cursor()
+
+            params = {'CompanyParam': Company_Name, 
+                      'catalogNumParam': catalog_num , 
+                      'costParam': cost,
+                      'ProductParam': Product_Name
+                      }
+            
+            # SQL Add query
+            query = "INSERT INTO Order_Info VALUES (null, %(CompanyParam)s, %(catalogNumParam)s, %(costParam)s, %(ProductParam)s);"
+            query2 = "INSERT INTO Stock_Info VALUES (LAST_INSERT_ID(), %s);"
+
+            #Execute SQL query
+            cursor.execute(query, params)
+            cursor.execute(query2, (Quantity,))
+
+            # Commit the transaction
+            mydb.commit()
+
+            # Close the cursor and connection
+            cursor.close()
+            mydb.close()
+
+            # use to prevent user from caching pages
+            response = make_response(redirect(url_for('stock.add_supply.html')))
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+            response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+            response.headers["Expires"] = "0" # Proxies.
+            return response
+        except Exception as e:
+            print("Something went wrong: {}".format(e))
+            return jsonify({'error': 'Failed to add row.'}), 500
+
+    if request.method == 'GET':
+        data = {
+            "Company Name": "",
+            "Catalog Number": "",
+            "Cost": "",
+            "Product Name": "",
+            "Quantity": "",
+        }
+
+        # use to prevent user from caching pages
+        response = make_response(render_template('add_supply.html', fields = data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

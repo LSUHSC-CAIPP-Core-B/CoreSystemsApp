@@ -16,17 +16,10 @@
         <div class="paddingdiv">
           <div class="rowdiv">
             <div class="columndiv">
-              <button id="addsuppliesButton" class="filterbutton" style="width: 175px;"> Add Supplies </button>
+              <form method="GET" action="/addSupply">
+                <button id="addsuppliesButton" class="filterbutton" style="width: 175px;"> Add Supplies </button>
+              </form>
             </div>
-            <script>
-              $(document).ready(function() {
-                // click event to the button
-                $('#addsuppliesButton').click(function() {
-                    // Redirect to a new webpage
-                    window.location.href = '/addsupplies';
-                });
-              });
-            </script>
             <!-- FILTERING -->
             <div class="columndiv">
               <form method="POST" action="/stock">

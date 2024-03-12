@@ -334,7 +334,7 @@ def changeAntibody():
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num == "N/A":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('stock.changeAntibody'))
         
         # TODO make date validation into a function
         # Defines the regex pattern for "YYYY-MM-DD"
@@ -420,23 +420,6 @@ def changeAntibody():
         print("Dataframe: ", df)
         data = df.to_dict()
         
-        '''
-        data = {
-            "Box Name": "",
-            "Company": "",
-            "Catalog Number": "",
-            "Target": "",
-            "Target Species": "",
-            "Fluorophore": "",
-            "Clone": "",
-            "Isotype": "",
-            "Size": "",
-            "Concentration": "",
-            "Expiration Date": "",
-            "Titration": "",
-            "Included": ""
-        }
-        '''
         # use to prevent user from caching pages
         response = make_response(render_template('change_antibody.html', fields = data, pkey = primary_key))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
@@ -478,7 +461,7 @@ def stock():
         # Dictionary of Parameters
         params = {'CompanyParam': company, 'ProductParam': product}
         
-        query = "SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name != '0' ORDER BY Quantity;"
+        query = "SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;"
         df = toDataframe(query, 'new_schema')
         SqlData = df
         
@@ -508,7 +491,7 @@ def stock():
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE Company_Name = '0' ORDER BY Quantity;", 'new_schema')
+                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'new_schema')
                 dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -519,7 +502,7 @@ def stock():
             #print(pd.DataFrame(data))
 
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity;", 'new_schema')
+        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'new_schema')
         dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = dataFrame.to_dict('records') 
     
@@ -606,3 +589,119 @@ def addSupply():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/changeSupply', methods=['GET', 'POST'])
+@login_required(role=["admin"])
+def changeSupply():
+    if request.method == 'POST':
+        primary_key = request.form['primary_key']
+        Company_Name = request.form.get('Company Name')
+        catalog_num = request.form.get('Catalog Number')
+        cost = request.form.get('Cost')
+        Product_Name = request.form.get('Product Name')
+        Quantity = request.form.get('Quantity')
+
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num == "N/A":
+            flash('Fields cannot be empty')
+            return redirect(url_for('stock.changeSupply'))
+
+        with open('app/Credentials/Stock.json', 'r') as file:
+                config_data = json.load(file)
+        db_config = config_data.get('db_config')
+            
+        print(db_config)
+
+        db_config = config_data.get('db_config', {})
+        
+        mydb = pymysql.connect(**db_config)
+        cursor = mydb.cursor()
+
+        params = {'CompanyParam': Company_Name, 
+                      'catalogNumParam': catalog_num , 
+                      'costParam': cost,
+                      'ProductParam': Product_Name,
+                      'Pkey': primary_key
+                      }
+
+        # SQL Change query
+        query = "UPDATE Order_Info SET Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Unit_Price = %(costParam)s, Product_Name = %(ProductParam)s WHERE Order_Info.Product_Num = %(Pkey)s;"
+        query2 = "UPDATE Stock_Info SET Quantity = %s"
+        print("testing query execution")
+        #Execute SQL query
+        cursor.execute(query, params)
+        cursor.execute(query2, (Quantity,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('stock.stock')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
+    if request.method == 'GET':
+        primary_key = int(request.args.get('primaryKey'))
+        print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
+        query = "SELECT O.Product_Name, O.catalog_num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
+        df = toDataframe(query, 'new_schema', (primary_key,))
+        df.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        print("Dataframe: ", df)
+        data = df.to_dict()
+        
+        # use to prevent user from caching pages
+        response = make_response(render_template('change_supply.html', fields = data, pkey = primary_key))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+@bp.route('/deleteSupply', methods=['POST'])
+@login_required(role=["admin"])
+def deleteSupply():
+    primary_key = request.form['primaryKey']
+    print(primary_key)
+
+    try:
+        with open('app/Credentials/Stock.json', 'r') as file:
+                config_data = json.load(file)
+        db_config = config_data.get('db_config')
+            
+        print(db_config)
+
+        db_config = config_data.get('db_config', {})
+
+        mydb = pymysql.connect(**db_config)
+        cursor = mydb.cursor()
+
+        # SQL DELETE query
+        query = "DELETE FROM Order_Info WHERE Product_Num = %s"
+        query2 = "DELETE FROM Stock_Info WHERE Product_Num = %s"
+
+        #Execute SQL query
+        # !query2 must be executed first because of foreign key constraints
+        cursor.execute(query2, (primary_key,))
+        cursor.execute(query, (primary_key,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('stock.stock')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    except Exception as e:
+        print("Something went wrong: {}".format(e))
+        return jsonify({'error': 'Failed to delete row.'}), 500

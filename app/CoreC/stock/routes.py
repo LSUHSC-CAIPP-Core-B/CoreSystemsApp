@@ -499,10 +499,11 @@ def stock():
         dataFrame = toDataframe("SELECT o.Product_Name, o.catalog_num ,o.Company_Name, o.Unit_Price, s.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY Quantity;", 'new_schema')
         dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = dataFrame.to_dict('records')
-
+        #number of rows in table
+        num_rows = len(data)
     try:
         # use to prevent user from caching pages
-        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str))
+        response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

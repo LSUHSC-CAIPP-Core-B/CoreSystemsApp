@@ -444,19 +444,6 @@ def changeAntibody():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
-@bp.route('/panels', methods=['GET', 'POST'])
-@login_required(role=["user", "coreC"])
-def panels():
-    if request.method == 'GET':
-        dataFrame = toDataframe("SELECT * FROM panels", 'antibodies')
-        data = dataFrame.to_dict('records')
-        # use to prevent user from caching pages
-        response = make_response(render_template("panels.html", data=data, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-
 @bp.route('/stock', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def stock():

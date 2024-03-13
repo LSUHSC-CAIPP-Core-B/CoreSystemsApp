@@ -37,13 +37,6 @@ def toDataframe(query, database_name, params=None):
         db_config = config_data.get('db_config')
         db_config
         db_config = config_data.get('db_config', {})
-    if database_name.lower() == "new_schema":
-        with open('app/Credentials/Stock.json', 'r') as file:
-            config_data = json.load(file)
-        db_config = config_data.get('db_config')
-        db_config
-        print(db_config)
-        db_config = config_data.get('db_config', {})
 
     try:
         mydb = pymysql.connect(**db_config)
@@ -349,11 +342,11 @@ def changeAntibody():
             except ValueError:
                 # The string is in the correct format but not a valid date
                 flash('Not a valid Date')
-                return redirect(url_for('stock.addAntibody'))
+                return redirect(url_for('stock.changeAntibody'))
         else:
             # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('stock.changeAntibody'))
 
         # * Checking to see if included is Yes or No
         # Finds match using fuzzywuzzy library
@@ -367,7 +360,7 @@ def changeAntibody():
             included = 0
         else:
             flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('stock.changeAntibody'))
 
     #try:
         mydb = pymysql.connect(**db_config)
@@ -462,7 +455,7 @@ def stock():
         params = {'CompanyParam': company, 'ProductParam': product}
         
         query = "SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;"
-        df = toDataframe(query, 'new_schema')
+        df = toDataframe(query, 'antibodies')
         SqlData = df
         
         # TODO fix sorting
@@ -491,7 +484,7 @@ def stock():
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'new_schema')
+                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'antibodies')
                 dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -502,7 +495,7 @@ def stock():
             #print(pd.DataFrame(data))
 
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'new_schema')
+        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'antibodies')
         dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = dataFrame.to_dict('records') 
     
@@ -533,13 +526,6 @@ def addSupply():
             return redirect(url_for('stock.addSupply'))
 
         try:
-            with open('app/Credentials/Stock.json', 'r') as file:
-                config_data = json.load(file)
-            db_config = config_data.get('db_config')
-            
-            print(db_config)
-
-            db_config = config_data.get('db_config', {})
             mydb = pymysql.connect(**db_config)
             cursor = mydb.cursor()
 
@@ -605,14 +591,6 @@ def changeSupply():
         if catalog_num == "" or catalog_num == "N/A":
             flash('Fields cannot be empty')
             return redirect(url_for('stock.changeSupply'))
-
-        with open('app/Credentials/Stock.json', 'r') as file:
-                config_data = json.load(file)
-        db_config = config_data.get('db_config')
-            
-        print(db_config)
-
-        db_config = config_data.get('db_config', {})
         
         mydb = pymysql.connect(**db_config)
         cursor = mydb.cursor()
@@ -626,11 +604,10 @@ def changeSupply():
 
         # SQL Change query
         query = "UPDATE Order_Info SET Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Unit_Price = %(costParam)s, Product_Name = %(ProductParam)s WHERE Order_Info.Product_Num = %(Pkey)s;"
-        query2 = "UPDATE Stock_Info SET Quantity = %s"
-        print("testing query execution")
+        query2 = "UPDATE Stock_Info SET Quantity = %s WHERE Order_Info.Product_Num = %s;"
         #Execute SQL query
         cursor.execute(query, params)
-        cursor.execute(query2, (Quantity,))
+        cursor.execute(query2, (Quantity, primary_key))
 
         # Commit the transaction
         mydb.commit()
@@ -650,7 +627,7 @@ def changeSupply():
         primary_key = int(request.args.get('primaryKey'))
         print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT O.Product_Name, O.catalog_num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
-        df = toDataframe(query, 'new_schema', (primary_key,))
+        df = toDataframe(query, 'antibodies', (primary_key,))
         df.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         print("Dataframe: ", df)
         data = df.to_dict()

@@ -8,8 +8,7 @@
         </head>
         <body>
             <div class="header" id="gradheader">
-                <h1 class="header_text">Add new Antibody</h1>
-                <h2 class="header_text">Add new Antibody information to the database</h2>
+                <h1 class="header_text">Change Antibody Information</h1>
               </div>
 
               {% with messages = get_flashed_messages() %}
@@ -21,7 +20,7 @@
                 {% endwith %}
 
             <form method="POST" action="/changeAntibody">
-              <input type = "hidden" name = "primary_key" value = "{{ pkey }}">
+              <input type = "hidden" name = "primaryKey" value = "{{ pkey }}">
                 {% for key, val in fields.items() %}
                 <div>
                   {% set first_val = val.values() | first %}

@@ -151,7 +151,7 @@ def antibodies_route():
 def addAntibody():
     if request.method == 'POST':
         print("test")
-        box_name = request.form.get('Box')
+        box_name = request.form.get('Box Name')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
         target_name = request.form.get('Target')
@@ -308,7 +308,7 @@ def deleteAntibody():
 @login_required(role=["admin"])
 def changeAntibody():
     if request.method == 'POST':
-        primary_key = request.form['primary_key']
+        primary_key = request.form.get('primaryKey')
         box_name = request.form.get('Box Name')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
@@ -405,7 +405,8 @@ def changeAntibody():
         return jsonify({'error': 'Failed to change row.'}), 500
 
     if request.method == 'GET':
-        primary_key = int(request.args.get('primaryKey'))
+        primary_key = request.args.get('primaryKey')
+        #primary_key = int(primaryKey)
         print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
         df = toDataframe(query, 'antibodies', (primary_key,))
@@ -454,7 +455,12 @@ def stock():
         # Dictionary of Parameters
         params = {'CompanyParam': company, 'ProductParam': product}
         
-        query = "SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;"
+        # Ascending vs Descending
+        if sort == "QuantityAscending":
+            query = f"SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by};"
+        else:
+            query = f"SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by} DESC;"
+        
         df = toDataframe(query, 'antibodies')
         SqlData = df
         

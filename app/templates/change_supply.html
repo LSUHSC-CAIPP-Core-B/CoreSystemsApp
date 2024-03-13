@@ -20,7 +20,7 @@
                 {% endwith %}
 
             <form method="POST" action="/changeSupply">
-              <input type = "hidden" name = "primary_key" value = "{{ pkey }}">
+              <input type = "hidden" name = "primaryKey" value = "{{ pkey }}">
                 {% for key, val in fields.items() %}
                 <div>
                   {% set first_val = val.values() | first %}

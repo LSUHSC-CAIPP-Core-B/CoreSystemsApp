@@ -14,7 +14,8 @@ import pymysql
 import re
 from datetime import datetime
 
-with open('app/Credentials/Antibodies.json', 'r') as file:
+# Opens Json file
+with open('app/Credentials/CoreC.json', 'r') as file:
             config_data = json.load(file)
 db_config = config_data.get('db_config')
 db_config
@@ -31,21 +32,18 @@ def toDataframe(query, database_name, params=None):
     return: dataframe from the query passed
     """
     # TODO: Make more scalable and flexible
-    if database_name.lower() == "antibodies":
-        with open('app/Credentials/Antibodies.json', 'r') as file:
-            config_data = json.load(file)
-        db_config = config_data.get('db_config')
-        db_config
-        db_config = config_data.get('db_config', {})
+    with open('app/Credentials/CoreC.json', 'r') as file:
+        config_data = json.load(file)
+    db_config = config_data.get('db_config')
+    db_config
+    db_config = config_data.get('db_config', {})
 
     try:
         mydb = pymysql.connect(**db_config)
+        # Using bind parameters to prevent SQL injection
         result_dataFrame = pd.read_sql_query(query, mydb, params=params)
         
-        # Using bind parameters to prevent SQL injection
-        #result_dataFrame = pd.read_sql(query, mydb, params=params)
-        
-        mydb.close()  # close the connection
+        mydb.close()  # closes the connection
         return result_dataFrame
     except Exception as e:
         print(str(e))
@@ -401,9 +399,6 @@ def changeAntibody():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-    #except Exception as e:
-        print("Something went wrong: {}".format(e))
-        return jsonify({'error': 'Failed to change row.'}), 500
 
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')

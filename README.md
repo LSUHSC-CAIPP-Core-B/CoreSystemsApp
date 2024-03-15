@@ -3,7 +3,7 @@
 Web App to manage systems in Bioinformatics and Modeling Cores B and C.
 
 ## Setup
-Python version required: 3.9.*
+Python version required: 3.9.*   
 Create environment with:    
 `python3 -m venv <venv_name>`    
 or this for specific version of python installed:    

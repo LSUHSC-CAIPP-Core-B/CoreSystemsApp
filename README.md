@@ -10,7 +10,7 @@ or this for specific version of python installed:
 `python3.9 -m venv <venv_name>`   
 Activate the environment with:    
 `source <venv_name>/bin/activate`    
-Install requirements with 
+Install requirements with:    
 `pip install -r requirements.txt`   
 
 ### Mac OS

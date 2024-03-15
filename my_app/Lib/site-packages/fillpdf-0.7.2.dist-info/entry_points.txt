@@ -1,3 +1,0 @@
-[console_scripts]
-extractfillpdf = fillpdf.extractfillpdf:run
-insertfillpdf = fillpdf.insertfillpdf:run

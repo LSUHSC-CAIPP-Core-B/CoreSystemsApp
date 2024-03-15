@@ -1,3 +1,3 @@
 my_app/
-**/_pycache_/
+**/__pycache__/
 .hintrc

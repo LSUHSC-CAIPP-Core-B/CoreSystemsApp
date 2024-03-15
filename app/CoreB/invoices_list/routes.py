@@ -300,8 +300,6 @@ def invoices_list():
     response.headers["Expires"] = "0" # Proxies.
     return response
 
-    #return render_template("invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
-
 @bp.route('/delete_invoice', methods=['GET'])
 @login_required(["admin"])
 def delete_invoice():

@@ -3,9 +3,15 @@
 Web App to manage systems in Bioinformatics and Modeling Cores B and C.
 
 ## Setup
+Python version required: 3.9.*
+Create environment with:    
+`python3 -m venv <venv_name>`    
+or this for specific version of python installed:    
+`python3.9 -m venv <venv_name>`   
+Activate the environment with:    
+`source <venv_name>/bin/activate`    
 Install requirements with 
 `pip install -r requirements.txt`   
-Python version required: 3.9.*
 
 ### Mac OS
 `brew install redis`

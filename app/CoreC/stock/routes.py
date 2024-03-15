@@ -88,7 +88,7 @@ def antibodies_route():
         query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
-        df = toDataframe(query, 'antibodies')
+        df = toDataframe(query, 'CoreC')
 
         SqlData = df
         print(SqlData)
@@ -119,7 +119,7 @@ def antibodies_route():
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'antibodies')
+                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'CoreC')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -130,7 +130,7 @@ def antibodies_route():
             #print(pd.DataFrame(data))
 
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'antibodies')
+        dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = dataFrame.to_dict('records')
     
@@ -405,7 +405,7 @@ def changeAntibody():
         #primary_key = int(primaryKey)
         print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
-        df = toDataframe(query, 'antibodies', (primary_key,))
+        df = toDataframe(query, 'CoreC', (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         print("Dataframe: ", df)
         data = df.to_dict()
@@ -457,7 +457,7 @@ def stock():
         else:
             query = f"SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by} DESC;"
         
-        df = toDataframe(query, 'antibodies')
+        df = toDataframe(query, 'CoreC')
         SqlData = df
         
         # TODO fix sorting
@@ -486,7 +486,7 @@ def stock():
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'antibodies')
+                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'CoreC')
                 dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -497,7 +497,7 @@ def stock():
             #print(pd.DataFrame(data))
 
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'antibodies')
+        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.catalog_num , O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'CoreC')
         dataFrame.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = dataFrame.to_dict('records') 
     
@@ -629,7 +629,7 @@ def changeSupply():
         primary_key = int(request.args.get('primaryKey'))
         print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT O.Product_Name, O.catalog_num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  stock_info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
-        df = toDataframe(query, 'antibodies', (primary_key,))
+        df = toDataframe(query, 'CoreC', (primary_key,))
         df.rename(columns={'Product_Name': 'Product', 'catalog_num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         print("Dataframe: ", df)
         data = df.to_dict()

@@ -31,10 +31,16 @@ def orders():
         data = [dict for dict in data if dict['Service Type'].__contains__(service_type)]
         data = [dict for dict in data if dict['PI Name'].lower().__contains__(pi_name.lower())]
         # sort dict
-        if sort != 'Request Date':
-            data = sorted(data, key=lambda d: d[sort])
-        else:
-            data = sorted(data, key=lambda d: d[sort], reverse=True)
+        if sort != "Original":
+            if sort == 'Request Date':
+                data = sorted(data, key=lambda d: d[sort], reverse=True)
+            else:
+                data = sorted(data, key=lambda d: d[sort])
+
+    # to always sort by newest date
+    if request.method == "GET":
+        sort = "Request Date"
+        data = sorted(data, key=lambda d: d[sort], reverse=True)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
@@ -53,7 +59,6 @@ def orders():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-        #return render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
     elif request.method == 'POST':
         return render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)

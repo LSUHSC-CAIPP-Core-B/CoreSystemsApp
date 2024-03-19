@@ -31,8 +31,6 @@ def information():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-    
-        #return render_template('information.html', data=pi_data, order_num=order_num, list=list, len=len, str=str)
 
 @bp.route('/pilist', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -56,8 +54,6 @@ def pilist():
         if sort != 'Original':
             data = sorted(data, key=lambda d: d[sort])
 
-        # TODO error while data empty, show diff screen
-
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
     total = len(data)
@@ -71,8 +67,6 @@ def pilist():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
-
-    #return render_template('pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
 @bp.route('/add_pi', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -99,7 +93,7 @@ def add_pi():
     elif request.method == 'POST':
         first_name = request.form.get('PI_first_name')
         last_name = request.form.get('PI_last_name')
-        pi_id = request.form.get('PI_ID')
+        pi_id = request.form.get('PI_ID').strip()
         email = request.form.get('PI_email')
         department = request.form.get('PI_departmnet')
 

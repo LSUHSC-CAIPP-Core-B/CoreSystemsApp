@@ -24,7 +24,9 @@
                 <option value="RNA">RNA-Seq analysis</option>
                 <option value="DNA">DNA-Seq analysis</option>
                 <option value="Protein">Protein analysis</option>
+                <option value="Proteomics">Proteomics analysis</option>
                 <option value="Metabolite">Metabolite analysis</option>
+                <option value="BioRender">BioRender license</option>
               </select>
             </div>
             <div class="leftdiv">
@@ -36,6 +38,7 @@
               <label class="formlabel">Sort by</label>
               <select class="tableselect" name="sort" id="sort">
                 <option value="Request Date" selected>Request Date</option>
+                <option value>Not sorted</option>
                 <option value="Project ID">Project ID</option>
                 <option value="Reponsible Person">Reponsible Person</option>
                 <option value="PI Name">PI Name</option>
@@ -159,6 +162,11 @@
                     <input type="hidden" name="services"
                       value="{{list(data[row].values())[17]}}" />
                     {% else %}
+                    {% if list(data[row].values())[14] == "BioRender license" %} <!-- Check for apropriate service details -->
+                    <input type="hidden" name="services"
+                      value="{{list(data[row].values())[23]}}" />
+                    {% else %}
+                    {% endif %}
                     {% endif %}
                     {% endif %}
                     {% endif %}

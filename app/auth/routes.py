@@ -55,8 +55,6 @@ def signup():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-
-        #return render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination)
     
     elif request.method == 'POST':
         email = request.form.get('email')

@@ -9,8 +9,8 @@ from app.pdfwriter import PdfWriter
 from app.reader import Reader
 
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
-services_reader = Reader("services.csv")
-services_no_price_reader = Reader("services_with_no_unit_price.csv")
+services_reader = Reader("services.csv")  # services is a file to list all available services with their prices
+services_no_price_reader = Reader("services_with_no_unit_price.csv")  # this file is to list all services that their price is not calculated based on samples
 
 def list_services(services_str, services_to_find):
     """
@@ -51,23 +51,32 @@ def invoice():
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
         # check what services are selected and put them into array       
-        #services_to_find = ["RNA-seq DEG Analysis", "Pathway Analysis", "Pathway and Pertubagen Analysis", "Variant Calling Analysis", "DNA Methylation-Seq"]
         # if service is BioRender license then make service_str the same as service_type to work the same way as the other servies
         if service_type == "BioRender license":
+            biorender_accounts = services_str
             services_str = service_type
+            # pass dict with hidden data just to pass it to the next request
+            hidden_data = {
+                "Account Number": acc_num,
+                "Quantity" : sample_num,
+                "Order Number": order_num,
+                "Manager Name": manager_name,
+                "PI Name": pi_name,
+                "BioRender Accounts": biorender_accounts
+            }
+        else:
+            # pass dict with hidden data just to pass it to the next request
+            hidden_data = {
+                "Account Number": acc_num,
+                "Quantity" : sample_num,
+                "Order Number": order_num,
+                "Manager Name": manager_name,
+                "PI Name": pi_name
+            }
         services_to_find_data = services_reader.getRawDataCSV(dict=True)
         services_data = list_services(services_str, services_to_find_data)
 
-        # pass dict with hidden data just to pass it to the next request
-        hidden_data = {
-            "Account Number": acc_num,
-            "Quantity" : sample_num,
-            "Order Number": order_num,
-            "Manager Name": manager_name,
-            "PI Name": pi_name
-        }
-
-        # get invoice data from DB for each service or make arecord if none exists
+        # get invoice data from DB for each service or make a record if none exists
         invoices = []
         total_price_sum = 0.0
         for service_data in services_data:
@@ -127,6 +136,7 @@ def gen_invoice():
         acc_num = request.form.get('Account Number') or ""
         manager_name = request.form.get('Manager Name') or ""
         services_num = request.form.get('Services Number') or 0
+        biorender_accounts = request.form.get('BioRender Accounts') or ""
 
         # based on order data prepare inputs
         date = datetime.now().strftime('%m/%d/%Y')
@@ -172,7 +182,7 @@ def gen_invoice():
             # Discount details keys
             item_discount_key = "ITEM Row" + str(service_row + 1)
             qty_discount_key = "QTYRow" + str(service_row + 1)
-            unit_discount_key = "UNITRow" + str(service_row + 1)
+            unit_discount_key = "UNITRow" + str(service_row + 1) 
             service_discount_reason_key = "DESCRIPTIONRow" + str(service_row + 1)
             service_discount_amount_key = "UNIT COSTRow" + str(service_row + 1)
             service_discount_total_key = "TOTALRow" + str(service_row + 1)
@@ -251,6 +261,18 @@ def gen_invoice():
         service_grand_total_key = "TOTALGRAND TOTAL"
         dict_data[service_grand_total_key] = "$ " + str(grand_total - grand_total_discount)
 
+        # list BioRender accounts
+        if biorender_accounts:
+            biorender_title_row = 6
+            biorender_row = 7
+            item_key = "DESCRIPTIONRow" + str(biorender_title_row)
+            dict_data[item_key] = "License for"
+            biorender_accounts_list = biorender_accounts.split(",")
+            for biorender_account in biorender_accounts_list:
+                item_key = "DESCRIPTIONRow" + str(biorender_row)
+                dict_data[item_key] = str(biorender_account)
+                biorender_row += 1
+
         pdfWriter.fillForm(dict_data)
         return send_from_directory('static', "filled-out-v2.pdf")
 
@@ -283,8 +305,6 @@ def invoices_list():
         # sort dict
         if sort != 'Original':
             data = sorted(data, key=lambda d: d[sort])
-
-        # TODO error while data empty, show diff screen
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')

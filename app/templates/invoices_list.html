@@ -2,7 +2,7 @@
 
 {% block content %}
 <html>
-  <body onload="loadFilterByKey(['#service_type', '#sort'])">
+  <body onload="loadFilterByKey(['#sort'])">
     <!--FUNCTIONS-->
     <script>
         function saveFilterByKey(keys) {
@@ -35,24 +35,17 @@
           <div class="columndiv">
             <form method="POST" action="/invoices_list">
               <div class="leftdiv">
-                <label class="formlabel">Service type</label>
-                <input class="tableinput" type="text" name="service_type" id="service_type"
-                  placeholder="Service type"
-                  autofocus>
-              </div>
-              <div class="leftdiv">
                 <label class="formlabel">Sort by</label>
                 <select class="tableselect" name="sort" id="sort">
                   <option value="Original">Original order</option>
                   <option value="Project ID">Project ID</option>
-                  <option value="Service type">Service type</option>
                   <option value="Total price">Total price</option>
                   <option value="Total discount">Total discount</option>
                 </select>
               </div>
               <div class="leftdiv">
                 <button class="filterbutton"
-                  onclick="saveFilterByKey(['#service_type', '#sort'])">Filter</button>
+                  onclick="saveFilterByKey(['#sort'])">Filter</button>
               </div>
             </form>
           </div>
@@ -87,7 +80,9 @@
                       href="/delete_invoice?project_id={{list(data[row].values())[0]}}"><button
                         class="deletebutton"
                         onclick="return confirm('Are you sure You want to delete this invoice?')">X</button></a>
-                    {{ list(data[row].values())[col] }}
+                        <a
+                        href="/invoice_details?project_id={{list(data[row].values())[0]}}">{{
+                        list(data[row].values())[col]}}</a>
                   {% else %}
   
                   {{ list(data[row].values())[col] }}

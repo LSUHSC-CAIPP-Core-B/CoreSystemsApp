@@ -277,7 +277,7 @@ def gen_invoice():
         return send_from_directory('static', "filled-out-v2.pdf")
 
 @bp.route('/invoices_list', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["coreB", "admin"])
 def invoices_list():
     """
     GET: Display list of all invoices made
@@ -285,26 +285,41 @@ def invoices_list():
     """
     # get invoice list data
     invoices = Invoice.query.all()
+
     data = []
+    project_ids = []
+    total_prices = []
+    total_discounts = []
 
     for invoice in invoices:
+        invoice_project_id = invoice.project_id
+        if invoice_project_id not in project_ids:
+            project_ids.append(invoice_project_id)
+            total_prices.append(invoice.total_price)
+            total_discounts.append(invoice.total_discount)
+        else:
+            total_prices[project_ids.index(invoice_project_id)] += invoice.total_price
+            total_discounts[project_ids.index(invoice_project_id)] += invoice.total_discount
+
+    
+    print(project_ids)
+        
+
+    for p_id in range(0, len(project_ids)):
         invoice_dict = {}
-        invoice_dict["Project ID"] = invoice.project_id
-        invoice_dict["Service type"] = invoice.service_type
-        invoice_dict["Total price"] = invoice.total_price
-        invoice_dict["Total discount"] = invoice.total_discount
-        invoice_dict["Final price"] = float(invoice.total_price) - float(invoice.total_discount)
+        invoice_dict["Project ID"] = project_ids[p_id]
+        invoice_dict["Total price"] = total_prices[p_id]
+        invoice_dict["Total discount"] = total_discounts[p_id]
         data.append(invoice_dict)
 
     if request.method == 'POST':
-        # search vars
-        service_type = request.form.get('service_type') or ""
-        # filter dict
-        data = [dict for dict in data if dict['Service type'].lower().__contains__(service_type.lower())]
         sort = request.form.get('sort') or "Original"
         # sort dict
         if sort != 'Original':
-            data = sorted(data, key=lambda d: d[sort])
+            if sort != 'Project ID':
+                data = sorted(data, key=lambda d: d[sort], reverse=True)
+            else:
+                data = sorted(data, key=lambda d: d[sort])
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -320,8 +335,38 @@ def invoices_list():
     response.headers["Expires"] = "0" # Proxies.
     return response
 
+@bp.route('/invoice_details', methods=['GET'])
+@login_required(["coreB", "admin"])
+def invoice_details():
+    """
+    GET: Delete invoice
+    """
+    if request.method == 'GET':
+        project_id = request.args['project_id']
+
+        invoice_details = []
+
+        invoice = Invoice.query.filter_by(project_id=project_id).all()
+        if invoice:
+            for inv in invoice:
+                invoice_detail_dict = {
+                    'Service': inv.service_type,
+                    'Total price': inv.total_price,
+                    'Total discount': inv.total_discount
+                }
+                invoice_details.append(invoice_detail_dict)
+
+
+        # use to prevent user from caching pages
+        response = make_response(render_template('invoice_details.html', data=invoice_details, project_id=project_id, list=list, len=len, str=str))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
+
 @bp.route('/delete_invoice', methods=['GET'])
-@login_required(["admin"])
+@login_required(["coreB", "admin"])
 def delete_invoice():
     """
     GET: Delete invoice

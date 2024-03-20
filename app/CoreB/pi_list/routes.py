@@ -33,7 +33,7 @@ def information():
         return response
 
 @bp.route('/pilist', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreB"])
 def pilist():
     """
     GET: Display list of all PIs
@@ -69,7 +69,7 @@ def pilist():
     return response
 
 @bp.route('/add_pi', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreB"])
 def add_pi():
     """
     GET: Display screen to input new PI information
@@ -131,7 +131,7 @@ def add_pi():
         return response
     
 @bp.route('/delete_pi', methods=['GET'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreB"])
 def delete_pi():
     """
     GET: Delete PI
@@ -167,7 +167,19 @@ def update():
         data = [dict for dict in data if dict['PI ID'].__contains__(pi_id)]
         update_data = data[0]
 
-        return render_template('update_pi.html', fields = update_data)
+        pi_full_name = update_data["PI full name"].split("_")
+        pi_first_name = pi_full_name[0]
+        pi_last_name = pi_full_name[1]
+
+        update_data_new = {
+            'PI first name': pi_first_name,
+            'PI last name': pi_last_name,
+            'PI ID': update_data['PI ID'],
+            'email': update_data['email'],
+            'Department': update_data['Department']
+        }
+
+        return render_template('update_pi.html', fields = update_data_new)
   
     elif request.method == 'POST':
         pi_id = request.args.get('pi_id')
@@ -177,9 +189,18 @@ def update():
 
         # updated row
         row = {}
+        pi_full_name = ""
         
         for key, val in dict(request.form).items():
-            row[key] = val
+            if key != 'PI first name':
+                if key == 'PI last name':
+                    pi_full_name += "_" + val
+                    row['PI full name'] = pi_full_name
+                else:
+                    row[key] = val
+            else:
+                pi_full_name += val
+
 
         id = find(data, "PI ID", pi_id)
         if id != None:

@@ -105,6 +105,7 @@ def add_pi():
         # get csv data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
 
+        # check if PI ID already exists
         for d in data:
             if pi_id == d["PI ID"]:
                 flash('PI with this ID already exists, please pick a new one.')
@@ -163,8 +164,8 @@ def update():
         # variable to hold CSV data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
 
-        pi_id = request.args.get('pi_id')
-        data = [dict for dict in data if dict['PI ID'].__contains__(pi_id)]
+        pi_id_old = request.args.get('pi_id_old')
+        data = [dict for dict in data if dict['PI ID'].__contains__(pi_id_old)]
         update_data = data[0]
 
         pi_full_name = update_data["PI full name"].split("_")
@@ -179,10 +180,10 @@ def update():
             'Department': update_data['Department']
         }
 
-        return render_template('update_pi.html', fields = update_data_new)
+        return render_template('update_pi.html', fields = update_data_new, pi_id_old = pi_id_old)
   
     elif request.method == 'POST':
-        pi_id = request.args.get('pi_id')
+        pi_id_old = request.args.get('pi_id_old')
 
         # variable to hold CSV data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
@@ -191,18 +192,32 @@ def update():
         row = {}
         pi_full_name = ""
         
+        # join PI first and last name to match database format and check if PI ID already exists in DB
         for key, val in dict(request.form).items():
+            # fields cannot be empty
+            if val.strip() == "":
+                flash('Fields cannot be empty')
+                return redirect(url_for('pi_list.update', pi_id_old = pi_id_old))
+            
             if key != 'PI first name':
                 if key == 'PI last name':
                     pi_full_name += "_" + val
                     row['PI full name'] = pi_full_name
-                else:
+                elif key == "PI ID":
+                    # check if PI ID already exists
+                    for d in data:
+                        if val == d["PI ID"] and val != pi_id_old:
+                            flash('PI with this ID already exists, please pick a new one.')
+                            return redirect(url_for('pi_list.update', pi_id_old = pi_id_old))
+
                     row[key] = val
+                else:
+                    row[key] = val           
             else:
                 pi_full_name += val
 
 
-        id = find(data, "PI ID", pi_id)
+        id = find(data, "PI ID", pi_id_old)
         if id != None:
             data[int(id)] = row
 

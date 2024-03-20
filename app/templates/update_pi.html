@@ -11,7 +11,16 @@
                 <h1 class="header_text">Update PI information</h1>
                 <h2 class="header_text">Approve the changes with update button</h2>
               </div>
-            <form method="POST" action="/update_pi?pi_id={{request.args.get('pi_id')}}">
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="updatediv one">
+                <h3>{{ messages[0] }}</h3>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/update_pi?pi_id_old={{pi_id_old}}">
                 {% for key, val in fields.items() %}      
                 <div>
                     <div class="updatediv one">

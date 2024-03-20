@@ -7,6 +7,7 @@ from app import db
 from datetime import datetime
 from app.pdfwriter import PdfWriter
 from app.reader import Reader
+import numpy as np
 
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
 services_reader = Reader("services.csv")  # services is a file to list all available services with their prices
@@ -301,11 +302,14 @@ def invoices_list():
             total_prices[project_ids.index(invoice_project_id)] += invoice.total_price
             total_discounts[project_ids.index(invoice_project_id)] += invoice.total_discount
 
+    final_prices = np.array(total_prices) - np.array(total_discounts)
+
     for p_id in range(0, len(project_ids)):
         invoice_dict = {}
         invoice_dict["Project ID"] = project_ids[p_id]
         invoice_dict["Total price"] = total_prices[p_id]
         invoice_dict["Total discount"] = total_discounts[p_id]
+        invoice_dict["Final price"] = final_prices[p_id]
         data.append(invoice_dict)
 
     if request.method == 'POST':

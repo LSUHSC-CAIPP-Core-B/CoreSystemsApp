@@ -301,10 +301,6 @@ def invoices_list():
             total_prices[project_ids.index(invoice_project_id)] += invoice.total_price
             total_discounts[project_ids.index(invoice_project_id)] += invoice.total_discount
 
-    
-    print(project_ids)
-        
-
     for p_id in range(0, len(project_ids)):
         invoice_dict = {}
         invoice_dict["Project ID"] = project_ids[p_id]

@@ -41,16 +41,18 @@ def invoice():
         order_num = request.form.get('order_num')
         pi_name = request.form.get('pi_name')
         bm_info = request.form.get('bm_info')
+        service_type = request.form.get('service_type')
+        services_str = request.form.get('services')
+        sample_num = request.form.get('sample_num')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
 
+        # check if bm info format is correct
         if len(bm_info_split) != 3:
             return render_template('error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
         acc_num = bm_info_split[0]
         manager_name = bm_info_split[1]
-        service_type = request.form.get('service_type')
-        services_str = request.form.get('services')
-        sample_num = request.form.get('sample_num')
+
         # check what services are selected and put them into array       
         # if service is BioRender license then make service_str the same as service_type to work the same way as the other servies
         if service_type == "BioRender license":
@@ -142,6 +144,7 @@ def gen_invoice():
         # based on order data prepare inputs
         date = datetime.now().strftime('%m/%d/%Y')
 
+        # dictionary of data to put into PDF
         dict_data = {
             'DEBIT ACCOUNTRow1': acc_num,
             'DEPT REQUISITION Row1': order_num,
@@ -151,7 +154,7 @@ def gen_invoice():
         }
 
         # services details
-        # initial row number values to start from
+        # initial row number values to start from in the invoice PDF
         service_row = 4
         item_number = 1
         # initial grand total prices
@@ -163,7 +166,7 @@ def gen_invoice():
         services_no_unit_price = [snop["Service"] for snop in services_no_unit_price_data]
         # loop all services
         for i in range(0, int(services_num)):
-            # get needed values from invoice form
+            # get needed values from invoice form, create variable names to match their names in html file
             get_name_key = "service " + str(i) + " name"
             get_qty_key = "service " + str(i) + " qty"
             get_discount_reason_key = "service " + str(i) + " discount reason"
@@ -177,6 +180,7 @@ def gen_invoice():
             service_discount_amount_detail = request.form.get(get_discount_amount_key)
             service_price_detail = request.form.get(service_price_key)
 
+            # if service is the last discount put it at the bottom of the PDF
             if service_name_detail == "All services discount":
                 service_row = 21
 
@@ -284,14 +288,16 @@ def invoices_list():
     GET: Display list of all invoices made
     POST: Display filtered list of all invoices made
     """
-    # get invoice list data
+    # get invoice list data from DB
     invoices = Invoice.query.all()
 
+    # lists to sum data into
     data = []
     project_ids = []
     total_prices = []
     total_discounts = []
 
+    # for every invoice sum values from single project together
     for invoice in invoices:
         invoice_project_id = invoice.project_id
         if invoice_project_id not in project_ids:
@@ -304,6 +310,7 @@ def invoices_list():
 
     final_prices = np.array(total_prices) - np.array(total_discounts)
 
+    # for each project ID get data into list of dicts to display
     for p_id in range(0, len(project_ids)):
         invoice_dict = {}
         invoice_dict["Project ID"] = project_ids[p_id]
@@ -346,6 +353,7 @@ def invoice_details():
 
         invoice_details = []
 
+        # get invoices with specified project id
         invoice = Invoice.query.filter_by(project_id=project_id).all()
         if invoice:
             for inv in invoice:
@@ -364,7 +372,6 @@ def invoice_details():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
-
 @bp.route('/delete_invoice', methods=['GET'])
 @login_required(["coreB", "admin"])
 def delete_invoice():
@@ -374,6 +381,7 @@ def delete_invoice():
     if request.method == 'GET':
         project_id = request.args['project_id']
 
+        # get invoices with specified project id
         invoice = Invoice.query.filter_by(project_id=project_id).all()
         if invoice:
             for inv in invoice:

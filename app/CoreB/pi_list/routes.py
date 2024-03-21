@@ -159,7 +159,6 @@ def update():
     GET: Display edit screen of selected PI
     POST: Update selected PI data
     """
-    # HTTP GET method
     if request.method == 'GET':
         # variable to hold CSV data
         data = information_reader.getRawDataCSV(headers=True, dict=True)
@@ -199,6 +198,9 @@ def update():
                 flash('Fields cannot be empty')
                 return redirect(url_for('pi_list.update', pi_id_old = pi_id_old))
             
+            # if not PI first name and not last name we just add it to the row dictionary that will replace the old data
+            # when the value is first or last name we want to add them to a variable first to join them and the nadd to the row dictionary
+            # when adding pi id we check if it already exists before we add it
             if key != 'PI first name':
                 if key == 'PI last name':
                     pi_full_name += "_" + val

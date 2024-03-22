@@ -1,36 +1,24 @@
 from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.orders import bp
-from app.reader import Reader
+from app.reader import Reader, find
 from app.models import Invoice
 from app import login_required
 from app import db
-# import redis
+import redis
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
 
-# r = redis.Redis(decode_responses=True)
-
-
-def find(lst, key, value):
-    """
-    Find dict in list of dicts that have a specified value of specified key
-
-    lst (list(dict)): list of dicts to check in
-    key (str): key of which value to check
-    value (var): value to look for in dict in key
-
-    return: index of found dict in list or None if nothing found
-    """
-    for i, dic in enumerate(lst):
-        if dic[key] == value:
-            return i
-    return None
+r = redis.Redis(decode_responses=True)
 
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
 def orders():
+    """
+    GET: Display list of all orders made
+    POST: Display filtered list of all orders made
+    """
     # variable to hold CSV data
     data = reader.getFormattedDataCSV()
 
@@ -43,10 +31,16 @@ def orders():
         data = [dict for dict in data if dict['Service Type'].__contains__(service_type)]
         data = [dict for dict in data if dict['PI Name'].lower().__contains__(pi_name.lower())]
         # sort dict
-        if sort != 'Request Date':
-            data = sorted(data, key=lambda d: d[sort])
-        else:
-            data = sorted(data, key=lambda d: d[sort], reverse=True)
+        if sort != "Original":
+            if sort == 'Request Date':
+                data = sorted(data, key=lambda d: d[sort], reverse=True)
+            else:
+                data = sorted(data, key=lambda d: d[sort])
+
+    # to always sort by newest date
+    if request.method == "GET":
+        sort = "Request Date"
+        data = sorted(data, key=lambda d: d[sort], reverse=True)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
@@ -56,8 +50,8 @@ def orders():
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     if request.method == 'GET':
-        # if r.get("download_refresh") == "True":
-        #    flash('Please refresh download script')
+        if r.get("download_refresh") == "True":
+           flash('Please refresh download script')
 
         # use to prevent user from caching pages
         response = make_response(render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
@@ -65,7 +59,6 @@ def orders():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-        #return render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
     elif request.method == 'POST':
         return render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
@@ -73,6 +66,10 @@ def orders():
 @bp.route('/update', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreB"])
 def update():
+    """
+    GET: Display edit screen of specified order
+    POST: Update values of specified order
+    """
     # HTTP GET method
     if request.method == 'GET':
         # variable to hold CSV data
@@ -116,6 +113,9 @@ def update():
 @bp.route('/delete', methods=['GET'])
 @login_required(role=["admin", "coreB"])
 def delete():
+    """
+    GET: Delete order
+    """
     if request.method == 'GET':
         # variable to hold CSV data
         data = reader.getFormattedDataCSV()

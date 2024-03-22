@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from . import db
 
 # Database models used for user credentials
+# User has a custom properties of roles to determine access level
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -54,8 +55,7 @@ class UserHasRole(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
-
-# Database models for invoices TODO join with User table to follow changes in project id
+# Invoice record is made for each service (one project has multiple services so one project will have multiple invoice records in DB)
 
 class Invoice(db.Model):
     __tablename__ = "invoices"

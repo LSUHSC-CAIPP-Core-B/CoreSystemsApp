@@ -8,6 +8,10 @@ from app import db, login_required
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    GET: Display login page
+    POST: Login user
+    """
     if request.method == 'GET':
         return render_template('login.html')
     
@@ -30,6 +34,10 @@ def login():
 @bp.route('/signup', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def signup():
+    """
+    GET: Display admin panel
+    POST: Add new user
+    """
     if request.method == 'GET':
         # get all admin users
         users = User.query.all()
@@ -47,8 +55,6 @@ def signup():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-
-        #return render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination)
     
     elif request.method == 'POST':
         email = request.form.get('email')
@@ -89,6 +95,9 @@ def signup():
 @bp.route('/deleteUser', methods=['GET'])
 @login_required(["admin"])
 def delete_user():
+    """
+    GET: Delete user
+    """
     if request.method == 'GET':
         email = request.args['email']
 
@@ -104,6 +113,9 @@ def delete_user():
 @bp.route('/logout')
 @login_required(["any"])
 def logout():
+    """
+    Delete user
+    """
     logout_user()
     # Delete rememberme cookie because logout_user does not do it for you.
     response = make_response(redirect(url_for('auth.login')))

@@ -81,7 +81,7 @@
                         {% if list(data[row].keys())[col] == "Product" %}
                         <form id="deleteForm" method="POST" action="/deleteSupply">
                           <input type="hidden" name="primaryKey" value="{{ data[row]['Product_Num'] }}" />
-                          <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this order?')">X</button>
+                          <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this?')">X</button>
                         </form>
                         <form method="GET" action="/changeSupply">
                           <input type="hidden" name="primaryKey" value="{{ data[row]['Product_Num'] }}" />

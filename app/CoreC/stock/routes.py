@@ -68,7 +68,6 @@ def antibodies_route():
         for i in AllUinputs:
             if i:
                 Uinputs.append(i)
-        print(Uinputs)
 
         # Maps sorting options to their corresponding SQL names
         sort_orders = {
@@ -91,9 +90,7 @@ def antibodies_route():
         df = toDataframe(query, 'CoreC')
 
         SqlData = df
-        print(SqlData)
         
-        # TODO fix sorting
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
@@ -127,7 +124,6 @@ def antibodies_route():
             SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             # Converts to a list of dictionaries
             data = SqlData.to_dict(orient='records')
-            #print(pd.DataFrame(data))
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
@@ -149,7 +145,6 @@ def antibodies_route():
 @login_required(role=["admin"])
 def addAntibody():
     if request.method == 'POST':
-        print("test")
         box_name = request.form.get('Box Name')
         company_name = request.form.get('Company')
         catalog_num = request.form.get('Catalog Number')
@@ -170,7 +165,6 @@ def addAntibody():
             flash('Fields cannot be empty')
             return redirect(url_for('stock.addAntibody'))
         
-        # TODO make date validation into a function
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
         
@@ -189,7 +183,7 @@ def addAntibody():
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('stock.addAntibody'))
 
-        # * Checking to see if included is Yes or No
+        # * Checking to see if included is Yes or No *
         # Finds match using fuzzywuzzy library
         YesScore = fuzz.ratio("yes", included.lower())
         NoScore = fuzz.ratio("no", included.lower())
@@ -274,7 +268,6 @@ def addAntibody():
 @login_required(role=["admin"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
-    print(primary_key)
 
     try:
         mydb = pymysql.connect(**db_config)
@@ -357,6 +350,8 @@ def changeAntibody():
             included = 1
         elif NoScore >= threshold:
             included = 0
+        elif included == '1' or included == '0':
+            pass
         else:
             flash('Included field must be "Yes" or "No"')
             return redirect(url_for('stock.changeAntibody'))
@@ -402,12 +397,9 @@ def changeAntibody():
 
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
-        #primary_key = int(primaryKey)
-        print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
         df = toDataframe(query, 'CoreC', (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-        print("Dataframe: ", df)
         data = df.to_dict()
         
         # use to prevent user from caching pages
@@ -434,7 +426,6 @@ def stock():
         for i in AllUinputs:
             if i:
                 Uinputs.append(i)
-        print(Uinputs)
 
         # Maps sorting options to their corresponding SQL names
         sort_orders = {
@@ -460,7 +451,6 @@ def stock():
         df = toDataframe(query, 'CoreC')
         SqlData = df
         
-        # TODO fix sorting
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
@@ -494,7 +484,6 @@ def stock():
             SqlData.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             # Converts to a list of dictionaries
             data = SqlData.to_dict(orient='records')
-            #print(pd.DataFrame(data))
 
     if request.method == 'GET':
         dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'CoreC')
@@ -515,7 +504,6 @@ def stock():
 @login_required(role=["admin"])
 def addSupply():
     if request.method == 'POST':
-        print("test")
         Company_Name = request.form.get('Company Name')
         catalog_num = request.form.get('Catalog Number')
         cost = request.form.get('Cost')
@@ -582,7 +570,7 @@ def addSupply():
 @login_required(role=["admin"])
 def changeSupply():
     if request.method == 'POST':
-        primary_key = request.form['primary_key']
+        primary_key = request.form.get('primaryKey')
         Company_Name = request.form.get('Company Name')
         catalog_num = request.form.get('Catalog Number')
         cost = request.form.get('Cost')
@@ -626,12 +614,11 @@ def changeSupply():
         return response
 
     if request.method == 'GET':
-        primary_key = int(request.args.get('primaryKey'))
+        primary_key = request.args.get('primaryKey')
         print("primary key: ", primary_key, "\nPkey type: ", type(primary_key))
         query = "SELECT O.Product_Name, O.Catalog_Num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
         df = toDataframe(query, 'CoreC', (primary_key,))
         df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        print("Dataframe: ", df)
         data = df.to_dict()
         
         # use to prevent user from caching pages
@@ -645,14 +632,11 @@ def changeSupply():
 @login_required(role=["admin"])
 def deleteSupply():
     primary_key = request.form['primaryKey']
-    print(primary_key)
 
     try:
         with open('app/Credentials/Stock.json', 'r') as file:
                 config_data = json.load(file)
         db_config = config_data.get('db_config')
-            
-        print(db_config)
 
         db_config = config_data.get('db_config', {})
 
@@ -664,7 +648,7 @@ def deleteSupply():
         query2 = "DELETE FROM Stock_Info WHERE Product_Num = %s"
 
         #Execute SQL query
-        # !query2 must be executed first because of foreign key constraints
+        #! query2 must be executed first because of foreign key constraints
         cursor.execute(query2, (primary_key,))
         cursor.execute(query, (primary_key,))
 

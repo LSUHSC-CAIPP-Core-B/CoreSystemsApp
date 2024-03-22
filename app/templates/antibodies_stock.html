@@ -64,6 +64,7 @@
               </select>
             </div>
             <div class="leftdiv">
+              <!--
               <label class="formlabel">Panels</label>
               <select class="tableselect" name="panelSelect" id="panelSelect">
                 <option value="All" selected>All</option>
@@ -74,6 +75,7 @@
                 <option value="privatePanel">Private Panel</option>
                 {% endif %}
               </select>
+              -->
               <button class="filterbutton"
               onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
             </div>
@@ -123,7 +125,7 @@
                 {% if col == 1 %}
                 <form id="deleteForm" method="POST" action="/deleteAntibody">
                   <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
-                  <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this order?')">X</button>
+                  <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
                 </form>
                 <form method="GET" action="/changeAntibody">
                   <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />

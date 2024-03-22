@@ -23,7 +23,11 @@
             <a href="/graphs"><h2 class="base-heading">Graphs</h2></a>
             {% endif %}
             {% if current_user.is_core_c %} <!-- if access to Core C -->
+            <a href="/antibodies"><h2 class="base-heading">Antibodies</h2></a>
+            {% if current_user.is_admin %}
+            <a href="/panels"><h2 class="base-heading">panels</h2></a>
             <a href="/stock"><h2 class="base-heading">Stock</h2></a>
+            {% endif %}
             {% endif %}
             {% else %} <!-- if access to both Core B and C-->
             <div class="dropdown">
@@ -39,7 +43,11 @@
                 <h2 class="base-heading">Core C
                 </h2>
                 <div class="dropdown-content">
+                    <a href="/antibodies" class="adrop">Antibodies</a>
+                    {% if current_user.is_admin %}
+                    <!-- <a href="/panels" class="adrop">Panels</a> -->
                     <a href="/stock" class="adrop">Stock</a>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}

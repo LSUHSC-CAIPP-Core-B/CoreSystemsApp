@@ -99,18 +99,22 @@ def antibodies_route():
 
             threshold = 70  # Threshold for a match
 
-            for i in Uinputs:
-                matches = []
+            matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
+
+            for input_index, i in enumerate(Uinputs):
                 for index, row in SqlData.iterrows():
                     for column in columns_to_check:
                         if fuzz.ratio(i, row[column]) > threshold:
-                            matches.append(index)
-                            break  # Stops checking other columns if a match is found for this row
+                            matches_per_input[input_index].add(index)  # Adds row index to the set for this input
+                            break  # No need to check other columns for this input
+
+            # Finds the intersection of all sets to ensure each input has at least one matching column in the row
+            all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
             
             # renaming columns and setting data variable
             SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             # Gets the filtered dataframe
-            filtered_df = SqlData.loc[matches]
+            filtered_df = SqlData.loc[list(all_matches)]
             # Converts to a list of dictionaries
             data = filtered_df.to_dict(orient='records')
             
@@ -459,18 +463,22 @@ def stock():
 
             threshold = 45  # Threshold for a match
 
-            for i in Uinputs:
-                matches = []
+            matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
+
+            for input_index, i in enumerate(Uinputs):
                 for index, row in SqlData.iterrows():
                     for column in columns_to_check:
                         if fuzz.ratio(i, row[column]) > threshold:
-                            matches.append(index)
-                            break  # Stops checking other columns if a match is found for this row
+                            matches_per_input[input_index].add(index)  # Adds row index to the set for this input
+                            break  # No need to check other columns for this input
+
+            # Finds the intersection of all sets to ensure each input has at least one matching column in the row
+            all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
             
             # renaming columns and setting data variable
             df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             # Gets the filtered dataframe
-            filtered_df = SqlData.loc[matches]
+            filtered_df = SqlData.loc[list(all_matches)]
             # Converts to a list of dictionaries
             data = filtered_df.to_dict(orient='records')
             

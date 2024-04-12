@@ -123,14 +123,16 @@
               <td>
                 {{ list(data[row].values())[col] }}
                 {% if col == 1 %}
-                <form id="deleteForm" method="POST" action="/deleteAntibody">
-                  <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
-                  <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
-                </form>
-                <form method="GET" action="/changeAntibody">
-                  <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
-                  <button class="filterbutton">Change Info</button>
-                </form>
+                  {% if data[row]["Included"] != 0 and data[row]["Catalog Number"] != "N/A" %}
+                    <form id="deleteForm" method="POST" action="/deleteAntibody">
+                      <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                      <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
+                    </form>
+                    <form method="GET" action="/changeAntibody">
+                      <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                      <button class="filterbutton">Change Info</button>
+                    </form>
+                  {% endif %}
                 {% endif %}
               </td>
               {% endif %}

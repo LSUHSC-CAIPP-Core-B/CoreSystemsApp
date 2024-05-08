@@ -24,9 +24,9 @@ db_config
 db_config = config_data.get('db_config', {})
 
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 
-@cache.cached(timeout=60)
+@cache1.cached(timeout=60)
 def toDataframe(query, database_name, params=None):
     """
     Takes in query, database, and parameter and converts query to a dataframe.
@@ -142,11 +142,11 @@ def antibodies_route():
 
         data = create_or_filter_dataframe()
         with app.app_context():
-            cache.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
             
     if request.method == 'GET':
         with app.app_context():
-            cached_data = cache.get('cached_dataframe')
+            cached_data = cache1.get('cached_dataframe')
         if cached_data is None:
             dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
@@ -154,7 +154,7 @@ def antibodies_route():
         else:
             # Try to get the cached DataFrame
             with app.app_context():
-                data = cache.get('cached_dataframe')
+                data = cache1.get('cached_dataframe')
         '''
         dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
@@ -522,10 +522,14 @@ def changeAntibody():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
+cache2 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
+
+
 @bp.route('/stock', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def stock():
     if request.method == 'POST':
+        '''
         company = request.form.get('Company') or ""
         product = request.form.get('Product') or ""
         sort = request.form.get('sort') or "Original"
@@ -601,11 +605,21 @@ def stock():
             SqlData.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             # Converts to a list of dictionaries
             data = SqlData.to_dict(orient='records')
+        '''
+        data = create_or_filter_StockDataframe()
+        with app.app_context():
+            cache2.set('cached_dataframe2', data, timeout=3600)
 
     if request.method == 'GET':
-        dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'CoreC')
-        dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        data = dataFrame.to_dict('records') 
+        with app.app_context():
+            cached_data = cache2.get('cached_dataframe2')
+        if cached_data is None:
+            dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY Quantity;", 'CoreC')
+            dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+            data = dataFrame.to_dict('records')
+        else:
+            with app.app_context():
+                data = cache2.get('cached_dataframe2')
     
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
@@ -621,6 +635,84 @@ def stock():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+def create_or_filter_StockDataframe():
+    company = request.form.get('Company') or ""
+    product = request.form.get('Product') or ""
+    sort = request.form.get('sort') or "Original"
+
+    # Stores all possible Inputs
+    AllUinputs = [company, product]
+    
+    # Creates list to store inputs that are being Used
+    Uinputs = []
+    # Checks which input fields are being used
+    for i in AllUinputs:
+        if i:
+            Uinputs.append(i)
+
+    # Maps sorting options to their corresponding SQL names
+    sort_orders = {
+        'Product': 'Product_Name',
+        'Cost': 'Unit_Price'
+    }
+    # Check if sort is in the dictionary, if not then uses default value
+    order_by = sort_orders.get(sort, 'Quantity')
+
+    # Validate the order_by to prevent sql injection
+    if order_by not in sort_orders.values():
+        order_by = 'Quantity'  
+    
+    # Dictionary of Parameters
+    params = {'CompanyParam': company, 'ProductParam': product}
+    
+    # Ascending vs Descending
+    if sort == "QuantityAscending":
+        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by};"
+    else:
+        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by} DESC;"
+    
+    df = toDataframe(query, 'CoreC')
+    SqlData = df
+    
+    # * Fuzzy Search *
+    # Checks whether filters are being used
+    # If filters are used then implements fuzzy matching
+    if len(Uinputs) != 0:
+        columns_to_check = ["Company_Name", "Product_Name"]
+
+        threshold = 45  # Threshold for a match
+
+        matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
+
+        for input_index, i in enumerate(Uinputs):
+            for index, row in SqlData.iterrows():
+                for column in columns_to_check:
+                    if fuzz.ratio(i, row[column]) > threshold:
+                        matches_per_input[input_index].add(index)  # Adds row index to the set for this input
+                        break  # No need to check other columns for this input
+
+        # Finds the intersection of all sets to ensure each input has at least one matching column in the row
+        all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
+        
+        # renaming columns and setting data variable
+        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        # Gets the filtered dataframe
+        filtered_df = SqlData.loc[list(all_matches)]
+        # Converts to a list of dictionaries
+        data = filtered_df.to_dict(orient='records')
+        
+        # If no match is found displays empty row
+        if not data:
+            dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'CoreC')
+            dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+            data = dataFrame.to_dict('records')
+    else: # If no search filters are used
+        # renaming columns and setting data variable
+        SqlData.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        # Converts to a list of dictionaries
+        data = SqlData.to_dict(orient='records')
+    return data
 
 @bp.route('/addSupply', methods=['GET', 'POST'])
 @login_required(role=["admin"])

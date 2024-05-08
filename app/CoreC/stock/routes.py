@@ -140,8 +140,7 @@ def antibodies_route():
         # Clear the cache when new filters are applied
         #cache.delete('cached_dataframe')
 
-        df = create_or_filter_dataframe()
-        data = df.to_dict('records')
+        data = create_or_filter_dataframe()
         with app.app_context():
             cache.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
     if request.method == 'GET':
@@ -253,7 +252,7 @@ def create_or_filter_dataframe():
         # Converts to a list of dictionaries
         data = SqlData.to_dict(orient='records')
 
-    return filtered_df
+    return data
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])

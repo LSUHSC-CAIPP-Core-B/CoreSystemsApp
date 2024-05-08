@@ -143,6 +143,7 @@ def antibodies_route():
         data = create_or_filter_dataframe()
         with app.app_context():
             cache.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+            
     if request.method == 'GET':
         with app.app_context():
             cached_data = cache.get('cached_dataframe')
@@ -251,7 +252,6 @@ def create_or_filter_dataframe():
         SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         # Converts to a list of dictionaries
         data = SqlData.to_dict(orient='records')
-
     return data
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
@@ -607,11 +607,16 @@ def stock():
         dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = dataFrame.to_dict('records') 
     
+    page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
     #number of rows in table
     num_rows = len(data)
 
+    pagination_users = data[offset: offset + per_page]
+    pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+
     # use to prevent user from caching pages
-    response = make_response(render_template("stock.html", data=data, list=list, len=len, str=str, num_rows=num_rows))
+    response = make_response(render_template("stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.

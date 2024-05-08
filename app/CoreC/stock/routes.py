@@ -37,7 +37,7 @@ def toDataframe(query, database_name, params=None):
 
     return: dataframe from the query passed
     """
-    # TODO: Make more scalable and flexible
+
     with open('app/Credentials/CoreC.json', 'r') as file:
         config_data = json.load(file)
     db_config = config_data.get('db_config')
@@ -59,86 +59,9 @@ def toDataframe(query, database_name, params=None):
 @login_required(role=["user", "coreC"])
 def antibodies_route():
     if request.method == 'POST':
-        '''
-        Company_name = request.form.get('company_name') or ""
-        Target_Name = request.form.get('target_name') or ""
-        Target_Species = request.form.get('target_species') or ""
-        sort = request.form.get('sort') or 'Original'
-        panelSelect =  request.form.get('panelSelect') or 'Original'
-
-        # Stores all possible Inputs
-        AllUinputs = [Company_name, Target_Name, Target_Species]
-        
-        # Creates list to store inputs that are being Used
-        Uinputs = []
-        # Checks which input fields are being used
-        for i in AllUinputs:
-            if i:
-                Uinputs.append(i)
-
-        # Maps sorting options to their corresponding SQL names
-        sort_orders = {
-            'Price': 'Cost',
-            'Catalog Number': 'Catalog_Num',
-            'Expiration Date': 'Expiration_Date',
-            'Box Name': 'Box_Name'
-        }
-        # Check if sort is in the dictionary, if not then uses default value
-        order_by = sort_orders.get(sort, 'Target_Name')
-
-        # Validate the order_by to prevent sql injection
-        if order_by not in sort_orders.values():
-            order_by = 'Target_Name'  
-
-        
-        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
-
-        # Creates Dataframe
-        df = toDataframe(query, 'CoreC')
-
-        SqlData = df
-        
-        # * Fuzzy Search *
-        # Checks whether filters are being used
-        # If filters are used then implements fuzzy matching
-        if len(Uinputs) != 0:
-            columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
-
-            threshold = 70  # Threshold for a match
-
-            matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
-
-            for input_index, i in enumerate(Uinputs):
-                for index, row in SqlData.iterrows():
-                    for column in columns_to_check:
-                        if fuzz.ratio(i, row[column]) > threshold:
-                            matches_per_input[input_index].add(index)  # Adds row index to the set for this input
-                            break  # No need to check other columns for this input
-
-            # Finds the intersection of all sets to ensure each input has at least one matching column in the row
-            all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
-            
-            # renaming columns and setting data variable
-            SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-            # Gets the filtered dataframe
-            filtered_df = SqlData.loc[list(all_matches)]
-            # Converts to a list of dictionaries
-            data = filtered_df.to_dict(orient='records')
-            
-            # If no match is found displays empty row
-            if not data:
-                dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'CoreC')
-                dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-                data = dataFrame.to_dict('records')
-        else: # If no search filters are used
-            # renaming columns and setting data variable
-            SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-            # Converts to a list of dictionaries
-            data = SqlData.to_dict(orient='records')
-        '''
-
         # Clear the cache when new filters are applied
-        #cache.delete('cached_dataframe')
+        with app.app_context():
+            cache1.delete('cached_dataframe')
 
         data = create_or_filter_dataframe()
         with app.app_context():
@@ -529,83 +452,10 @@ cache2 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
 @login_required(role=["admin"])
 def stock():
     if request.method == 'POST':
-        '''
-        company = request.form.get('Company') or ""
-        product = request.form.get('Product') or ""
-        sort = request.form.get('sort') or "Original"
+        # Clear the cache when new filters are applied
+        with app.app_context():
+            cache2.delete('cached_dataframe')
 
-        # Stores all possible Inputs
-        AllUinputs = [company, product]
-        
-        # Creates list to store inputs that are being Used
-        Uinputs = []
-        # Checks which input fields are being used
-        for i in AllUinputs:
-            if i:
-                Uinputs.append(i)
-
-        # Maps sorting options to their corresponding SQL names
-        sort_orders = {
-            'Product': 'Product_Name',
-            'Cost': 'Unit_Price'
-        }
-        # Check if sort is in the dictionary, if not then uses default value
-        order_by = sort_orders.get(sort, 'Quantity')
-
-        # Validate the order_by to prevent sql injection
-        if order_by not in sort_orders.values():
-            order_by = 'Quantity'  
-        
-        # Dictionary of Parameters
-        params = {'CompanyParam': company, 'ProductParam': product}
-        
-        # Ascending vs Descending
-        if sort == "QuantityAscending":
-            query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by};"
-        else:
-            query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != '0' ORDER BY {order_by} DESC;"
-        
-        df = toDataframe(query, 'CoreC')
-        SqlData = df
-        
-        # * Fuzzy Search *
-        # Checks whether filters are being used
-        # If filters are used then implements fuzzy matching
-        if len(Uinputs) != 0:
-            columns_to_check = ["Company_Name", "Product_Name"]
-
-            threshold = 45  # Threshold for a match
-
-            matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
-
-            for input_index, i in enumerate(Uinputs):
-                for index, row in SqlData.iterrows():
-                    for column in columns_to_check:
-                        if fuzz.ratio(i, row[column]) > threshold:
-                            matches_per_input[input_index].add(index)  # Adds row index to the set for this input
-                            break  # No need to check other columns for this input
-
-            # Finds the intersection of all sets to ensure each input has at least one matching column in the row
-            all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
-            
-            # renaming columns and setting data variable
-            df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-            # Gets the filtered dataframe
-            filtered_df = SqlData.loc[list(all_matches)]
-            # Converts to a list of dictionaries
-            data = filtered_df.to_dict(orient='records')
-            
-            # If no match is found displays empty row
-            if not data:
-                dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = '0' ORDER BY Quantity;", 'CoreC')
-                dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-                data = dataFrame.to_dict('records')
-        else: # If no search filters are used
-            # renaming columns and setting data variable
-            SqlData.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-            # Converts to a list of dictionaries
-            data = SqlData.to_dict(orient='records')
-        '''
         data = create_or_filter_StockDataframe()
         with app.app_context():
             cache2.set('cached_dataframe2', data, timeout=3600)

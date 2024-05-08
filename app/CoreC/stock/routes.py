@@ -7,13 +7,10 @@ from app import login_required
 import mysql.connector as connection
 import pandas as pd
 import json
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+from fuzzywuzzy import fuzz, process
 import pymysql
-
 import re
 from datetime import datetime
-
 from flask_caching import Cache
 
 # Opens Json file
@@ -78,11 +75,6 @@ def antibodies_route():
             # Try to get the cached DataFrame
             with app.app_context():
                 data = cache1.get('cached_dataframe')
-        '''
-        dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
-        dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-        data = dataFrame.to_dict('records')
-        '''
     
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')

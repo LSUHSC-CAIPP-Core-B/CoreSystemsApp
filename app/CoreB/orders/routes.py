@@ -1,16 +1,20 @@
-from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.orders import bp
 from app.reader import Reader, find
 from app.models import Invoice
 from app import login_required
 from app import db
+from flask_caching import Cache
 import redis
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
 
 r = redis.Redis(decode_responses=True)
+
+app = Flask(__name__)
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
@@ -23,6 +27,10 @@ def orders():
     data = reader.getFormattedDataCSV()
 
     if request.method == 'POST':
+         # Clear the cache when new filters are applied
+        with app.app_context():
+            cache1.delete('cached_data')
+
         # search vars
         service_type = request.form.get('service_type') or ""
         pi_name = request.form.get('pi_name') or ""
@@ -36,11 +44,21 @@ def orders():
                 data = sorted(data, key=lambda d: d[sort], reverse=True)
             else:
                 data = sorted(data, key=lambda d: d[sort])
+        with app.app_context():
+            cache1.set('cached_data', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
     # to always sort by newest date
     if request.method == "GET":
-        sort = "Request Date"
-        data = sorted(data, key=lambda d: d[sort], reverse=True)
+        with app.app_context():
+            cached_data = cache1.get('cached_data')
+
+        if cached_data is None:
+            sort = "Request Date"
+            data = sorted(data, key=lambda d: d[sort], reverse=True)
+        else:
+            # Try to get the cached DataFrame
+            with app.app_context():
+                data = cache1.get('cached_data')
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
@@ -52,7 +70,7 @@ def orders():
     if request.method == 'GET':
         if r.get("download_refresh") == "True":
            flash('Please refresh download script')
-
+        
         # use to prevent user from caching pages
         response = make_response(render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

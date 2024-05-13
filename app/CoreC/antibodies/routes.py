@@ -347,7 +347,6 @@ def changeAntibody():
             flash('Fields cannot be empty')
             return redirect(url_for('stock.changeAntibody'))
         
-        # TODO make date validation into a function
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
         

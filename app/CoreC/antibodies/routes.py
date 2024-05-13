@@ -54,7 +54,6 @@ def toDataframe(query, database_name, params=None):
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
-    print("Antibody function")
     if request.method == 'POST':
         # Clear the cache when new filters are applied
         with app.app_context():

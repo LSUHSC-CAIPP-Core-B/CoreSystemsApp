@@ -61,6 +61,7 @@ def stock():
         with app.app_context():
             cache2.delete('cached_dataframe')
 
+
         data = create_or_filter_StockDataframe()
         with app.app_context():
             cache2.set('cached_dataframe2', data, timeout=3600)

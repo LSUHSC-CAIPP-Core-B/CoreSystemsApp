@@ -29,7 +29,15 @@ def login():
         
         login_user(user)
 
-        return redirect(url_for('orders.orders'))
+        # checl what roles the user has and redirect him to desired page
+        roles_to_check = []
+        for r in user.urole:
+            roles_to_check.append(r.role)
+
+        if "coreB" in roles_to_check:
+            return redirect(url_for('orders.orders'))
+        elif "coreC" in roles_to_check:
+            return redirect(url_for('stock.antibodies_route'))
 
 @bp.route('/signup', methods=['GET', 'POST'])
 @login_required(role=["admin"])

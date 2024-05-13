@@ -94,7 +94,4 @@ def create_app(config_class=Config):
     from app.CoreC.stock import bp as stock_bp
     app.register_blueprint(stock_bp)
 
-    from app.CoreC.antibodies import bp as antibodies_bp
-    app.register_blueprint(antibodies_bp)
-
     return app

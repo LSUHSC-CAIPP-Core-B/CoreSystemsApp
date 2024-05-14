@@ -90,9 +90,9 @@ def create_or_filter_dataframe():
 
     query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
+
     # Creates Dataframe
     df = db_utils.toDataframe(query)
-
     SqlData = df
     
     # * Fuzzy Search *

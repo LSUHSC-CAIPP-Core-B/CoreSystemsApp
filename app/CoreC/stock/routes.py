@@ -12,43 +12,9 @@ import pymysql
 import re
 from datetime import datetime
 from flask_caching import Cache
-
-# Opens Json file
-with open('app/Credentials/CoreC.json', 'r') as file:
-            config_data = json.load(file)
-db_config = config_data.get('db_config')
-db_config
-db_config = config_data.get('db_config', {})
+from app.utils.db_utils import db_utils
 
 app = Flask(__name__)
-
-def toDataframe(query, database_name, params=None):
-    """
-    Takes in query, database, and parameter and converts query to a dataframe.
-    
-    query(str): query to convert to dataframe
-    database_name(str): database name for connection
-    param(str)or(None): Parameter to put in query
-
-    return: dataframe from the query passed
-    """
-
-    with open('app/Credentials/CoreC.json', 'r') as file:
-        config_data = json.load(file)
-    db_config = config_data.get('db_config')
-    db_config
-    db_config = config_data.get('db_config', {})
-
-    try:
-        mydb = pymysql.connect(**db_config)
-        # Using bind parameters to prevent SQL injection
-        result_dataFrame = pd.read_sql_query(query, mydb, params=params)
-        
-        mydb.close()  # closes the connection
-        return result_dataFrame
-    except Exception as e:
-        print(str(e))
-        mydb.close()
 
 cache2 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
 
@@ -70,7 +36,7 @@ def stock():
         with app.app_context():
             cached_data = cache2.get('cached_dataframe2')
         if cached_data is None:
-            dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;")
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -128,7 +94,7 @@ def create_or_filter_StockDataframe():
     else:
         query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY {order_by} DESC;"
     
-    df = toDataframe(query, 'CoreC')
+    df = db_utils.toDataframe(query)
     SqlData = df
     
     # * Fuzzy Search *
@@ -160,7 +126,7 @@ def create_or_filter_StockDataframe():
         
         # If no match is found displays empty row
         if not data:
-            dataFrame = toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;")
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
     else: # If no search filters are used
@@ -186,7 +152,7 @@ def addSupply():
             return redirect(url_for('stock.addSupply'))
 
         try:
-            mydb = pymysql.connect(**db_config)
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
             cursor = mydb.cursor()
 
             params = {'CompanyParam': Company_Name, 
@@ -247,7 +213,7 @@ def changeSupply():
         Product_Name = request.form.get('Product')
         Quantity = request.form.get('Quantity')
         
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         params = {'CompanyParam': Company_Name, 
@@ -281,7 +247,7 @@ def changeSupply():
     if request.method == 'GET':
         primary_key = int(request.args.get('primaryKey'))
         query = "SELECT O.Product_Name, O.Catalog_Num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
-        df = toDataframe(query, 'CoreC', (primary_key,))
+        df = db_utils.toDataframe(query, (primary_key,))
         df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = df.to_dict()
         
@@ -298,7 +264,7 @@ def deleteSupply():
     primary_key = request.form['primaryKey']
 
     try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         # SQL DELETE query

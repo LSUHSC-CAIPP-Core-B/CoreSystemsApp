@@ -13,43 +13,10 @@ import re
 from datetime import datetime
 from flask_caching import Cache
 
-# Opens Json file
-with open('app/Credentials/CoreC.json', 'r') as file:
-            config_data = json.load(file)
-db_config = config_data.get('db_config')
-db_config
-db_config = config_data.get('db_config', {})
+from app.utils.db_utils import db_utils
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
-
-def toDataframe(query, database_name, params=None):
-    """
-    Takes in query, database, and parameter and converts query to a dataframe.
-    
-    query(str): query to convert to dataframe
-    database_name(str): database name for connection
-    param(str)or(None): Parameter to put in query
-
-    return: dataframe from the query passed
-    """
-
-    with open('app/Credentials/CoreC.json', 'r') as file:
-        config_data = json.load(file)
-    db_config = config_data.get('db_config')
-    db_config
-    db_config = config_data.get('db_config', {})
-
-    try:
-        mydb = pymysql.connect(**db_config)
-        # Using bind parameters to prevent SQL injection
-        result_dataFrame = pd.read_sql_query(query, mydb, params=params)
-        
-        mydb.close()  # closes the connection
-        return result_dataFrame
-    except Exception as e:
-        print(str(e))
-        mydb.close()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -67,7 +34,7 @@ def antibodies_route():
         with app.app_context():
             cached_data = cache1.get('cached_dataframe')
         if cached_data is None:
-            dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;")
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -123,8 +90,9 @@ def create_or_filter_dataframe():
 
     query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
-    # Creates Dataframe and copy
-    df = toDataframe(query, 'CoreC')
+
+    # Creates Dataframe
+    df = db_utils.toDataframe(query)
     SqlData = df
     
     # * Fuzzy Search *
@@ -156,7 +124,7 @@ def create_or_filter_dataframe():
         
         # If no match is found displays empty row
         if not data:
-            dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;")
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
     else: # If no search filters are used
@@ -188,7 +156,7 @@ def addAntibody():
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num.lower() == "n/a":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
         
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
@@ -202,11 +170,11 @@ def addAntibody():
             except ValueError:
                 # The string is in the correct format but not a valid date
                 flash('Not a valid Date')
-                return redirect(url_for('stock.addAntibody'))
+                return redirect(url_for('antibodies.addAntibody'))
         else:
             # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
 
         # * Checking to see if included is Yes or No *
         # Finds match using fuzzywuzzy library
@@ -220,10 +188,10 @@ def addAntibody():
             included = 0
         else:
             flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
 
         try:
-            mydb = pymysql.connect(**db_config)
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
             cursor = mydb.cursor()
 
             params = {'BoxParam': box_name,
@@ -255,7 +223,7 @@ def addAntibody():
             mydb.close()
 
             # use to prevent user from caching pages
-            response = make_response(redirect(url_for('stock.antibodies_route')))
+            response = make_response(redirect(url_for('antibodies.antibodies_route')))
             response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
             response.headers["Pragma"] = "no-cache" # HTTP 1.0.
             response.headers["Expires"] = "0" # Proxies.
@@ -295,7 +263,7 @@ def deleteAntibody():
     primary_key = request.form['primaryKey']
 
     try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         # SQL DELETE query
@@ -312,7 +280,7 @@ def deleteAntibody():
         mydb.close()
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -344,8 +312,8 @@ def changeAntibody():
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num == "N/A":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.changeAntibody'))
-        
+            return redirect(url_for('antibodies.changeAntibody'))
+
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
         
@@ -358,11 +326,11 @@ def changeAntibody():
             except ValueError:
                 # The string is in the correct format but not a valid date
                 flash('Not a valid Date')
-                return redirect(url_for('stock.changeAntibody'))
+                return redirect(url_for('antibodies.changeAntibody'))
         else:
             # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
-            return redirect(url_for('stock.changeAntibody'))
+            return redirect(url_for('antibodies.changeAntibody'))
 
         # * Checking to see if included is Yes or No
         # Finds match using fuzzywuzzy library
@@ -378,10 +346,10 @@ def changeAntibody():
             pass
         else:
             flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('stock.changeAntibody'))
+            return redirect(url_for('antibodies.changeAntibody'))
 
     #try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         params = {'BoxParam': box_name,
@@ -413,7 +381,7 @@ def changeAntibody():
         mydb.close()
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -422,7 +390,7 @@ def changeAntibody():
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
-        df = toDataframe(query, 'CoreC', (primary_key,))
+        df = db_utils.toDataframe(query, (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = df.to_dict()
         

@@ -18,28 +18,6 @@ from app.utils.db_utils import db_utils
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 
-def toDataframe(query, database_name, params=None):
-    """
-    Takes in query, database, and parameter and converts query to a dataframe.
-    
-    query(str): query to convert to dataframe
-    database_name(str): database name for connection
-    param(str)or(None): Parameter to put in query
-
-    return: dataframe from the query passed
-    """
-
-    try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
-        # Using bind parameters to prevent SQL injection
-        result_dataFrame = pd.read_sql_query(query, mydb, params=params)
-        
-        mydb.close()  # closes the connection
-        return result_dataFrame
-    except Exception as e:
-        print(str(e))
-        mydb.close()
-
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
@@ -56,7 +34,7 @@ def antibodies_route():
         with app.app_context():
             cached_data = cache1.get('cached_dataframe')
         if cached_data is None:
-            dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;")
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -113,7 +91,7 @@ def create_or_filter_dataframe():
     query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
     # Creates Dataframe
-    df = toDataframe(query, 'CoreC')
+    df = db_utils.toDataframe(query)
 
     SqlData = df
     
@@ -146,7 +124,7 @@ def create_or_filter_dataframe():
         
         # If no match is found displays empty row
         if not data:
-            dataFrame = toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'CoreC')
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;")
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
     else: # If no search filters are used
@@ -413,7 +391,7 @@ def changeAntibody():
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
-        df = toDataframe(query, 'CoreC', (primary_key,))
+        df = db_utils.toDataframe(query, (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = df.to_dict()
         

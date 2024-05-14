@@ -313,8 +313,7 @@ def changeAntibody():
         if catalog_num == "" or catalog_num == "N/A":
             flash('Fields cannot be empty')
             return redirect(url_for('antibodies.changeAntibody'))
-        
-        # TODO make date validation into a function
+
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
         

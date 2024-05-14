@@ -13,12 +13,7 @@ import re
 from datetime import datetime
 from flask_caching import Cache
 
-# Opens Json file
-with open('app/Credentials/CoreC.json', 'r') as file:
-            config_data = json.load(file)
-db_config = config_data.get('db_config')
-db_config
-db_config = config_data.get('db_config', {})
+from app.utils.db_utils import db_utils
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
@@ -34,14 +29,8 @@ def toDataframe(query, database_name, params=None):
     return: dataframe from the query passed
     """
 
-    with open('app/Credentials/CoreC.json', 'r') as file:
-        config_data = json.load(file)
-    db_config = config_data.get('db_config')
-    db_config
-    db_config = config_data.get('db_config', {})
-
     try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         # Using bind parameters to prevent SQL injection
         result_dataFrame = pd.read_sql_query(query, mydb, params=params)
         
@@ -54,7 +43,6 @@ def toDataframe(query, database_name, params=None):
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
-    print("Antibody function")
     if request.method == 'POST':
         # Clear the cache when new filters are applied
         with app.app_context():
@@ -190,7 +178,7 @@ def addAntibody():
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num.lower() == "n/a":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
         
         # Defines the regex pattern for "YYYY-MM-DD"
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
@@ -204,11 +192,11 @@ def addAntibody():
             except ValueError:
                 # The string is in the correct format but not a valid date
                 flash('Not a valid Date')
-                return redirect(url_for('stock.addAntibody'))
+                return redirect(url_for('antibodies.addAntibody'))
         else:
             # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
 
         # * Checking to see if included is Yes or No *
         # Finds match using fuzzywuzzy library
@@ -222,10 +210,10 @@ def addAntibody():
             included = 0
         else:
             flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('stock.addAntibody'))
+            return redirect(url_for('antibodies.addAntibody'))
 
         try:
-            mydb = pymysql.connect(**db_config)
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
             cursor = mydb.cursor()
 
             params = {'BoxParam': box_name,
@@ -257,7 +245,7 @@ def addAntibody():
             mydb.close()
 
             # use to prevent user from caching pages
-            response = make_response(redirect(url_for('stock.antibodies_route')))
+            response = make_response(redirect(url_for('antibodies.antibodies_route')))
             response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
             response.headers["Pragma"] = "no-cache" # HTTP 1.0.
             response.headers["Expires"] = "0" # Proxies.
@@ -297,7 +285,7 @@ def deleteAntibody():
     primary_key = request.form['primaryKey']
 
     try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         # SQL DELETE query
@@ -314,7 +302,7 @@ def deleteAntibody():
         mydb.close()
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -346,7 +334,7 @@ def changeAntibody():
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num == "N/A":
             flash('Fields cannot be empty')
-            return redirect(url_for('stock.changeAntibody'))
+            return redirect(url_for('antibodies.changeAntibody'))
         
         # TODO make date validation into a function
         # Defines the regex pattern for "YYYY-MM-DD"
@@ -361,11 +349,11 @@ def changeAntibody():
             except ValueError:
                 # The string is in the correct format but not a valid date
                 flash('Not a valid Date')
-                return redirect(url_for('stock.changeAntibody'))
+                return redirect(url_for('antibodies.changeAntibody'))
         else:
             # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
-            return redirect(url_for('stock.changeAntibody'))
+            return redirect(url_for('antibodies.changeAntibody'))
 
         # * Checking to see if included is Yes or No
         # Finds match using fuzzywuzzy library
@@ -381,10 +369,10 @@ def changeAntibody():
             pass
         else:
             flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('stock.changeAntibody'))
+            return redirect(url_for('antibodies.changeAntibody'))
 
     #try:
-        mydb = pymysql.connect(**db_config)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
         cursor = mydb.cursor()
 
         params = {'BoxParam': box_name,
@@ -416,7 +404,7 @@ def changeAntibody():
         mydb.close()
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

@@ -36,7 +36,7 @@ def stock():
         with app.app_context():
             cached_data = cache2.get('cached_dataframe2')
         if cached_data is None:
-            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;")
+            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -94,7 +94,7 @@ def create_or_filter_StockDataframe():
     else:
         query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY {order_by} DESC;"
     
-    df = db_utils.toDataframe(query)
+    df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
     SqlData = df
     
     # * Fuzzy Search *
@@ -126,7 +126,7 @@ def create_or_filter_StockDataframe():
         
         # If no match is found displays empty row
         if not data:
-            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;")
+            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
     else: # If no search filters are used
@@ -247,7 +247,7 @@ def changeSupply():
     if request.method == 'GET':
         primary_key = int(request.args.get('primaryKey'))
         query = "SELECT O.Product_Name, O.Catalog_Num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
-        df = db_utils.toDataframe(query, (primary_key,))
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', (primary_key,))
         df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = df.to_dict()
         

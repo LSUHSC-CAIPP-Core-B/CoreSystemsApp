@@ -157,24 +157,15 @@ def addAntibody():
         if catalog_num == "" or catalog_num.lower() == "n/a":
             flash('Fields cannot be empty')
             return redirect(url_for('antibodies.addAntibody'))
-        
-        # Defines the regex pattern for "YYYY-MM-DD"
-        datePattern = r"^\d{4}-\d{2}-\d{2}$"
-        
-        # Checks if the string matches the pattern
-        if re.match(datePattern, expiration_date):
-            try:
-                # Tries to convert the string to a datetime object
-                datetime.strptime(expiration_date, "%Y-%m-%d")
-                pass  # It's a valid date in the correct format
-            except ValueError:
-                # The string is in the correct format but not a valid date
+
+        if db_utils.isValidDateFormat(expiration_date):
+            if not db_utils.isValidDate(expiration_date):
                 flash('Not a valid Date')
                 return redirect(url_for('antibodies.addAntibody'))
         else:
-            # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
+
 
         # * Checking to see if included is Yes or No *
         # Finds match using fuzzywuzzy library
@@ -314,21 +305,11 @@ def changeAntibody():
             flash('Fields cannot be empty')
             return redirect(url_for('antibodies.changeAntibody'))
 
-        # Defines the regex pattern for "YYYY-MM-DD"
-        datePattern = r"^\d{4}-\d{2}-\d{2}$"
-        
-        # Checks if the string matches the pattern
-        if re.match(datePattern, expiration_date):
-            try:
-                # Tries to convert the string to a datetime object
-                datetime.strptime(expiration_date, "%Y-%m-%d")
-                pass  # It's a valid date in the correct format
-            except ValueError:
-                # The string is in the correct format but not a valid date
+        if db_utils.isValidDateFormat(expiration_date):
+            if not db_utils.isValidDate(expiration_date):
                 flash('Not a valid Date')
                 return redirect(url_for('antibodies.changeAntibody'))
         else:
-            # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
 

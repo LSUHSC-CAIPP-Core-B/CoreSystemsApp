@@ -152,7 +152,7 @@ def addSupply():
             return redirect(url_for('stock.addSupply'))
 
         try:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
             cursor = mydb.cursor()
 
             params = {'CompanyParam': Company_Name, 
@@ -213,7 +213,7 @@ def changeSupply():
         Product_Name = request.form.get('Product')
         Quantity = request.form.get('Quantity')
         
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         params = {'CompanyParam': Company_Name, 
@@ -264,7 +264,7 @@ def deleteSupply():
     primary_key = request.form['primaryKey']
 
     try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL DELETE query

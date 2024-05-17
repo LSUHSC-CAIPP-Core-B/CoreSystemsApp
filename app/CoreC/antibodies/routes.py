@@ -34,7 +34,7 @@ def antibodies_route():
         with app.app_context():
             cached_data = cache1.get('cached_dataframe')
         if cached_data is None:
-            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;")
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -92,7 +92,8 @@ def create_or_filter_dataframe():
 
 
     # Creates Dataframe
-    df = db_utils.toDataframe(query)
+    df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
+
     SqlData = df
     
     # * Fuzzy Search *
@@ -124,7 +125,7 @@ def create_or_filter_dataframe():
         
         # If no match is found displays empty row
         if not data:
-            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;")
+            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
     else: # If no search filters are used
@@ -157,24 +158,15 @@ def addAntibody():
         if catalog_num == "" or catalog_num.lower() == "n/a":
             flash('Fields cannot be empty')
             return redirect(url_for('antibodies.addAntibody'))
-        
-        # Defines the regex pattern for "YYYY-MM-DD"
-        datePattern = r"^\d{4}-\d{2}-\d{2}$"
-        
-        # Checks if the string matches the pattern
-        if re.match(datePattern, expiration_date):
-            try:
-                # Tries to convert the string to a datetime object
-                datetime.strptime(expiration_date, "%Y-%m-%d")
-                pass  # It's a valid date in the correct format
-            except ValueError:
-                # The string is in the correct format but not a valid date
+
+        if db_utils.isValidDateFormat(expiration_date):
+            if not db_utils.isValidDate(expiration_date):
                 flash('Not a valid Date')
                 return redirect(url_for('antibodies.addAntibody'))
         else:
-            # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
+
 
         # * Checking to see if included is Yes or No *
         # Finds match using fuzzywuzzy library
@@ -314,21 +306,11 @@ def changeAntibody():
             flash('Fields cannot be empty')
             return redirect(url_for('antibodies.changeAntibody'))
 
-        # Defines the regex pattern for "YYYY-MM-DD"
-        datePattern = r"^\d{4}-\d{2}-\d{2}$"
-        
-        # Checks if the string matches the pattern
-        if re.match(datePattern, expiration_date):
-            try:
-                # Tries to convert the string to a datetime object
-                datetime.strptime(expiration_date, "%Y-%m-%d")
-                pass  # It's a valid date in the correct format
-            except ValueError:
-                # The string is in the correct format but not a valid date
+        if db_utils.isValidDateFormat(expiration_date):
+            if not db_utils.isValidDate(expiration_date):
                 flash('Not a valid Date')
                 return redirect(url_for('antibodies.changeAntibody'))
         else:
-            # The string does not match the "YYYY-MM-DD" format
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
 
@@ -390,7 +372,7 @@ def changeAntibody():
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
-        df = db_utils.toDataframe(query, (primary_key,))
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         data = df.to_dict()
         

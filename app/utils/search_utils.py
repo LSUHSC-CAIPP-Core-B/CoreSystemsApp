@@ -2,7 +2,7 @@ from fuzzywuzzy import fuzz
 import pandas as pd
 
 class search_utils:
-
+    @staticmethod
     def search_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame) -> dict:
         '''
         Takes in user inputs, columns to check, threshold,

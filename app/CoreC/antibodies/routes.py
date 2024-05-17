@@ -102,7 +102,6 @@ def create_or_filter_dataframe():
     # If filters are used then implements fuzzy matching
     if len(Uinputs) != 0:
         columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
-
         data = search_utils.search_data(Uinputs, columns_to_check, 70, SqlData)
         
         # If no match is found displays empty row

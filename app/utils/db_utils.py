@@ -21,7 +21,7 @@ class db_utils:
     @staticmethod
     def toDataframe(query: str, path: str, params=None) -> any:
         """
-        Takes in query, database, and parameter and converts query to a dataframe.
+        Takes in database query, and parameter then converts query to a dataframe.
 
         return: dataframe from the query passed
         """
@@ -36,6 +36,7 @@ class db_utils:
             print(str(e))
             mydb.close()
     
+    @staticmethod
     def isValidDateFormat(expiration_date: str) -> bool:
         '''
         Takes in expiration date to check if valid format for mysql.
@@ -50,6 +51,7 @@ class db_utils:
         else: # The string does not match the "YYYY-MM-DD" format
             return False
 
+    @staticmethod
     def isValidDate(expiration_date: str) -> bool:
         '''
         Takes in expiration date to check if valid date for mysql.

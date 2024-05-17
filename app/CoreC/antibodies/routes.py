@@ -183,7 +183,7 @@ def addAntibody():
             return redirect(url_for('antibodies.addAntibody'))
 
         try:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
             cursor = mydb.cursor()
 
             params = {'BoxParam': box_name,
@@ -255,7 +255,7 @@ def deleteAntibody():
     primary_key = request.form['primaryKey']
 
     try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL DELETE query
@@ -331,7 +331,7 @@ def changeAntibody():
             return redirect(url_for('antibodies.changeAntibody'))
 
     #try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json', 'r'))
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         params = {'BoxParam': box_name,

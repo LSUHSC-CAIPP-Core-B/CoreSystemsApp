@@ -4,13 +4,14 @@ import pandas as pd
 import pymysql
 import json
 import re
+
 class db_utils:
     @staticmethod
-    def json_Reader(path: str, mode: str) -> any:
+    def json_Reader(path: str) -> any:
         '''
-        Takes in path to json file and file mode like 'r','w','a'
+        Takes in path to json file
         '''
-        with open(path, mode) as file:
+        with open(path, 'r') as file:
             config_data = json.load(file)
         db_config = config_data.get('db_config')
         db_config

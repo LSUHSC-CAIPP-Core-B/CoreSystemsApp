@@ -12,7 +12,9 @@ import pymysql
 import re
 from datetime import datetime
 from flask_caching import Cache
+
 from app.utils.db_utils import db_utils
+from app.utils.search_utils import search_utils
 
 app = Flask(__name__)
 
@@ -102,27 +104,7 @@ def create_or_filter_StockDataframe():
     # If filters are used then implements fuzzy matching
     if len(Uinputs) != 0:
         columns_to_check = ["Company_Name", "Product_Name"]
-
-        threshold = 45  # Threshold for a match
-
-        matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
-
-        for input_index, i in enumerate(Uinputs):
-            for index, row in SqlData.iterrows():
-                for column in columns_to_check:
-                    if fuzz.ratio(i, row[column]) > threshold:
-                        matches_per_input[input_index].add(index)  # Adds row index to the set for this input
-                        break  # No need to check other columns for this input
-
-        # Finds the intersection of all sets to ensure each input has at least one matching column in the row
-        all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
-        
-        # renaming columns and setting data variable
-        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        # Gets the filtered dataframe
-        filtered_df = SqlData.loc[list(all_matches)]
-        # Converts to a list of dictionaries
-        data = filtered_df.to_dict(orient='records')
+        data = search_utils.search_data(Uinputs, columns_to_check, 45, SqlData)
         
         # If no match is found displays empty row
         if not data:

@@ -28,7 +28,7 @@ class db_utils:
         """
 
         try:
-            mydb = pymysql.connect(**db_utils.json_Reader(path, 'r'))
+            mydb = pymysql.connect(**db_utils.json_Reader(path))
             result_dataFrame = pd.read_sql_query(query, mydb, params=params)
             
             mydb.close()

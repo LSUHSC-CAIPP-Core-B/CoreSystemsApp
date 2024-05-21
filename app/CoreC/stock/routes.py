@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, jsonify
+from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, jsonify
 from flask_paginate import Pagination, get_page_args
 from jinja2 import UndefinedError
 from app.CoreC.stock import bp
@@ -12,14 +12,15 @@ import pymysql
 import re
 from datetime import datetime
 from flask_caching import Cache
+from io import BytesIO
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
 
 app = Flask(__name__)
 
-cache2 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
-
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @bp.route('/stock', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -27,23 +28,29 @@ def stock():
     if request.method == 'POST':
         # Clear the cache when new filters are applied
         with app.app_context():
-            cache2.delete('cached_dataframe')
+            cache1.delete('cached_dataframe')
 
 
         data = create_or_filter_StockDataframe()
         with app.app_context():
-            cache2.set('cached_dataframe2', data, timeout=3600)
+            cache1.set('cached_dataframe2', data, timeout=3600)
 
     if request.method == 'GET':
         with app.app_context():
-            cached_data = cache2.get('cached_dataframe2')
+            cached_data = cache1.get('cached_dataframe2')
         if cached_data is None:
+            with app.app_context():
+                defaultCache.delete('cached_dataframe')
+
             dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
+
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
         else:
             with app.app_context():
-                data = cache2.get('cached_dataframe2')
+                data = cache1.get('cached_dataframe2')
     
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
@@ -274,3 +281,22 @@ def deleteSupply():
     except Exception as e:
         print("Something went wrong: {}".format(e))
         return jsonify({'error': 'Failed to delete row.'}), 500
+
+@bp.route('/downloadStockCSV', methods=['GET'])
+@login_required(role=["coreC"])
+def downloadCSV():
+    with app.app_context():
+        saved_data = cache1.get('cached_dataframe2')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+
+    df = pd.DataFrame.from_dict(saved_data)
+    csv = df.to_csv(index=False)
+    
+    # Convert the CSV string to bytes and use BytesIO
+    csv_bytes = csv.encode('utf-8')
+    csv_io = BytesIO(csv_bytes)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

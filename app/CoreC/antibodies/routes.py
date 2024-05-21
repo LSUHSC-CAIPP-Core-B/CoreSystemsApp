@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, jsonify
+from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, jsonify
 from flask_paginate import Pagination, get_page_args
 from jinja2 import UndefinedError
 from app.CoreC.antibodies import bp
@@ -12,12 +12,14 @@ import pymysql
 import re
 from datetime import datetime
 from flask_caching import Cache
+from io import BytesIO
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -35,9 +37,15 @@ def antibodies_route():
         with app.app_context():
             cached_data = cache1.get('cached_dataframe')
         if cached_data is None:
+            with app.app_context():
+                defaultCache.delete('cached_dataframe')
+
             dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             data = dataFrame.to_dict('records')
+
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
         else:
             # Try to get the cached DataFrame
             with app.app_context():
@@ -363,3 +371,22 @@ def changeAntibody():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+
+@bp.route('/downloadCSV', methods=['GET'])
+@login_required(role=["coreC"])
+def downloadCSV():
+    with app.app_context():
+            saved_data = cache1.get('cached_dataframe')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+
+    df = pd.DataFrame.from_dict(saved_data)
+    csv = df.to_csv(index=False)
+    
+    # Convert the CSV string to bytes and use BytesIO
+    csv_bytes = csv.encode('utf-8')
+    csv_io = BytesIO(csv_bytes)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

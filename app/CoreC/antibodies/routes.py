@@ -372,11 +372,11 @@ def changeAntibody():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
-@bp.route('/downloadCSV', methods=['GET'])
+@bp.route('/downloadAntibodyCSV', methods=['GET'])
 @login_required(role=["coreC"])
 def downloadCSV():
     with app.app_context():
-            saved_data = cache1.get('cached_dataframe')
+        saved_data = cache1.get('cached_dataframe')
     
     if saved_data is None:
         with app.app_context():

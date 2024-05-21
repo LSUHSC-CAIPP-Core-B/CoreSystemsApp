@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
+import pandas as pd
 from app.CoreB.orders import bp
 from app.reader import Reader, find
 from app.models import Invoice
@@ -7,6 +8,7 @@ from app import login_required
 from app import db
 from flask_caching import Cache
 import redis
+from io import BytesIO
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
@@ -15,6 +17,7 @@ r = redis.Redis(decode_responses=True)
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
@@ -53,8 +56,14 @@ def orders():
             cached_data = cache1.get('cached_data')
 
         if cached_data is None:
+            with app.app_context():
+                defaultCache.delete('cached_dataframe')
+
             sort = "Request Date"
             data = sorted(data, key=lambda d: d[sort], reverse=True)
+
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
         else:
             # Try to get the cached DataFrame
             with app.app_context():
@@ -151,3 +160,22 @@ def delete():
         reader.deleteDataCSV(unprocessed_df, id)
 
         return redirect(url_for('orders.orders'))
+    
+@bp.route('/downloadOrdersCSV', methods=['GET'])
+@login_required(role=["coreC"])
+def downloadCSV():
+    with app.app_context():
+        saved_data = cache1.get('cached_dataframe')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+
+    df = pd.DataFrame.from_dict(saved_data)
+    csv = df.to_csv(index=False)
+    
+    # Convert the CSV string to bytes and use BytesIO
+    csv_bytes = csv.encode('utf-8')
+    csv_io = BytesIO(csv_bytes)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Orders.csv')

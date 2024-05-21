@@ -299,4 +299,4 @@ def downloadCSV():
     csv_bytes = csv.encode('utf-8')
     csv_io = BytesIO(csv_bytes)
     
-    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Stock.csv')

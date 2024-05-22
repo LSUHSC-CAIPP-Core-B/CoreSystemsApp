@@ -410,7 +410,7 @@ def delete_invoice():
         return response
 
 @bp.route('/downloadInvoicesCSV', methods=['GET'])
-@login_required(role=["coreC"])
+@login_required(role=["coreB"])
 def downloadCSV():
     with app.app_context():
         saved_data = cache1.get('cached_data')

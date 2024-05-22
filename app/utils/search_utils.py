@@ -12,8 +12,8 @@ class search_utils:
         columns_to_checks(list): All possible inputs
         threshold(int): Search Accuracy 0-100 
         SqlData(pd.Dataframe): Data thats being searched
-        '''
-        matches_per_input = [set() for _ in Uinputs]  # List of sets, one for each input
+        '''    
+        matches_per_input: list = [set() for _ in Uinputs]  # List of sets, one for each input
 
         for input_index, i in enumerate(Uinputs):
             for index, row in SqlData.iterrows():

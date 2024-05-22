@@ -1,5 +1,8 @@
-from flask import render_template, request, make_response, send_from_directory, flash, redirect, url_for
+from io import BytesIO
+from flask import Flask, render_template, request, make_response, send_file, send_from_directory, flash, redirect, url_for
+from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
+import pandas as pd
 from app.CoreB.invoices_list import bp
 from app import login_required
 from app.models import Invoice
@@ -8,6 +11,10 @@ from datetime import datetime
 from app.pdfwriter import PdfWriter
 from app.reader import Reader
 import numpy as np
+
+app = Flask(__name__)
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
 services_reader = Reader("services.csv")  # services is a file to list all available services with their prices
@@ -288,6 +295,9 @@ def invoices_list():
     GET: Display list of all invoices made
     POST: Display filtered list of all invoices made
     """
+    with app.app_context():
+        cache1.delete('cached_data')
+
     # get invoice list data from DB
     invoices = Invoice.query.all()
 
@@ -327,6 +337,11 @@ def invoices_list():
                 data = sorted(data, key=lambda d: d[sort], reverse=True)
             else:
                 data = sorted(data, key=lambda d: d[sort])
+    
+    with app.app_context():
+        cache1.set('cached_data', data, timeout=3600)
+    
+    print(data)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -393,3 +408,22 @@ def delete_invoice():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+
+@bp.route('/downloadInvoicesCSV', methods=['GET'])
+@login_required(role=["coreC"])
+def downloadCSV():
+    with app.app_context():
+        saved_data = cache1.get('cached_data')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_data')
+
+    df = pd.DataFrame.from_dict(saved_data)
+    csv = df.to_csv(index=False)
+    
+    # Convert the CSV string to bytes and use BytesIO
+    csv_bytes = csv.encode('utf-8')
+    csv_io = BytesIO(csv_bytes)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Invoices.csv')

@@ -1,18 +1,17 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, jsonify
+from app.CoreC.antibodies.antibodiesTable import antibodiesTable
 from flask_paginate import Pagination, get_page_args
-from jinja2 import UndefinedError
+import mysql.connector as connection
 from app.CoreC.antibodies import bp
+from jinja2 import UndefinedError
 from app.reader import Reader
 from app import login_required
-import mysql.connector as connection
 import pandas as pd
-import json
-from fuzzywuzzy import fuzz, process
-import pymysql
-import re
+from fuzzywuzzy import fuzz
 from datetime import datetime
 from flask_caching import Cache
 from io import BytesIO
+import pymysql
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
@@ -29,7 +28,7 @@ def antibodies_route():
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = create_or_filter_dataframe()
+        data: dict = create_or_filter_dataframe()
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
             
@@ -86,39 +85,8 @@ def create_or_filter_dataframe():
         'Expiration Date': 'Expiration_Date',
         'Box Name': 'Box_Name'
     }
-    # Check if sort is in the dictionary, if not then uses default value
-    order_by = sort_orders.get(sort, 'Target_Name')
-
-    # Validate the order_by to prevent sql injection
-    if order_by not in sort_orders.values():
-        order_by = 'Target_Name'  
-
-    query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
-
-
-    # Creates Dataframe
-    df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
-
-    SqlData = df
     
-    # * Fuzzy Search *
-    # Checks whether filters are being used
-    # If filters are used then implements fuzzy matching
-    if len(Uinputs) != 0:
-        columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
-        data = search_utils.search_data(Uinputs, columns_to_check, 70, SqlData)
-        
-        # If no match is found displays empty row
-        if not data:
-            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
-            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-            data = dataFrame.to_dict('records')
-    else: # If no search filters are used
-        # renaming columns and setting data variable
-        SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-        # Converts to a list of dictionaries
-        data = SqlData.to_dict(orient='records')
-    return data
+    return antibodiesTable.display(Uinputs, sort, sort_orders)
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])

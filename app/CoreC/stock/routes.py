@@ -16,11 +16,14 @@ from io import BytesIO
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.CoreC.stock.stockTable import stockTable
 
 app = Flask(__name__)
 
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+stockTable = stockTable()
 
 @bp.route('/stock', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -78,48 +81,13 @@ def create_or_filter_StockDataframe():
     # Creates list to store inputs that are being Used
     Uinputs: list[str] = [i for i in AllUinputs if i]
 
+    
     # Maps sorting options to their corresponding SQL names
     sort_orders = {
         'Product': 'Product_Name',
         'Cost': 'Unit_Price'
     }
-    # Check if sort is in the dictionary, if not then uses default value
-    order_by = sort_orders.get(sort, 'Quantity')
-
-    # Validate the order_by to prevent sql injection
-    if order_by not in sort_orders.values():
-        order_by = 'Quantity'  
-    
-    # Dictionary of Parameters
-    params = {'CompanyParam': company, 'ProductParam': product}
-    
-    # Ascending vs Descending
-    if sort == "QuantityAscending":
-        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY {order_by};"
-    else:
-        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY {order_by} DESC;"
-    
-    df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
-    SqlData = df
-    
-    # * Fuzzy Search *
-    # Checks whether filters are being used
-    # If filters are used then implements fuzzy matching
-    if len(Uinputs) != 0:
-        columns_to_check = ["Company_Name", "Product_Name"]
-        data = search_utils.search_data(Uinputs, columns_to_check, 45, SqlData)
-        
-        # If no match is found displays empty row
-        if not data:
-            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
-            dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-            data = dataFrame.to_dict('records')
-    else: # If no search filters are used
-        # renaming columns and setting data variable
-        SqlData.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        # Converts to a list of dictionaries
-        data = SqlData.to_dict(orient='records')
-    return data
+    return stockTable.display(Uinputs, sort, sort_orders)
 
 @bp.route('/addSupply', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -136,40 +104,21 @@ def addSupply():
             flash('Fields cannot be empty')
             return redirect(url_for('stock.addSupply'))
 
-        try:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-            cursor = mydb.cursor()
 
-            params = {'CompanyParam': Company_Name, 
-                      'catalogNumParam': catalog_num , 
-                      'costParam': cost,
-                      'ProductParam': Product_Name
-                      }
-            
-            # SQL Add query
-            query = "INSERT INTO Order_Info VALUES (null, %(CompanyParam)s, %(catalogNumParam)s, %(costParam)s, %(ProductParam)s);"
-            query2 = "INSERT INTO Stock_Info VALUES (LAST_INSERT_ID(), %s);"
+        params = {'CompanyParam': Company_Name, 
+                    'catalogNumParam': catalog_num , 
+                    'costParam': cost,
+                    'ProductParam': Product_Name
+                    }
 
-            #Execute SQL query
-            cursor.execute(query, params)
-            cursor.execute(query2, (Quantity,))
+        stockTable.add(params, Quantity)
 
-            # Commit the transaction
-            mydb.commit()
-
-            # Close the cursor and connection
-            cursor.close()
-            mydb.close()
-
-            # use to prevent user from caching pages
-            response = make_response(redirect(url_for('stock.addSupply')))
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-            response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-            response.headers["Expires"] = "0" # Proxies.
-            return response
-        except Exception as e:
-            print("Something went wrong: {}".format(e))
-            return jsonify({'error': 'Failed to add row.'}), 500
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('stock.stock')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
     if request.method == 'GET':
         data = {
@@ -197,9 +146,6 @@ def changeSupply():
         cost = request.form.get('Cost')
         Product_Name = request.form.get('Product')
         Quantity = request.form.get('Quantity')
-        
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
 
         params = {'CompanyParam': Company_Name, 
                       'catalogNumParam': catalog_num , 
@@ -208,19 +154,7 @@ def changeSupply():
                       'Pkey': primary_key
                       }
 
-        # SQL Change query
-        query = "UPDATE Order_Info SET Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Unit_Price = %(costParam)s, Product_Name = %(ProductParam)s WHERE Order_Info.Product_Num = %(Pkey)s;"
-        query2 = "UPDATE Stock_Info SET Quantity = %s WHERE Product_Num = %s;"
-        #Execute SQL query
-        cursor.execute(query, params)
-        cursor.execute(query2, (Quantity, primary_key))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        stockTable.change(params, Quantity, primary_key)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('stock.stock')))
@@ -248,35 +182,14 @@ def changeSupply():
 def deleteSupply():
     primary_key = request.form['primaryKey']
 
-    try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
+    stockTable.delete(primary_key)
 
-        # SQL DELETE query
-        query = "DELETE FROM Order_Info WHERE Product_Num = %s"
-        query2 = "DELETE FROM Stock_Info WHERE Product_Num = %s"
-
-        #Execute SQL query
-        #! query2 must be executed first because of foreign key constraints
-        cursor.execute(query2, (primary_key,))
-        cursor.execute(query, (primary_key,))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
-
-        # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.stock')))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-    except Exception as e:
-        print("Something went wrong: {}".format(e))
-        return jsonify({'error': 'Failed to delete row.'}), 500
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('stock.stock')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
 
 @bp.route('/downloadStockCSV', methods=['GET'])
 @login_required(role=["coreC"])

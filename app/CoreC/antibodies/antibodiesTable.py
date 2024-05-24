@@ -1,7 +1,7 @@
 from typing import IO
 from typing_extensions import override
 
-from flask import flash, redirect, url_for
+from flask import flash
 from fuzzywuzzy import fuzz
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
@@ -10,7 +10,8 @@ import pymysql
 
 
 class antibodiesTable(BaseDatabaseTable):
-    """ Concrete class,
+    """ Concrete class
+    
     Inherits from abstract class BaseDatabaseTable
 
     :param BaseDatabaseTable: Abstract Class BaseDatabaseTable

@@ -1,18 +1,17 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, jsonify
+from app.CoreC.antibodies.antibodiesTable import antibodiesTable
 from flask_paginate import Pagination, get_page_args
-from jinja2 import UndefinedError
+import mysql.connector as connection
 from app.CoreC.antibodies import bp
+from jinja2 import UndefinedError
 from app.reader import Reader
 from app import login_required
-import mysql.connector as connection
 import pandas as pd
-import json
-from fuzzywuzzy import fuzz, process
-import pymysql
-import re
+from fuzzywuzzy import fuzz
 from datetime import datetime
 from flask_caching import Cache
 from io import BytesIO
+import pymysql
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
@@ -20,6 +19,8 @@ from app.utils.search_utils import search_utils
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+antibodiesTable = antibodiesTable()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -29,7 +30,7 @@ def antibodies_route():
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = create_or_filter_dataframe()
+        data: dict = create_or_filter_dataframe()
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
             
@@ -77,11 +78,7 @@ def create_or_filter_dataframe():
     AllUinputs = [Company_name, Target_Name, Target_Species]
     
     # Creates list to store inputs that are being Used
-    Uinputs = []
-    # Checks which input fields are being used
-    for i in AllUinputs:
-        if i:
-            Uinputs.append(i)
+    Uinputs: list[str] = [i for i in AllUinputs if i]
 
     # Maps sorting options to their corresponding SQL names
     sort_orders = {
@@ -90,39 +87,8 @@ def create_or_filter_dataframe():
         'Expiration Date': 'Expiration_Date',
         'Box Name': 'Box_Name'
     }
-    # Check if sort is in the dictionary, if not then uses default value
-    order_by = sort_orders.get(sort, 'Target_Name')
-
-    # Validate the order_by to prevent sql injection
-    if order_by not in sort_orders.values():
-        order_by = 'Target_Name'  
-
-    query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
-
-
-    # Creates Dataframe
-    df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
-
-    SqlData = df
     
-    # * Fuzzy Search *
-    # Checks whether filters are being used
-    # If filters are used then implements fuzzy matching
-    if len(Uinputs) != 0:
-        columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
-        data = search_utils.search_data(Uinputs, columns_to_check, 70, SqlData)
-        
-        # If no match is found displays empty row
-        if not data:
-            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
-            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-            data = dataFrame.to_dict('records')
-    else: # If no search filters are used
-        # renaming columns and setting data variable
-        SqlData.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-        # Converts to a list of dictionaries
-        data = SqlData.to_dict(orient='records')
-    return data
+    return antibodiesTable.display(Uinputs, sort, sort_orders)
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -155,63 +121,34 @@ def addAntibody():
         else:
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
-
-
-        # * Checking to see if included is Yes or No *
-        # Finds match using fuzzywuzzy library
-        YesScore = fuzz.ratio("yes", included.lower())
-        NoScore = fuzz.ratio("no", included.lower())
-        threshold = 80
         
-        if YesScore >= threshold:
-            included = 1
-        elif NoScore >= threshold:
-            included = 0
-        else:
-            flash('Included field must be "Yes" or "No"')
+        if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))
 
-        try:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-            cursor = mydb.cursor()
+        params = {'BoxParam': box_name,
+                    'CompanyParam': company_name, 
+                    'catalogNumParam': catalog_num , 
+                    'TargetParam': target_name, 
+                    'TargetSpeciesParam': target_species, 
+                    'flourParam': fluorophore, 
+                    'cloneParam': clone, 
+                    'isotypeParam': isotype, 
+                    'sizeParam': size, 
+                    'concentrationParam': concentration, 
+                    'DateParam': expiration_date, 
+                    'titrationParam': titration, 
+                    'costParam': cost, 
+                    'includedParam': included}
 
-            params = {'BoxParam': box_name,
-                      'CompanyParam': company_name, 
-                      'catalogNumParam': catalog_num , 
-                      'TargetParam': target_name, 
-                      'TargetSpeciesParam': target_species, 
-                      'flourParam': fluorophore, 
-                      'cloneParam': clone, 
-                      'isotypeParam': isotype, 
-                      'sizeParam': size, 
-                      'concentrationParam': concentration, 
-                      'DateParam': expiration_date, 
-                      'titrationParam': titration, 
-                      'costParam': cost, 
-                      'includedParam': included}
+        # Executes add query
+        antibodiesTable.add(params)
 
-            # SQL Add query
-            query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
-
-            #Execute SQL query
-            cursor.execute(query, params)
-
-            # Commit the transaction
-            mydb.commit()
-
-            # Close the cursor and connection
-            cursor.close()
-            mydb.close()
-
-            # use to prevent user from caching pages
-            response = make_response(redirect(url_for('antibodies.antibodies_route')))
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-            response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-            response.headers["Expires"] = "0" # Proxies.
-            return response
-        except Exception as e:
-            print("Something went wrong: {}".format(e))
-            return jsonify({'error': 'Failed to add row.'}), 500
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
     if request.method == 'GET':
         data = {
@@ -242,33 +179,15 @@ def addAntibody():
 @login_required(role=["admin"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
+    
+    antibodiesTable.delete(primary_key)
 
-    try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        # SQL DELETE query
-        query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
-
-        #Execute SQL query
-        cursor.execute(query, (primary_key,))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
-
-        # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-    except Exception as e:
-        print("Something went wrong: {}".format(e))
-        return jsonify({'error': 'Failed to delete row.'}), 500
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('antibodies.antibodies_route')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
 
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -303,25 +222,8 @@ def changeAntibody():
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
 
-        # * Checking to see if included is Yes or No
-        # Finds match using fuzzywuzzy library
-        YesScore = fuzz.ratio("yes", included.lower())
-        NoScore = fuzz.ratio("no", included.lower())
-        threshold = 80
-        
-        if YesScore >= threshold:
-            included = 1
-        elif NoScore >= threshold:
-            included = 0
-        elif included == '1' or included == '0':
-            pass
-        else:
-            flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('antibodies.changeAntibody'))
-
-    #try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
+        if not (included := antibodiesTable.isIncludedValidInput(included)):
+            return redirect(url_for('antibodies.addAntibody'))
 
         params = {'BoxParam': box_name,
                     'CompanyParam': company_name, 
@@ -339,17 +241,8 @@ def changeAntibody():
                     'includedParam': included,
                     'Pkey': primary_key}
 
-        # SQL Change query
-        query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        #Executes change query
+        antibodiesTable.change(params)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('antibodies.antibodies_route')))
@@ -382,11 +275,6 @@ def downloadCSV():
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
 
-    df = pd.DataFrame.from_dict(saved_data)
-    csv = df.to_csv(index=False)
-    
-    # Convert the CSV string to bytes and use BytesIO
-    csv_bytes = csv.encode('utf-8')
-    csv_io = BytesIO(csv_bytes)
+    csv_io = antibodiesTable.download_CSV(saved_data=saved_data)
     
     return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

@@ -76,11 +76,7 @@ def create_or_filter_StockDataframe():
     AllUinputs = [company, product]
     
     # Creates list to store inputs that are being Used
-    Uinputs = []
-    # Checks which input fields are being used
-    for i in AllUinputs:
-        if i:
-            Uinputs.append(i)
+    Uinputs: list[str] = [i for i in AllUinputs if i]
 
     # Maps sorting options to their corresponding SQL names
     sort_orders = {

@@ -3,21 +3,21 @@ from typing import IO
 
 class ITable(ABC):
     @abstractmethod
-    def display() -> None:
+    def display(self) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def add() -> None:
+    def add(self) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def change() -> None:
+    def change(self) -> None:
         raise NotImplementedError
     
     @abstractmethod
-    def delete() -> None:
+    def delete(self) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def download_CSV(saved_data: dict[any]) -> IO[bytes]:
+    def download_CSV(self, saved_data: dict) -> IO[bytes]:
         raise NotImplementedError()

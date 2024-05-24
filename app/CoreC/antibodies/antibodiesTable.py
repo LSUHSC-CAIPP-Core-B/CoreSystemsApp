@@ -1,7 +1,12 @@
 from typing import IO
+from typing_extensions import override
+
+from flask import flash, redirect, url_for
+
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+import pymysql
 
 
 class antibodiesTable(BaseDatabaseTable):
@@ -9,8 +14,9 @@ class antibodiesTable(BaseDatabaseTable):
 
     :param BaseDatabaseTable: _description_
     :type BaseDatabaseTable: _type_
-    """    
-    def display(Uinputs: str, sort: str, sort_orders: dict[str]) -> dict:
+    """   
+    @override
+    def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
         # Check if sort is in the dictionary, if not then uses default value
     
         order_by = sort_orders.get(sort, 'Target_Name')
@@ -46,11 +52,28 @@ class antibodiesTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
 
-    def add() -> None:
-        pass
+    def add(self, **kwargs) -> None:
+        for name, value in kwargs.items():
+            if name == 'catalog_num':
+                raise NotImplementedError
+                     
 
-    def change() -> None:
+    def change(self) -> None:
         pass
     
-    def delete() -> None:
-        pass
+    def delete(self, primary_key) -> None:
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        # SQL DELETE query
+        query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
+
+        #Execute SQL query
+        cursor.execute(query, (primary_key,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()

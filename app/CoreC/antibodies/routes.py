@@ -20,6 +20,8 @@ app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
+antibodiesTable = antibodiesTable()
+
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies_route():
@@ -206,33 +208,15 @@ def addAntibody():
 @login_required(role=["admin"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
+    
+    antibodiesTable.delete(primary_key)
 
-    try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        # SQL DELETE query
-        query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
-
-        #Execute SQL query
-        cursor.execute(query, (primary_key,))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
-
-        # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
-    except Exception as e:
-        print("Something went wrong: {}".format(e))
-        return jsonify({'error': 'Failed to delete row.'}), 500
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('antibodies.antibodies_route')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
 
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -346,11 +330,6 @@ def downloadCSV():
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
 
-    df = pd.DataFrame.from_dict(saved_data)
-    csv = df.to_csv(index=False)
-    
-    # Convert the CSV string to bytes and use BytesIO
-    csv_bytes = csv.encode('utf-8')
-    csv_io = BytesIO(csv_bytes)
+    csv_io = antibodiesTable.download_CSV(saved_data=saved_data)
     
     return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

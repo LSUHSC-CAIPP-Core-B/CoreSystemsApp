@@ -1,29 +1,30 @@
 from abc import abstractmethod
 from io import BytesIO
 from typing import IO
+from typing_extensions import override
 
 import pandas as pd
 from app.interfaces.ITable import ITable
 
 class BaseDatabaseTable(ITable):
-    @abstractmethod
-    def display(Uinputs: str, sort: str, sort_orders: dict[str]) -> dict[any]:
+    @override
+    def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict[any]:
         raise NotImplementedError()
     
     @abstractmethod
-    def add() -> None:
+    def add(self) -> None:
         raise NotImplementedError()
     
     @abstractmethod    
-    def change() -> None:
+    def change(self) -> None:
         raise NotImplementedError()
     
     @abstractmethod
-    def delete() -> None:
+    def delete(self) -> None:
         raise NotImplementedError()
     
-    @abstractmethod
-    def download_CSV(saved_data: dict[any]) -> IO[bytes]:
+    @override
+    def download_CSV(self, saved_data: dict) -> IO[bytes]:
         df = pd.DataFrame.from_dict(saved_data)
         csv = df.to_csv(index=False)
         

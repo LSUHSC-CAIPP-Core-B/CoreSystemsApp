@@ -140,21 +140,8 @@ def addAntibody():
                     'costParam': cost, 
                     'includedParam': included}
 
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        # SQL Add query
-        query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
-
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        # Executes add query
+        antibodiesTable.add(params)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('antibodies.antibodies_route')))
@@ -254,20 +241,8 @@ def changeAntibody():
                     'includedParam': included,
                     'Pkey': primary_key}
 
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        # SQL Change query
-        query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        #Executes change query
+        antibodiesTable.change(params)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('antibodies.antibodies_route')))

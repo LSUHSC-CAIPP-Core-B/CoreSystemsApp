@@ -2,7 +2,7 @@ from typing import IO
 from typing_extensions import override
 
 from flask import flash, redirect, url_for
-
+from fuzzywuzzy import fuzz
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
@@ -77,3 +77,25 @@ class antibodiesTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+    def isIncludedValidInput(self, included: str) -> str | bool:
+        """# * Checking to see if included is Yes or No *
+        Finds match using fuzzywuzzy library
+
+        :param included: Included Variable
+        :type included: str
+        :return: returns string included or boolean false
+        :rtype: str | bool
+        """        
+
+        YesScore = fuzz.ratio("yes", included.lower())
+        NoScore = fuzz.ratio("no", included.lower())
+        threshold = 80
+        
+        if YesScore >= threshold:
+            return (included := 1)
+        elif NoScore >= threshold:
+            return (included := 0)
+        else:
+            flash('Included field must be "Yes" or "No"')
+            return False

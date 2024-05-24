@@ -121,63 +121,47 @@ def addAntibody():
         else:
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
-
-
-        # * Checking to see if included is Yes or No *
-        # Finds match using fuzzywuzzy library
-        YesScore = fuzz.ratio("yes", included.lower())
-        NoScore = fuzz.ratio("no", included.lower())
-        threshold = 80
         
-        if YesScore >= threshold:
-            included = 1
-        elif NoScore >= threshold:
-            included = 0
-        else:
-            flash('Included field must be "Yes" or "No"')
+        if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))
 
-        try:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-            cursor = mydb.cursor()
+        params = {'BoxParam': box_name,
+                    'CompanyParam': company_name, 
+                    'catalogNumParam': catalog_num , 
+                    'TargetParam': target_name, 
+                    'TargetSpeciesParam': target_species, 
+                    'flourParam': fluorophore, 
+                    'cloneParam': clone, 
+                    'isotypeParam': isotype, 
+                    'sizeParam': size, 
+                    'concentrationParam': concentration, 
+                    'DateParam': expiration_date, 
+                    'titrationParam': titration, 
+                    'costParam': cost, 
+                    'includedParam': included}
 
-            params = {'BoxParam': box_name,
-                      'CompanyParam': company_name, 
-                      'catalogNumParam': catalog_num , 
-                      'TargetParam': target_name, 
-                      'TargetSpeciesParam': target_species, 
-                      'flourParam': fluorophore, 
-                      'cloneParam': clone, 
-                      'isotypeParam': isotype, 
-                      'sizeParam': size, 
-                      'concentrationParam': concentration, 
-                      'DateParam': expiration_date, 
-                      'titrationParam': titration, 
-                      'costParam': cost, 
-                      'includedParam': included}
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
 
-            # SQL Add query
-            query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
+        # SQL Add query
+        query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
 
-            #Execute SQL query
-            cursor.execute(query, params)
+        #Execute SQL query
+        cursor.execute(query, params)
 
-            # Commit the transaction
-            mydb.commit()
+        # Commit the transaction
+        mydb.commit()
 
-            # Close the cursor and connection
-            cursor.close()
-            mydb.close()
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
 
-            # use to prevent user from caching pages
-            response = make_response(redirect(url_for('antibodies.antibodies_route')))
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-            response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-            response.headers["Expires"] = "0" # Proxies.
-            return response
-        except Exception as e:
-            print("Something went wrong: {}".format(e))
-            return jsonify({'error': 'Failed to add row.'}), 500
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
     if request.method == 'GET':
         data = {
@@ -251,25 +235,8 @@ def changeAntibody():
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
 
-        # * Checking to see if included is Yes or No
-        # Finds match using fuzzywuzzy library
-        YesScore = fuzz.ratio("yes", included.lower())
-        NoScore = fuzz.ratio("no", included.lower())
-        threshold = 80
-        
-        if YesScore >= threshold:
-            included = 1
-        elif NoScore >= threshold:
-            included = 0
-        elif included == '1' or included == '0':
-            pass
-        else:
-            flash('Included field must be "Yes" or "No"')
-            return redirect(url_for('antibodies.changeAntibody'))
-
-    #try:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
+        if not (included := antibodiesTable.isIncludedValidInput(included)):
+            return redirect(url_for('antibodies.addAntibody'))
 
         params = {'BoxParam': box_name,
                     'CompanyParam': company_name, 
@@ -286,6 +253,9 @@ def changeAntibody():
                     'costParam': cost, 
                     'includedParam': included,
                     'Pkey': primary_key}
+
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
 
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"

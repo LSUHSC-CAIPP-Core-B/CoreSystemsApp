@@ -7,6 +7,14 @@ import pandas as pd
 from app.interfaces.ITable import ITable
 
 class BaseDatabaseTable(ITable):
+    """Abstract class
+
+    For tables that display database information
+
+    :param ITable: interface for tables
+    :type ITable: type
+    """    
+
     @override
     def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict[any]:
         raise NotImplementedError()

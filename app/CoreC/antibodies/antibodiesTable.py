@@ -10,13 +10,26 @@ import pymysql
 
 
 class antibodiesTable(BaseDatabaseTable):
-    """_summary_
+    """ Concrete class,
+    Inherits from abstract class BaseDatabaseTable
 
-    :param BaseDatabaseTable: _description_
-    :type BaseDatabaseTable: _type_
+    :param BaseDatabaseTable: Abstract Class BaseDatabaseTable
+    :type BaseDatabaseTable: type
     """   
     @override
     def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
+        """Filters table then displays it 
+
+        :param Uinputs: User Inputs
+        :type Uinputs: str
+        :param sort: what to sort by
+        :type sort: str
+        :param sort_orders: Maps sorting options to their corresponding SQL names
+        :type sort_orders: dict
+        :return: data
+        :rtype: dict
+        """
+
         # Check if sort is in the dictionary, if not then uses default value
     
         order_by = sort_orders.get(sort, 'Target_Name')

@@ -20,15 +20,15 @@ class BaseDatabaseTable(ITable):
         raise NotImplementedError()
     
     @abstractmethod
-    def add(self) -> None:
+    def add(self, params:dict) -> None:
         raise NotImplementedError()
     
     @abstractmethod    
-    def change(self) -> None:
+    def change(self, params:dict) -> None:
         raise NotImplementedError()
     
     @abstractmethod
-    def delete(self) -> None:
+    def delete(self, primary_key) -> None:
         raise NotImplementedError()
     
     @override

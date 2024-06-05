@@ -6,6 +6,7 @@ from fuzzywuzzy import fuzz
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.utils.logging_utils.logGenerator import Logger
 import pymysql
 
 
@@ -115,6 +116,12 @@ class antibodiesTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+        logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        LogGenerator = Logger(logFormat=logFormat)
+        logger = LogGenerator.generateLogger()
+
+        logger.info("Deletion Complete!")
 
     def isIncludedValidInput(self, included: str) -> str | bool:
         """# * Checking to see if included is Yes or No *

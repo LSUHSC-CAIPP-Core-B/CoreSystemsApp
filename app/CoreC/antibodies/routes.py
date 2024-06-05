@@ -15,12 +15,17 @@ import pymysql
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.utils.logging_utils.logGenerator import Logger
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 antibodiesTable = antibodiesTable()
+
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat)
+logger = LogGenerator.generateLogger()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -179,7 +184,9 @@ def addAntibody():
 @login_required(role=["admin"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
-    
+
+    logger.info("Deletion Attempting...")
+
     antibodiesTable.delete(primary_key)
 
     # use to prevent user from caching pages

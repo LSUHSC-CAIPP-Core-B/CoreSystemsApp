@@ -7,23 +7,25 @@ class Logger():
     def __init__(self, logFormat) -> None:
         self.logFormat = logFormat
 
-    def generateLogger(self) -> type:
+    def generateLogger(self) -> logging.Logger:
         # Creates logger
         logger = logging.getLogger("logger")
         logLevel = logging.DEBUG
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logLevel)
 
-        # Creates console handler and set level to debug
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        # Check if the logger already has handlers
+        if not logger.handlers:
+            # Creates console handler and set level to debug
+            ch = logging.StreamHandler()
+            ch.setLevel(logLevel)
 
-        # Creates formatter
-        formatter = ColoredFormatter(self.logFormat,
-                                    datefmt='%m/%d/%Y, %I:%M:%S %p')
+            # Creates formatter
+            formatter = ColoredFormatter(self.logFormat, datefmt='%m/%d/%Y, %I:%M:%S %p')
 
-        # Add formatter to console handler
-        ch.setFormatter(formatter)
+            # Add formatter to console handler
+            ch.setFormatter(formatter)
 
-        # Add console handler to logger
-        logger.addHandler(ch)
+            # Add console handler to logger
+            logger.addHandler(ch)
+
         return logger

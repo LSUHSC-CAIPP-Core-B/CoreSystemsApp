@@ -101,12 +101,16 @@ class antibodiesTable(BaseDatabaseTable):
         mydb.close()
     
     def delete(self, primary_key) -> None:
+        logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
+        LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+        logger = LogGenerator.generateLogger()
+
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL DELETE query
         query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
-
+        logger.info(f"Executing query: {query} with params: {primary_key}")
         #Execute SQL query
         cursor.execute(query, (primary_key,))
 
@@ -116,10 +120,6 @@ class antibodiesTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
-
-        logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        LogGenerator = Logger(logFormat=logFormat)
-        logger = LogGenerator.generateLogger()
 
         logger.info("Deletion Complete!")
 

@@ -24,7 +24,7 @@ defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 antibodiesTable = antibodiesTable()
 
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LogGenerator = Logger(logFormat=logFormat)
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
 logger = LogGenerator.generateLogger()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])

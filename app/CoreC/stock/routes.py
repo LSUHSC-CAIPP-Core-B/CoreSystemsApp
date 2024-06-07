@@ -17,6 +17,7 @@ from io import BytesIO
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
 from app.CoreC.stock.stockTable import stockTable
+from app.utils.logging_utils.logGenerator import Logger
 
 app = Flask(__name__)
 
@@ -24,6 +25,11 @@ cache1 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 stockTable = stockTable()
+
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 @bp.route('/stock', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -104,6 +110,15 @@ def addSupply():
             flash('Fields cannot be empty')
             return redirect(url_for('stock.addSupply'))
 
+        if not Quantity.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('stock.addSupply'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('stock.addSupply'))
 
         params = {'CompanyParam': Company_Name, 
                     'catalogNumParam': catalog_num , 
@@ -147,6 +162,21 @@ def changeSupply():
         Product_Name = request.form.get('Product')
         Quantity = request.form.get('Quantity')
 
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num.lower() == "n/a":
+            flash('Fields cannot be empty')
+            return redirect(url_for('stock.addSupply'))
+
+        if not Quantity.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('stock.addSupply'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('stock.addSupply'))
+
         params = {'CompanyParam': Company_Name, 
                       'catalogNumParam': catalog_num , 
                       'costParam': cost,
@@ -181,6 +211,8 @@ def changeSupply():
 @login_required(role=["admin"])
 def deleteSupply():
     primary_key = request.form['primaryKey']
+
+    logger.info("Deletion Attempting...")
 
     stockTable.delete(primary_key)
 

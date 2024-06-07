@@ -6,8 +6,13 @@ from fuzzywuzzy import fuzz
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.utils.logging_utils.logGenerator import Logger
 import pymysql
 
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 class antibodiesTable(BaseDatabaseTable):
     """ Concrete class
@@ -19,18 +24,6 @@ class antibodiesTable(BaseDatabaseTable):
     """   
     @override
     def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
-        """Filters table then displays it 
-
-        :param Uinputs: User Inputs
-        :type Uinputs: str
-        :param sort: what to sort by
-        :type sort: str
-        :param sort_orders: Maps sorting options to their corresponding SQL names
-        :type sort_orders: dict
-        :return: data
-        :rtype: dict
-        """
-
         # Check if sort is in the dictionary, if not then uses default value
     
         order_by = sort_orders.get(sort, 'Target_Name')
@@ -66,13 +59,13 @@ class antibodiesTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
 
-    def add(self, params:dict) -> None:
+    def add(self, params:dict) -> None:   
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL Add query
         query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
-
+        logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
 
@@ -89,6 +82,7 @@ class antibodiesTable(BaseDatabaseTable):
 
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
+        logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
 
@@ -105,7 +99,7 @@ class antibodiesTable(BaseDatabaseTable):
 
         # SQL DELETE query
         query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
-
+        logger.info(f"Executing query: {query} with params: {primary_key}")
         #Execute SQL query
         cursor.execute(query, (primary_key,))
 
@@ -115,6 +109,8 @@ class antibodiesTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+        logger.info("Deletion Complete!")
 
     def isIncludedValidInput(self, included: str) -> str | bool:
         """# * Checking to see if included is Yes or No *

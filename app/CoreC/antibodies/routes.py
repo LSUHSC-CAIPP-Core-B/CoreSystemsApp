@@ -15,12 +15,18 @@ import pymysql
 
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.utils.logging_utils.logGenerator import Logger
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 antibodiesTable = antibodiesTable()
+
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -122,6 +128,16 @@ def addAntibody():
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
         
+        if not titration.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+
         if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))
 
@@ -179,7 +195,9 @@ def addAntibody():
 @login_required(role=["admin"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
-    
+
+    logger.info("Deletion Attempting...")
+
     antibodiesTable.delete(primary_key)
 
     # use to prevent user from caching pages
@@ -221,6 +239,16 @@ def changeAntibody():
         else:
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
+
+        if not titration.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
 
         if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))

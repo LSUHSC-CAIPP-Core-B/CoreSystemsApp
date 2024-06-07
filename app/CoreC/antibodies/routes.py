@@ -23,6 +23,7 @@ defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 antibodiesTable = antibodiesTable()
 
+# Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
 logger = LogGenerator.generateLogger()

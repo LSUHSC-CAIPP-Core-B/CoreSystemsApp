@@ -9,6 +9,10 @@ from app.utils.search_utils import search_utils
 from app.utils.logging_utils.logGenerator import Logger
 import pymysql
 
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 class antibodiesTable(BaseDatabaseTable):
     """ Concrete class
@@ -73,7 +77,7 @@ class antibodiesTable(BaseDatabaseTable):
 
         # SQL Add query
         query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
-
+        logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
 
@@ -90,6 +94,7 @@ class antibodiesTable(BaseDatabaseTable):
 
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
+        logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
 
@@ -101,10 +106,6 @@ class antibodiesTable(BaseDatabaseTable):
         mydb.close()
     
     def delete(self, primary_key) -> None:
-        logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
-        LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
-        logger = LogGenerator.generateLogger()
-
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 

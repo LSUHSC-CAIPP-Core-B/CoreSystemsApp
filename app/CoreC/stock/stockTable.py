@@ -6,7 +6,13 @@ from fuzzywuzzy import fuzz
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from app.utils.logging_utils.logGenerator import Logger
 import pymysql
+
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 class stockTable(BaseDatabaseTable):
     """ Concrete class
@@ -74,7 +80,7 @@ class stockTable(BaseDatabaseTable):
         # SQL Add query
         query = "INSERT INTO Order_Info VALUES (null, %(CompanyParam)s, %(catalogNumParam)s, %(costParam)s, %(ProductParam)s);"
         query2 = "INSERT INTO Stock_Info VALUES (LAST_INSERT_ID(), %s);"
-
+        logger.info(f"Executing queries: {query}, {query2} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
         cursor.execute(query2, (Quantity,))
@@ -93,6 +99,7 @@ class stockTable(BaseDatabaseTable):
         # SQL Change query
         query = "UPDATE Order_Info SET Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Unit_Price = %(costParam)s, Product_Name = %(ProductParam)s WHERE Order_Info.Product_Num = %(Pkey)s;"
         query2 = "UPDATE Stock_Info SET Quantity = %s WHERE Product_Num = %s;"
+        logger.info(f"Executing queries: {query}, {query2} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
         cursor.execute(query2, (Quantity, primary_key))
@@ -111,7 +118,7 @@ class stockTable(BaseDatabaseTable):
         # SQL DELETE query
         query = "DELETE FROM Order_Info WHERE Product_Num = %s"
         query2 = "DELETE FROM Stock_Info WHERE Product_Num = %s"
-
+        logger.info(f"Executing queries: {query2}, {query} with params: {primary_key}")
         #Execute SQL query
         #! query2 must be executed first because of foreign key constraints
         cursor.execute(query2, (primary_key,))
@@ -123,4 +130,6 @@ class stockTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+        logger.info("Deletion Complete!")
 

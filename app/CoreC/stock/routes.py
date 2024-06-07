@@ -110,6 +110,15 @@ def addSupply():
             flash('Fields cannot be empty')
             return redirect(url_for('stock.addSupply'))
 
+        if not Quantity.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('stock.addSupply'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('stock.addSupply'))
 
         params = {'CompanyParam': Company_Name, 
                     'catalogNumParam': catalog_num , 
@@ -152,6 +161,21 @@ def changeSupply():
         cost = request.form.get('Cost')
         Product_Name = request.form.get('Product')
         Quantity = request.form.get('Quantity')
+
+        # Making sure catalog number field isnt empty
+        if catalog_num == "" or catalog_num.lower() == "n/a":
+            flash('Fields cannot be empty')
+            return redirect(url_for('stock.addSupply'))
+
+        if not Quantity.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('stock.addSupply'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('stock.addSupply'))
 
         params = {'CompanyParam': Company_Name, 
                       'catalogNumParam': catalog_num , 

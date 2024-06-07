@@ -10,7 +10,11 @@ class Logger():
         self.logFile = logFile
 
     def generateLogger(self) -> logging.Logger:
-        # Creates logger
+        """Creates logger
+
+        :return: logger instance
+        :rtype: logging.Logger
+        """        
         logger = logging.getLogger("logger")
         logLevel = logging.DEBUG
         logger.setLevel(logLevel)

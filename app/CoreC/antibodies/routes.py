@@ -128,6 +128,16 @@ def addAntibody():
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.addAntibody'))
         
+        if not titration.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+
         if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))
 
@@ -229,6 +239,16 @@ def changeAntibody():
         else:
             flash('Date must be in "YYYY-MM-DD" format')
             return redirect(url_for('antibodies.changeAntibody'))
+
+        if not titration.isdigit():
+            flash('Titration must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
+        
+        try:
+            float(cost)
+        except ValueError:
+            flash('Cost must be a number')
+            return redirect(url_for('antibodies.addAntibody'))
 
         if not (included := antibodiesTable.isIncludedValidInput(included)):
             return redirect(url_for('antibodies.addAntibody'))

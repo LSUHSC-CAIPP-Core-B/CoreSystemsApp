@@ -24,18 +24,6 @@ class antibodiesTable(BaseDatabaseTable):
     """   
     @override
     def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
-        """Filters table then displays it 
-
-        :param Uinputs: User Inputs
-        :type Uinputs: str
-        :param sort: what to sort by
-        :type sort: str
-        :param sort_orders: Maps sorting options to their corresponding SQL names
-        :type sort_orders: dict
-        :return: data
-        :rtype: dict
-        """
-
         # Check if sort is in the dictionary, if not then uses default value
     
         order_by = sort_orders.get(sort, 'Target_Name')
@@ -71,7 +59,7 @@ class antibodiesTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
 
-    def add(self, params:dict) -> None:
+    def add(self, params:dict) -> None:   
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 

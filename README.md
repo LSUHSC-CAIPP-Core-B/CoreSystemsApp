@@ -7,9 +7,9 @@ CoreSystemsApp is a comprehensive web application developed by the LSUHSC-CAIPP 
 ## Table of Contents 
 - [Setup](#Setup) 
 - [Web App](#Web-App) 
--- [Login](#Login) 
--- [Core B](#Core-B) 
--- [Core C](#Core-C)
+    - [Login](#Login) 
+    - [Core B](#Core-B) 
+    - [Core C](#Core-C)
 - [Reader](#Reader)
 - [PdfWriter](#PdfWriter)
 

@@ -1,21 +1,22 @@
-from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, jsonify
-from app.CoreC.antibodies.antibodiesTable import antibodiesTable
-from flask_paginate import Pagination, get_page_args
-import mysql.connector as connection
-from app.CoreC.antibodies import bp
-from jinja2 import UndefinedError
-from app.reader import Reader
-from app import login_required
-import pandas as pd
-from fuzzywuzzy import fuzz
 from datetime import datetime
-from flask_caching import Cache
 from io import BytesIO
-import pymysql
 
+import mysql.connector as connection
+import pandas as pd
+import pymysql
+from app import login_required
+from app.CoreC.antibodies import bp
+from app.CoreC.antibodies.antibodiesTable import antibodiesTable
+from app.reader import Reader
 from app.utils.db_utils import db_utils
-from app.utils.search_utils import search_utils
 from app.utils.logging_utils.logGenerator import Logger
+from app.utils.search_utils import search_utils
+from flask import (Flask, flash, jsonify, make_response, redirect,
+                   render_template, request, send_file, url_for)
+from flask_caching import Cache
+from flask_paginate import Pagination, get_page_args
+from fuzzywuzzy import fuzz
+from jinja2 import UndefinedError
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache

@@ -1,13 +1,13 @@
 from typing import IO
-from typing_extensions import override
 
-from flask import flash
-from fuzzywuzzy import fuzz
+import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
-from app.utils.search_utils import search_utils
 from app.utils.logging_utils.logGenerator import Logger
-import pymysql
+from app.utils.search_utils import search_utils
+from flask import flash
+from fuzzywuzzy import fuzz
+from typing_extensions import override
 
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'

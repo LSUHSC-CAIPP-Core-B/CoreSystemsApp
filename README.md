@@ -1,8 +1,12 @@
-#  Order Form Automation
+#  Core Systems Application
 
 ![Title](docs/title.png)
 
 CoreSystemsApp is a comprehensive web application developed by the LSUHSC-CAIPP Core B team. It is designed to manage systems in Bioinformatics and Modeling Cores B and C, providing various core functionalities essential for these operations.
+
+![System Design](docs/Core_Systems_App_Design.png)
+
+Ensures that users have appropriate permissions and can perform operations on the database safely. It involves client-side application logic, server-side processing, and communication via APIs.
 
 ## Table of Contents 
 - [Setup](#Setup) 

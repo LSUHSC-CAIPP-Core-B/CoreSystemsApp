@@ -136,6 +136,7 @@ def update():
 
         reader.saveDataCSV(data, unprocessed_df)
 
+        # Updates cache
         with app.app_context():
             cache1.delete('cached_data')
         with app.app_context():

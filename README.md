@@ -1,6 +1,8 @@
 #  Core Systems Application
-<img alt="Static Badge" src="https://img.shields.io/badge/LSUHS_CAIPP%20Modeling%20Core-purple?link=https%3A%2F%2Fwww.lsuhs.edu%2Fcenters%2Fcenter-for-applied-immunology-and-pathological-processes%2Fbioinformatics-modeling-core">
+[![][black-shield]][black]
 
+[black]: https://www.lsuhs.edu/centers/center-for-applied-immunology-and-pathological-processes/bioinformatics-modeling-core
+[black-shield]: https://img.shields.io/badge/LSUHS-CAIPP_Modelling_Core-FFBF00.svg?style=for-the-badge&labelColor=purple
 ![PyPI - Implementation](https://img.shields.io/pypi/implementation/flask?logo=python) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pandas?logo=pandas&label=pandas) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/FuzzyWuzzy?logo=python&label=FuzzyWuzzy)
  ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github) ![GitHub last commit](https://img.shields.io/github/last-commit/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github)
 

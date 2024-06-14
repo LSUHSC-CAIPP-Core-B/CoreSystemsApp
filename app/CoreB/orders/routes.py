@@ -135,6 +135,13 @@ def update():
             return redirect(url_for('orders.orders'))
 
         reader.saveDataCSV(data, unprocessed_df)
+
+        # Updates cache
+        with app.app_context():
+            cache1.delete('cached_data')
+        with app.app_context():
+            cache1.set('cached_data', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+
         return redirect(url_for('orders.orders'))
 
 @bp.route('/delete', methods=['GET'])

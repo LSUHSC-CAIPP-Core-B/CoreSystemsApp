@@ -16,7 +16,6 @@ Advancements in flow cytometry technology have enabled a growing array of antibo
     - A comprehensive system designed to help users easily track supplies in a lab
 
 ## Database Configuration
----
 To ensure proper data manipulation, the database schema must adhere to the following structure:
 ##### Antibodies
 ``` sql

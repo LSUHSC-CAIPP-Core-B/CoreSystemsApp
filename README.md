@@ -86,73 +86,10 @@ Only super admins can add and delete users and other admins to the app. It can b
 ![App flow](docs/Core_App_entry_flow.png)
 
 ###  Core B
-
-This part has every system that Core B uses which are:
-
-#####  Orders
-
-This part is responsible for managing orders for Core B services. List of all currrent orders is displayed with number of filtering options. Each order can be edited and deleted. module gives the option to generate an invoice for specified order.
-
-#####  Invoices
-
-Page displays invoice history to keep track of previous services in one place. There are filtering and deletion options available.
-
-#####  PI list
-
-Part for displaying PI's information. There is an option to add new PIs and edit the current ones. There are filtering and deletion options available.
+For more details see [CoreB](app/CoreB/README.md)
 
 ###  Core C
-
-#### Database Configuration
----
-To ensure proper data manipulation, the database schema must adhere to the following structure:
-##### Antibodies
-``` sql
--- Antibodies table
-CREATE TABLE Antibodies_Stock(
-    Stock_ID INT AUTO_INCREMENT Primary key,
-    Box_Name VARCHAR(64),
-    Company_Name VARCHAR(64),
-    Catalog_Num VARCHAR(64),
-    Target_Name VARCHAR(64),
-    Target_Species VARCHAR(64),
-    Fluorophore VARCHAR(64),
-    Clone_Name VARCHAR(64),
-    Isotype VARCHAR(64),
-    Size VARCHAR(64),
-    Concentration VARCHAR(64),
-    Expiration_Date DATE,
-    Titration INT,
-    Cost FLOAT,
-    Cost_Per_Sample VARCHAR(64),
-    Included TINYINT                        
-) AUTO_INCREMENT = 1;
-```
-##### Stock
-``` sql
--- ORDER INFORMATION TABLE
-CREATE TABLE Order_Info(
-    Product_Num INT AUTO_INCREMENT primary key,
-    Company_Name VARCHAR(64),
-    Catalog_Num VARCHAR(64),
-    Unit_Price FLOAT(25),
-    Product_Name VARCHAR(64)
-);
-
--- STOCK INFORMATION TABLE
-CREATE TABLE Stock_Info (
-    Product_Num INT Primary key,
-    Quantity INT,
-    FOREIGN KEY (Product_Num) REFERENCES Order_info(Product_Num)
-);
-```
-##### Panels
-In Progress...
-```
-
-```
-
-  
+For more details see [CoreC](app/CoreC/README.md).
 
 ##  Reader
 

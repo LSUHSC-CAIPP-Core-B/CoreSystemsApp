@@ -1,8 +1,9 @@
 # CoreB
----
 ## Table of Contents 
 - [Introduction](#Introduction)
 - [Key Features](#Key-Features)
+## Introduction
+In progress...
 ## Key Features
 
 This section highlights every system that Core B uses which includes the following:

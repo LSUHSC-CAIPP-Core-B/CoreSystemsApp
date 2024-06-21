@@ -1,5 +1,4 @@
 # Core C
----
 ## Table of Contents 
 - [Introduction](#Introduction)
 - [Key Features](#Key-Features)

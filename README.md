@@ -4,7 +4,7 @@
 [black]: https://www.lsuhs.edu/centers/center-for-applied-immunology-and-pathological-processes/bioinformatics-modeling-core
 [black-shield]: https://img.shields.io/badge/LSUHS-CAIPP_Modelling_Core-FFBF00.svg?style=for-the-badge&labelColor=purple
 [![PyPI - Implementation](https://img.shields.io/pypi/implementation/flask?logo=python)](https://pypi.org/project/Flask/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pandas?logo=pandas&label=pandas)](https://pypi.org/project/pandas/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/FuzzyWuzzy?logo=python&label=FuzzyWuzzy)](https://pypi.org/project/fuzzywuzzy/)
- ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github) ![GitHub last commit](https://img.shields.io/github/last-commit/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github)
+ [![GitHub commit activity](https://img.shields.io/github/commit-activity/t/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github)](https://github.com/LSUHSC-CAIPP-Core-B/CoreSystemsApp/commits/main/) [![GitHub last commit](https://img.shields.io/github/last-commit/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github)](https://github.com/LSUHSC-CAIPP-Core-B/CoreSystemsApp/commits/main/)
 
 ![Title](docs/title.png)
 

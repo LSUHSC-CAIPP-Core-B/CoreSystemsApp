@@ -67,7 +67,7 @@ The app is divided into several sections based on required access levels and fun
 
 You must log in to your account to access the app. Each user has a specific role that grants them different levels of access.
 
-The login system is implemented with *Flask_Login* and includes custom roles. Roles:
+The login system is implemented with *flask_Login* and includes custom roles. Roles:
 
 - Admin
 

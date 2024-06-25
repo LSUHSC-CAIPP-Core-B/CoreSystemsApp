@@ -33,11 +33,23 @@ logger = LogGenerator.generateLogger()
 @login_required(role=["user", "coreC"])
 def antibodies_route():
     if request.method == 'POST':
+        Company_name = request.form.get('company_name') or ""
+        Target_Name = request.form.get('target_name') or ""
+        Target_Species = request.form.get('target_species') or ""
+        sort = request.form.get('sort') or 'Original'
+        panelSelect =  request.form.get('panelSelect') or 'Original'
+
+        # Stores all possible Inputs
+        AllUinputs = [Company_name, Target_Name, Target_Species]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs: list[str] = [i for i in AllUinputs if i]
+        
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data: dict = create_or_filter_dataframe()
+        data: dict = antibodiesTable.display(Uinputs, sort)
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
             
@@ -73,29 +85,6 @@ def antibodies_route():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
-
-def create_or_filter_dataframe():
-    Company_name = request.form.get('company_name') or ""
-    Target_Name = request.form.get('target_name') or ""
-    Target_Species = request.form.get('target_species') or ""
-    sort = request.form.get('sort') or 'Original'
-    panelSelect =  request.form.get('panelSelect') or 'Original'
-
-    # Stores all possible Inputs
-    AllUinputs = [Company_name, Target_Name, Target_Species]
-    
-    # Creates list to store inputs that are being Used
-    Uinputs: list[str] = [i for i in AllUinputs if i]
-
-    # Maps sorting options to their corresponding SQL names
-    sort_orders = {
-        'Price': 'Cost',
-        'Catalog Number': 'Catalog_Num',
-        'Expiration Date': 'Expiration_Date',
-        'Box Name': 'Box_Name'
-    }
-    
-    return antibodiesTable.display(Uinputs, sort, sort_orders)
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin"])

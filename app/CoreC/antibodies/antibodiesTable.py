@@ -23,9 +23,16 @@ class antibodiesTable(BaseDatabaseTable):
     :type BaseDatabaseTable: type
     """   
     @override
-    def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
+    def display(self, Uinputs: str, sort: str) -> dict:
+        # Maps sorting options to their corresponding SQL names
+        sort_orders = {
+            'Price': 'Cost',
+            'Catalog Number': 'Catalog_Num',
+            'Expiration Date': 'Expiration_Date',
+            'Box Name': 'Box_Name'
+        }
+
         # Check if sort is in the dictionary, if not then uses default value
-    
         order_by = sort_orders.get(sort, 'Target_Name')
 
         # Validate the order_by to prevent sql injection

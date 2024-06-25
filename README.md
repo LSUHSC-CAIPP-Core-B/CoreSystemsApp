@@ -61,13 +61,13 @@ Install requirements with:
 
 ##  Web App
 
-The app is separated into a few parts based on access level required and functionality.
+The app is divided into several sections based on required access levels and functionality.
 
 ###  Login
 
-You have to login into your account the access the app. Each user have different roles that grant specific access.
+You must log in to your account to access the app. Each user has a specific role that grants them different levels of access.
 
-Login system is implemented with *flask_login* with added custom roles. The roles are:
+The login system is implemented with *Flask_Login* and includes custom roles. Roles:
 
 - Admin
 
@@ -77,7 +77,7 @@ Login system is implemented with *flask_login* with added custom roles. The role
 
 - Core C
 
-Only super admins can add and delete users and other admins to the app. It can be done in the Authentication/Admin panel module.
+Only super admins can add and delete users, including other admins, within the app. This functionality is available in the Authentication/Admin panel module.
 
   
 
@@ -93,10 +93,8 @@ For more details see [CoreC](app/CoreC/README.md).
 
 ##  Reader
 
-Extension to read specific .csv data files. Orders from the CAIPP request Google form are parsed byt his module to keep the prefered format for data edition and display and to keep the .csv updatable by keeping it in the same format as it is downloaded from the Google form.
-
-  
+This extension reads specific .csv data files. It parses orders from the CAIPP request Google form, ensuring the data maintains the preferred format for editing and display. Additionally, it keeps the .csv files updatable by preserving the original format as downloaded from the Google form.
 
 ##  PdfWriter
 
-Extension to edit invoice PDF files. It gets a dictionary and puts the data to predefined invoice template.
+This extension allows for editing invoice PDF files. It takes a dictionary of data and populates a predefined invoice template accordingly.

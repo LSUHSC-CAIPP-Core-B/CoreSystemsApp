@@ -8,7 +8,7 @@
 
 ![Title](docs/title.png)
 
-CoreSystemsApp is a comprehensive web application developed by the LSUHSC-CAIPP Core B team. It is designed to manage systems in Bioinformatics and Modeling Cores B and C, providing various core functionalities essential for these operations.
+A lightweight and highly cutomizable free web system using Flask. CoreSystemsApp is a comprehensive web application developed by the LSUHSC-CAIPP Core B team. It is designed to manage systems in Bioinformatics and Modeling Cores B and C, providing various core functionalities essential for these operations.
 
 ![System Design](docs/Core_Systems_App_Design.png)
 

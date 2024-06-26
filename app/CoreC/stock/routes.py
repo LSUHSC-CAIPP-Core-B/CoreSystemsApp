@@ -36,12 +36,21 @@ logger = LogGenerator.generateLogger()
 @login_required(role=["admin"])
 def stock():
     if request.method == 'POST':
+        company = request.form.get('Company') or ""
+        product = request.form.get('Product') or ""
+        sort = request.form.get('sort') or "Original"
+
+        # Stores all possible Inputs
+        AllUinputs = [company, product]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs: list[str] = [i for i in AllUinputs if i]
+
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-
-        data = create_or_filter_StockDataframe()
+        data: dict = stockTable.display(Uinputs, sort)
         with app.app_context():
             cache1.set('cached_dataframe2', data, timeout=3600)
 

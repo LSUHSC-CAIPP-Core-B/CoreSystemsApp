@@ -18,7 +18,7 @@ class BaseDatabaseTable(ITable):
     """    
 
     @override
-    def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict[any]:
+    def display(self, Uinputs: str, sort: str) -> dict[any]:
         """Filters table then displays it 
 
         :param Uinputs: User Inputs

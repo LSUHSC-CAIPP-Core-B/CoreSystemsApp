@@ -24,7 +24,7 @@ class stockTable(BaseDatabaseTable):
     """
 
     @override
-    def display(self, Uinputs: str, sort: str, sort_orders: dict) -> dict:
+    def display(self, Uinputs: str, sort: str) -> dict:
         """Filters table then displays it 
 
         :param Uinputs: User Inputs
@@ -36,7 +36,11 @@ class stockTable(BaseDatabaseTable):
         :return: data
         :rtype: dict
         """
-
+        # Maps sorting options to their corresponding SQL names
+        sort_orders = {
+            'Product': 'Product_Name',
+            'Cost': 'Unit_Price'
+        }
         # Check if sort is in the dictionary, if not then uses default value
         order_by = sort_orders.get(sort, 'Quantity')
 

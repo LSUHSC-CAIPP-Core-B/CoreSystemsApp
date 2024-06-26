@@ -1,10 +1,12 @@
 from abc import abstractmethod
 from io import BytesIO
 from typing import IO
-from typing_extensions import override
 
 import pandas as pd
+from typing_extensions import override
+
 from app.interfaces.ITable import ITable
+
 
 class BaseDatabaseTable(ITable):
     """Abstract class

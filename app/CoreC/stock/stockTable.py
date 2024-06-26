@@ -62,7 +62,7 @@ class stockTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["Company_Name", "Product_Name"]
-            data = search_utils.search_data(Uinputs, columns_to_check, 45, SqlData)
+            data = search_utils.search_data(Uinputs, columns_to_check, 45, SqlData, {'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'})
             
             # If no match is found displays empty row
             if not data:

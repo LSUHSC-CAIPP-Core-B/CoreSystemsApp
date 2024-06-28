@@ -30,7 +30,7 @@
         <a href="/antibodies">
             <h2 class="base-heading">Antibodies</h2>
         </a>
-        <a href="/predefined_Antibody_Panels">
+        <a href="/panels">
             <h2 class="base-heading">Predefined Antibody Panels</h2>
         </a>
         {% if current_user.is_admin %}
@@ -54,7 +54,7 @@
             </h2>
             <div class="dropdown-content">
                 <a href="/antibodies" class="adrop">Antibodies</a>
-                <a href="/predefined_Antibody_Panels" class="adrop">Predefined Antibody Panels</a>
+                <a href="/panels" class="adrop">Predefined Antibody Panels</a>
                 {% if current_user.is_admin %}
                 <a href="/stock" class="adrop">Stock</a>
                 {% endif %}

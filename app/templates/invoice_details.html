@@ -2,38 +2,40 @@
 
 {% block content %}
 <html>
-    <body>
-      <div class="header" id="gradheader">
-        <h1 class="header_text">{{project_id}} invocie details</h1>
-        <h2 class="header_text">List of all services in the project</h2>
-      </div>
-      <div class="noback_centerdiv">
-      <div class="div-border-min">
-        <table class="table_round_all">
-            <thead>
-                <tr>
-                  {% for header in data[0].keys() %}
-                  <th>
-                    <h4>{{ header }}</h4>
-                  </th>
-                  {% endfor %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in range(0, len(data)) %}
-                <tr id="{{row}}">
-                  {% for col in range(0, len(list(data[row].values()))) %}
-                  <td>
-                    {{ list(data[row].values())[col] }}
-    
-                    {% endfor %}
-                    {% endfor %}
-                  </td>
-                </tr>
-              </tbody>
-          </table>
-        </div>
-      </div>
-    </body>
+
+<body>
+  <div class="header" id="gradheader">
+    <h1 class="header_text">{{project_id}} invoice details</h1>
+    <h2 class="header_text">List of all services in the project</h2>
+  </div>
+  <div class="noback_centerdiv">
+    <div class="div-border-min">
+      <table class="table_round_all">
+        <thead>
+          <tr>
+            {% for header in data[0].keys() %}
+            <th>
+              <h4>{{ header }}</h4>
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in range(0, len(data)) %}
+          <tr id="{{row}}">
+            {% for col in range(0, len(list(data[row].values()))) %}
+            <td>
+              {{ list(data[row].values())[col] }}
+
+              {% endfor %}
+              {% endfor %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
 </html>
 {% endblock %}

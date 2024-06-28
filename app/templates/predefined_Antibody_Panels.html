@@ -79,7 +79,7 @@
                                         class="deletebutton"
                                         onclick="return confirm('Are you sure You want to delete this invoice?')">X</button></a>
                                 {% endif %}
-                                <a href="/panel_details?primary_key={{list(data[row].values())[0]}}">{{
+                                <a href="/panel_details?Panel_Name={{list(data[row].values())[0]}}">{{
                                     list(data[row].values())[col]}}</a>
                                 {% else %}
 

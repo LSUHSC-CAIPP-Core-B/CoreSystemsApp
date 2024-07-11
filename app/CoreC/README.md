@@ -58,6 +58,16 @@ CREATE TABLE Stock_Info (
 ```
 ##### Panels
 In Progress...
-```
+```sql
+-- PANEL LIST TABLE
+CREATE TABLE predefined_panels(
+    Panel_id INT AUTO_INCREMENT Primary key,
+    Panel_Name VARCHAR(64)          
+) AUTO_INCREMENT = 1;
 
+-- PANEL TABLE
+CREATE TABLE panel_name(
+    stock_id INT Primary key,
+    FOREIGN KEY (stock_id) REFERENCES Antibodies_Stock(Stock_ID)
+);
 ```

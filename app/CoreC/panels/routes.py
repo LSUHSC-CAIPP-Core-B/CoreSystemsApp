@@ -66,7 +66,8 @@ def panel_details():
                                         per_page_parameter='per_page')
     
     per_page = request.args.get('per_page', 20, type=int)
-    
+    offset = (page - 1) * per_page
+
     #number of rows in table
     num_rows = len(data)
 

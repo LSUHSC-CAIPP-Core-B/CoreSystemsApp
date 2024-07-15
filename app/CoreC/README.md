@@ -13,7 +13,7 @@ Advancements in flow cytometry technology have enabled a growing array of antibo
     - Gives users the ability to download a selection of antibodies
 - Stock
     - Designed to help users easily track supplies in a lab
--Panels
+- Panels
     - Facilitates the categorization of antibodies into panels based on shared characteristics and common traits.
 
 ## Database Configuration

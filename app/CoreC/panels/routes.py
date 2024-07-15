@@ -30,7 +30,7 @@ def panels():
         
         panels_df = db_utils.toDataframe("SELECT Panel_name, Panel_table_name from predefined_panels;", 'app/Credentials/CoreC.json')
         with app.app_context():
-            cache1.set('cached_dataframe', panels_df, timeout=3600)
+            cache1.set('cached_dataframe', panels_df, timeout=604_800)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -58,7 +58,7 @@ def panel_details():
             panels_df = cache1.get('cached_dataframe')
         
         columns = [col for col in panels_df.columns if col]
-        table_name_dict = search_utils.search_data([panel_name], columns, 90, panels_df)
+        table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
         
         if not table_name.empty:

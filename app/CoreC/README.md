@@ -62,7 +62,8 @@ In Progress...
 -- PANEL LIST TABLE
 CREATE TABLE predefined_panels(
     Panel_id INT AUTO_INCREMENT Primary key,
-    Panel_Name VARCHAR(64)          
+    Panel_Name VARCHAR(255),
+    Panel_table_name VARCHAR(255)
 ) AUTO_INCREMENT = 1;
 
 -- PANEL TABLE

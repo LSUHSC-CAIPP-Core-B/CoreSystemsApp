@@ -9,10 +9,12 @@ Advancements in flow cytometry technology have enabled a growing array of antibo
 
 ## Key Features
 - Antibodies
-    - A comprehensive system designed to help users easily search for, filter, and collect detailed antibody data.
+    - Designed to help users easily search for, filter, and collect detailed antibody data.
     - Gives users the ability to download a selection of antibodies
 - Stock
-    - A comprehensive system designed to help users easily track supplies in a lab
+    - Designed to help users easily track supplies in a lab
+- Panels
+    - Facilitates the categorization of antibodies into panels based on shared characteristics and common traits.
 
 ## Database Configuration
 To ensure proper data manipulation, the database schema must adhere to the following structure:
@@ -57,12 +59,12 @@ CREATE TABLE Stock_Info (
 );
 ```
 ##### Panels
-In Progress...
 ```sql
 -- PANEL LIST TABLE
 CREATE TABLE predefined_panels(
     Panel_id INT AUTO_INCREMENT Primary key,
-    Panel_Name VARCHAR(64)          
+    Panel_Name VARCHAR(255),
+    Panel_table_name VARCHAR(255)
 ) AUTO_INCREMENT = 1;
 
 -- PANEL TABLE

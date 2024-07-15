@@ -6,17 +6,16 @@ import pandas as pd
 import pymysql
 from app import login_required
 from app.CoreC.panels import bp
-from app.CoreC.antibodies.antibodiesTable import antibodiesTable
-from app.reader import Reader
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
 from flask import (Flask, flash, jsonify, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 from fuzzywuzzy import fuzz
-from jinja2 import UndefinedError
+
+app = Flask(__name__)
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 
 
 @bp.route('/panels', methods=['GET', 'POST'])
@@ -25,11 +24,13 @@ def panels():
     if request.method == 'POST':
         raise NotImplementedError()
     if request.method == 'GET':
-        print("get method")
         dataFrame = db_utils.toDataframe("SELECT Panel_Name, (select COUNT(*) from antibodies_stock a join monica_innate_panel m where a.Stock_ID = m.stock_id) as antibody_num FROM predefined_panels ;", 'app/Credentials/CoreC.json')
         dataFrame.rename(columns={'Panel_Name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')
-        print("data")
+        
+        panels_df = db_utils.toDataframe("SELECT Panel_name, Panel_table_name from predefined_panels;", 'app/Credentials/CoreC.json')
+        with app.app_context():
+            cache1.set('cached_dataframe', panels_df, timeout=3600)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -53,10 +54,18 @@ def panel_details():
     if request.method == 'POST':
         raise NotImplementedError()
     if request.method == 'GET':
-        table_names = {'Monica Innate': 'monica_innate_panel',
-               'Monica Adaptive': 'monica_adaptive_panel'}
+        with app.app_context():
+            panels_df = cache1.get('cached_dataframe')
         
-        names = table_names.get(panel_name, 'Monica Innate')
+        columns = [col for col in panels_df.columns if col]
+        table_name_dict = search_utils.search_data([panel_name], columns, 90, panels_df)
+        table_name = pd.DataFrame(table_name_dict)
+        
+        if not table_name.empty:
+            names = table_name.iloc[0]['Panel_table_name']
+            print(names)
+        else:
+            print("Match not found")
 
         dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Box_Name, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype, a.Size, a.Concentration, DATE_FORMAT(a.Expiration_Date, '%m/%d/%Y') AS Expiration_Date,  a.Titration,  a.Cost FROM antibodies_stock a JOIN {names} m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
         dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)

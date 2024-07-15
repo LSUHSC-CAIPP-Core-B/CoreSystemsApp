@@ -3,7 +3,7 @@ import pandas as pd
 
 class search_utils:
     @staticmethod
-    def search_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict) -> dict:
+    def search_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
         '''
         Takes in user inputs, columns to check, threshold,
         Sql dataframe and returns a dictionary of results (list of dictionaries)
@@ -24,6 +24,9 @@ class search_utils:
 
         # Finds the intersection of all sets to ensure each input has at least one matching column in the row
         all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
-        SqlData.rename(columns=columns_rename, inplace=True)
+        
+        if columns_rename != None:
+            SqlData.rename(columns=columns_rename, inplace=True)
+        
         filtered_df = SqlData.loc[list(all_matches)]
         return filtered_df.to_dict(orient='records')

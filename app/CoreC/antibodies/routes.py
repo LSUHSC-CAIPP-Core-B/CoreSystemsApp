@@ -15,6 +15,7 @@ from flask import (Flask, flash, jsonify, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
+from flask_login import current_user
 from fuzzywuzzy import fuzz
 from jinja2 import UndefinedError
 
@@ -70,9 +71,14 @@ def antibodies_route():
             # Try to get the cached DataFrame
             with app.app_context():
                 data = cache1.get('cached_dataframe')
-    
+
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
+
+    if not current_user.is_admin:
+        per_page = request.args.get('per_page', 20, type=int)
+        offset = (page - 1) * per_page
+    
     #number of rows in table
     num_rows = len(data)
 

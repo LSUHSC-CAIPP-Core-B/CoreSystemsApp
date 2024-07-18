@@ -8,6 +8,7 @@ from app.utils.search_utils import search_utils
 from flask import flash
 from fuzzywuzzy import fuzz
 from typing_extensions import override
+from flask_login import current_user
 
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
@@ -39,8 +40,10 @@ class antibodiesTable(BaseDatabaseTable):
         if order_by not in sort_orders.values():
             order_by = 'Target_Name'  
 
-        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
-
+        if current_user.is_admin:
+            query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
+        else:
+            query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
         df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')

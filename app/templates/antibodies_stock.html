@@ -56,9 +56,9 @@
               <select class="tableselect" name="sort" id="sort">
                 <option value="Target Name" selected>Target Name</option>
                 <option value="Catalog Number">Catalog Number</option>
+                {% if current_user.is_admin %}
                 <option value="Expiration Date">Expiration Date</option>
                 <option value="Price">Price</option>
-                {% if current_user.is_admin %}
                 <option value="Box Name">Box Name</option>
                 {% endif %}
               </select>

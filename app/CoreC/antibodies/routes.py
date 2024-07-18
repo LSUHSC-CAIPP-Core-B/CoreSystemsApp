@@ -38,7 +38,6 @@ def antibodies_route():
         Target_Name = request.form.get('target_name') or ""
         Target_Species = request.form.get('target_species') or ""
         sort = request.form.get('sort') or 'Original'
-        panelSelect =  request.form.get('panelSelect') or 'Original'
 
         # Stores all possible Inputs
         AllUinputs = [Company_name, Target_Name, Target_Species]

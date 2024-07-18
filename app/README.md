@@ -2,7 +2,6 @@
 
 ## Table of Contents 
 - [Introduction](#Introduction)
-- [Cores](#Cores)
 - [Credentials](#Credentials)
 - [Abstraction](#Abstraction)
 - [Utilities](#Utilities)

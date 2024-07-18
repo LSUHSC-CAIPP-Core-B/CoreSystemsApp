@@ -15,6 +15,7 @@ from flask import (Flask, flash, jsonify, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
+from flask_login import current_user
 from fuzzywuzzy import fuzz
 from jinja2 import UndefinedError
 
@@ -31,13 +32,12 @@ logger = LogGenerator.generateLogger()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
-def antibodies_route():
+def antibodies():
     if request.method == 'POST':
         Company_name = request.form.get('company_name') or ""
         Target_Name = request.form.get('target_name') or ""
         Target_Species = request.form.get('target_species') or ""
         sort = request.form.get('sort') or 'Original'
-        panelSelect =  request.form.get('panelSelect') or 'Original'
 
         # Stores all possible Inputs
         AllUinputs = [Company_name, Target_Name, Target_Species]
@@ -60,8 +60,12 @@ def antibodies_route():
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
 
-            dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
-            dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+            if current_user.is_admin:
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+            else:
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
             data = dataFrame.to_dict('records')
 
             with app.app_context():
@@ -70,9 +74,14 @@ def antibodies_route():
             # Try to get the cached DataFrame
             with app.app_context():
                 data = cache1.get('cached_dataframe')
-    
+
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
+
+    if not current_user.is_admin:
+        per_page = request.args.get('per_page', 20, type=int)
+        offset = (page - 1) * per_page
+    
     #number of rows in table
     num_rows = len(data)
 
@@ -150,7 +159,7 @@ def addAntibody():
         antibodiesTable.add(params)
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -191,7 +200,7 @@ def deleteAntibody():
     antibodiesTable.delete(primary_key)
 
     # use to prevent user from caching pages
-    response = make_response(redirect(url_for('antibodies.antibodies_route')))
+    response = make_response(redirect(url_for('antibodies.antibodies')))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -263,7 +272,7 @@ def changeAntibody():
         antibodiesTable.change(params)
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

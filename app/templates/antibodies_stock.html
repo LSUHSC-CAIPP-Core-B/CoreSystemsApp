@@ -56,28 +56,16 @@
               <select class="tableselect" name="sort" id="sort">
                 <option value="Target Name" selected>Target Name</option>
                 <option value="Catalog Number">Catalog Number</option>
+                {% if current_user.is_admin %}
                 <option value="Expiration Date">Expiration Date</option>
                 <option value="Price">Price</option>
-                {% if current_user.is_admin %}
                 <option value="Box Name">Box Name</option>
                 {% endif %}
               </select>
             </div>
             <div class="leftdiv">
-              <!--
-              <label class="formlabel">Panels</label>
-              <select class="tableselect" name="panelSelect" id="panelSelect">
-                <option value="All" selected>All</option>
-                <option value="panel1">Panel 1</option>
-                <option value="panel2">Panel 2</option>
-                <option value="panel3">Panel 3</option>
-                {% if current_user.is_admin %}
-                <option value="privatePanel">Private Panel</option>
-                {% endif %}
-              </select>
-              -->
               <button class="filterbutton"
-              onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
+                onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
             </div>
           </form>
         </div>
@@ -95,25 +83,18 @@
   <div class="noback_centerdiv">
     <div class="div-border-min">
       <div
-      style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
-      {{ pagination.links }}
-    </div>
+        style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+        {{ pagination.links }}
+      </div>
       <div class="orderdiv">
         <table class="table_round_bottom">
           <thead>
             <tr>
               {% for header in data[0].keys() %}
-              {% if current_user.is_admin and header != "Stock_ID"%}
+              {% if header != "Stock_ID" %}
               <th>
                 <h4>{{ header }}</h4>
               </th>
-              {% else %}
-              {% if header not in ("Stock_ID", "Box Name", "Size", "Concentration", "Expiration Date", "Titration",
-              "Cost ($)") %}
-              <th>
-                <h4>{{ header }}</h4>
-              </th>
-              {% endif %}
               {% endif %}
               {% endfor %}
             </tr>
@@ -122,32 +103,25 @@
             {% for row in range(0, len(data)) %}
             <tr id="{{row}}">
               {% for col in range(0, len(list(data[row].values()))) %}
-              {% if current_user.is_admin %}
               {% if list(data[row].keys())[col] == "Box Name" %}
               <td>
                 {{ list(data[row].values())[col] }}
                 {% if col == 1 %}
-                  {% if data[row]["Included"] != 0 and data[row]["Catalog Number"] != "N/A" %}
-                    <form id="deleteForm" method="POST" action="/deleteAntibody">
-                      <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
-                      <button id="confirmBtn" class="deletebutton" onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
-                    </form>
-                    <form method="GET" action="/changeAntibody">
-                      <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
-                      <button class="filterbutton">Change Info</button>
-                    </form>
-                  {% endif %}
+                {% if data[row]["Included"] != 0 and data[row]["Catalog Number"] != "N/A" %}
+                <form id="deleteForm" method="POST" action="/deleteAntibody">
+                  <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                  <button id="confirmBtn" class="deletebutton"
+                    onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
+                </form>
+                <form method="GET" action="/changeAntibody">
+                  <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                  <button class="filterbutton">Change Info</button>
+                </form>
+                {% endif %}
                 {% endif %}
               </td>
               {% endif %}
-              {% endif %}
-              {% if not current_user.is_admin %}
-              {% if list(data[row].keys())[col] not in ("Stock_ID", "Box Name", "Size", "Concentration", "Expiration Date", "Titration", "Cost ($)") %}
-              <td>
-                {{ list(data[row].values())[col] }}
-              </td>
-              {% endif %}
-              {% elif list(data[row].keys())[col] not in ("Stock_ID", "Box Name") %}
+              {% if list(data[row].keys())[col] not in ("Stock_ID", "Box Name") %}
               <td>
                 {{ list(data[row].values())[col] }}
               </td>
@@ -163,8 +137,9 @@
   <div class="paddingdiv">
     <form method="GET" action="/downloadAntibodyCSV">
       <button class="filterbutton" style="width: 125px; margin-left: 1195px;">Download</button>
-    </form>  
-  </div>  
+    </form>
+  </div>
 </body>
+
 </html>
 {% endblock %}

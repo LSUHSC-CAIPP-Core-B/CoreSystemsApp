@@ -32,7 +32,7 @@ logger = LogGenerator.generateLogger()
 
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
-def antibodies_route():
+def antibodies():
     if request.method == 'POST':
         Company_name = request.form.get('company_name') or ""
         Target_Name = request.form.get('target_name') or ""
@@ -159,7 +159,7 @@ def addAntibody():
         antibodiesTable.add(params)
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -200,7 +200,7 @@ def deleteAntibody():
     antibodiesTable.delete(primary_key)
 
     # use to prevent user from caching pages
-    response = make_response(redirect(url_for('antibodies.antibodies_route')))
+    response = make_response(redirect(url_for('antibodies.antibodies')))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -272,7 +272,7 @@ def changeAntibody():
         antibodiesTable.change(params)
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies_route')))
+        response = make_response(redirect(url_for('antibodies.antibodies')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

@@ -37,7 +37,7 @@ def login():
         if "coreB" in roles_to_check:
             return redirect(url_for('orders.orders'))
         elif "coreC" in roles_to_check:
-            return redirect(url_for('antibodies.antibodies_route'))
+            return redirect(url_for('antibodies.antibodies'))
 
 @bp.route('/signup', methods=['GET', 'POST'])
 @login_required(role=["admin"])

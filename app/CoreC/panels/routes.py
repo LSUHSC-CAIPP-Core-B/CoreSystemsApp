@@ -25,7 +25,7 @@ def panels():
     if request.method == 'POST':
         raise NotImplementedError()
     if request.method == 'GET':
-        dataFrame = db_utils.toDataframe("SELECT Panel_Name, (select COUNT(*) from antibodies_stock a join monica_innate_panel m where a.Stock_ID = m.stock_id) as antibody_num FROM predefined_panels ;", 'app/Credentials/CoreC.json')
+        dataFrame = count_rows()
         dataFrame.rename(columns={'Panel_Name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')
         
@@ -47,6 +47,31 @@ def panels():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+def count_rows():
+    # Fetches the panel names and table names
+    panels_query = "SELECT Panel_name, Panel_table_name FROM predefined_panels"
+    panels_df = db_utils.toDataframe(panels_query, 'app/Credentials/CoreC.json')
+    
+    # List to hold the results
+    results = []
+    
+    # Iterates through each row in the DataFrame
+    for index, row in panels_df.iterrows():
+        panel_name = row['Panel_name']
+        table_name = row['Panel_table_name']
+        
+        # Constructs the COUNT query
+        count_query = f"SELECT COUNT(*) as antibody_num FROM {table_name}"
+        count_df = db_utils.toDataframe(count_query, 'app/Credentials/CoreC.json')
+        count = count_df['antibody_num'].iloc[0]
+        
+        # Appends the result to the list
+        results.append({'Panel_name': panel_name, 'antibody_num': count})
+    
+    # Converts the results to a DataFrame
+    results_df = pd.DataFrame(results)
+    return results_df
 
 @bp.route('/panel_details', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])

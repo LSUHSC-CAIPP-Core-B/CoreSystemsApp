@@ -283,6 +283,13 @@ def changeAntibody():
         query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', (primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+        
+        # Converts 1 to yes and 0 to no from the included column
+        if df.iloc[0,13] == 1:
+            df.iloc[0,13] = "Yes"
+        else:
+            df.iloc[0,13] == "No"
+
         data = df.to_dict()
         
         # use to prevent user from caching pages

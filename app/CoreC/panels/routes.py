@@ -91,12 +91,13 @@ def panel_details():
         with app.app_context():
             panels_df = cache1.get('cached_dataframe')
         
+        
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
         
-        # If not a panel was found then it gets the sql name of the panel
+        # If a panel was not found then it gets the sql name of the panel
         if not table_name.empty:
             names = table_name.iloc[0]['Panel_table_name']
 

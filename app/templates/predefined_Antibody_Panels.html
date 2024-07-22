@@ -39,7 +39,20 @@
     {% endwith %}
     <div class="paddingdiv">
         <div class="rowdiv">
-            <div class="columndiv"></div>
+            {% if current_user.is_admin %}
+            <div class="columndiv">
+                <button id="addPanelButton" class="filterbutton" style="width: 175px;"> Add Panel </button>
+            </div>
+            {% endif %}
+            <script>
+                $(document).ready(function () {
+                    // click event to the button
+                    $('#addPanelButton').click(function () {
+                        // Redirect to a new webpage
+                        window.location.href = '/addAntibody';
+                    });
+                });
+            </script>
             <div class="columndiv">
                 <form method="POST" action="/panels">
                     <div class="leftdiv">

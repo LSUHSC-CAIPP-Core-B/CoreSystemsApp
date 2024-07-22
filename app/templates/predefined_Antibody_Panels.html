@@ -30,6 +30,13 @@
         <h1 class="header_text">Predefined Antibody Panels</h1>
         <h2 class="header_text">List of all predefined antibody panels</h2>
     </div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="updatediv one">
+        <h3>{{ messages[0] }}</h3>
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="paddingdiv">
         <div class="rowdiv">
             <div class="columndiv"></div>

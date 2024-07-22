@@ -23,7 +23,15 @@ cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 @login_required(role=["user", "coreC"])
 def panels():
     if request.method == 'POST':
-        raise NotImplementedError()
+        sort = request.form.get('sort') or 'Original'
+
+        dataFrame = count_rows()
+
+        if sort == "Number of Antibodies":
+            dataFrame = dataFrame.sort_values(by='antibody_num', ascending=True)
+
+        dataFrame.rename(columns={'Panel_Name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
+        data = dataFrame.to_dict('records')
     if request.method == 'GET':
         dataFrame = count_rows()
         dataFrame.rename(columns={'Panel_Name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
@@ -48,7 +56,7 @@ def panels():
     response.headers["Expires"] = "0" # Proxies.
     return response
 
-def count_rows():
+def count_rows() -> pd.DataFrame:
     # Fetches the panel names and table names
     panels_query = "SELECT Panel_name, Panel_table_name FROM predefined_panels"
     panels_df = db_utils.toDataframe(panels_query, 'app/Credentials/CoreC.json')
@@ -100,7 +108,6 @@ def panel_details():
             dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM antibodies_stock a JOIN {names} m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
         data = dataFrame.to_dict('records')
-        print(f"Data for panel table: {data}")
 
         if not data:
             flash('Panel is empty')

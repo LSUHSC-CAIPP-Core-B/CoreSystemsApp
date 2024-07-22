@@ -100,12 +100,18 @@ def panel_details():
             dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM antibodies_stock a JOIN {names} m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
         data = dataFrame.to_dict('records')
+        print(f"Data for panel table: {data}")
+
+        if not data:
+            flash('Panel is empty')
+            return redirect(url_for('panels.panels'))
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
     
     per_page = request.args.get('per_page', 20, type=int)
     offset = (page - 1) * per_page
+
 
     #number of rows in table
     num_rows = len(data)

@@ -89,6 +89,10 @@ def addPanel():
     if request.method == 'POST':
         panel_name = request.form.get('Panel Name')
         print(f"Input: {panel_name}")
+        
+        if len(panel_name)  <= 1:
+            flash('Please enter a panel name')
+            return redirect(url_for('panels.addPanel'))
 
         panel_name = PanelsTable.get_Valid_Panel_Name(panel_name)
         db_name = PanelsTable.get_Valid_db_Name(panel_name)

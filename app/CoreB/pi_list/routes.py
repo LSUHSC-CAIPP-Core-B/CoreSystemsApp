@@ -26,7 +26,7 @@ def information():
             pi_data = data[0]
 
         # use to prevent user from caching pages
-        response = make_response(render_template('information.html', data=pi_data, order_num=order_num, list=list, len=len, str=str))
+        response = make_response(render_template('pi/information.html', data=pi_data, order_num=order_num, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -62,7 +62,7 @@ def pilist():
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     # use to prevent user from caching pages
-    response = make_response(render_template('pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
+    response = make_response(render_template('pi/pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -84,7 +84,7 @@ def add_pi():
             "PI_departmnet": ""
         }
         # use to prevent user from caching pages
-        response = make_response(render_template('add_pi.html', fields = pi_data))
+        response = make_response(render_template('pi/add_pi.html', fields = pi_data))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -179,7 +179,7 @@ def update():
             'Department': update_data['Department']
         }
 
-        return render_template('update_pi.html', fields = update_data_new, pi_id_old = pi_id_old)
+        return render_template('pi/update_pi.html', fields = update_data_new, pi_id_old = pi_id_old)
   
     elif request.method == 'POST':
         pi_id_old = request.args.get('pi_id_old')

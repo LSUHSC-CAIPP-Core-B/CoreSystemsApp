@@ -52,7 +52,7 @@ def panels():
     pagination = Pagination(page=page, per_page=per_page, total=num_rows)
     
     # use to prevent user from caching pages
-    response = make_response(render_template("predefined_Antibody_Panels.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+    response = make_response(render_template("CoreC/predefined_Antibody_Panels.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -133,7 +133,7 @@ def addPanel():
             "Panel Name": ""
         }
         # use to prevent user from caching pages
-        response = make_response(render_template('add_panel.html', fields = data))
+        response = make_response(render_template('CoreC/add_panel.html', fields = data))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -186,7 +186,7 @@ def panel_details():
     pagination = Pagination(page=page, per_page=per_page, total=num_rows)
     
     # use to prevent user from caching pages
-    response = make_response(render_template("panel_details.html", Panel_Name=panel_name, data=pagination_users, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+    response = make_response(render_template("CoreC/panel_details.html", Panel_Name=panel_name, data=pagination_users, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.

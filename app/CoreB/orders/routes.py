@@ -81,14 +81,14 @@ def orders():
            flash('Please refresh download script')
         
         # use to prevent user from caching pages
-        response = make_response(render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
+        response = make_response(render_template('CoreB/main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
 
     elif request.method == 'POST':
-        return render_template('main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
+        return render_template('CoreB/main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str)
 
 @bp.route('/update', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreB"])
@@ -106,7 +106,7 @@ def update():
         data = [dict for dict in data if dict['Question'].__contains__(question_id)]
         update_data = data[0]
 
-        return render_template('update.html', fields = update_data)
+        return render_template('CoreB/update.html', fields = update_data)
   
     elif request.method == 'POST':
         # variable to hold CSV data

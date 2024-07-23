@@ -10,4 +10,4 @@ from app.reader import Reader
 @login_required
 def graphs():
     if request.method == 'GET':
-        return render_template('graphs.html')
+        return render_template('CoreB/graphs.html')

@@ -56,7 +56,7 @@ def invoice():
 
         # check if bm info format is correct
         if len(bm_info_split) != 3:
-            return render_template('error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
+            return render_template('CoreB/error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
         acc_num = bm_info_split[0]
         manager_name = bm_info_split[1]
 
@@ -126,7 +126,7 @@ def invoice():
         else:
             percent_discount = (invoice.total_discount/total_price_sum) * 100.0
 
-        response = make_response(render_template('edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
+        response = make_response(render_template('CoreB/edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -210,9 +210,9 @@ def gen_invoice():
 
                 # Service details values
                 if service_price_detail == "":
-                    return render_template('error_invoice.html', error_msg="Service price must be provided")
+                    return render_template('CoreB/error_invoice.html', error_msg="Service price must be provided")
                 elif service_qty_detail == "":
-                    return render_template('error_invoice.html', error_msg="Service samples must be provided")
+                    return render_template('CoreB/error_invoice.html', error_msg="Service samples must be provided")
             
                 service_price_detail = float(service_price_detail)
                 dict_data[item_key] = str(item_number)
@@ -237,9 +237,9 @@ def gen_invoice():
             # Discount details values
             if service_discount_reason_detail != None and len(service_discount_reason_detail) != 0:
                 if service_discount_amount_detail == "":
-                    return render_template('error_invoice.html', error_msg="Discount amount must be provided")
+                    return render_template('CoreB/error_invoice.html', error_msg="Discount amount must be provided")
                 elif service_discount_qty_detail == "":
-                    return render_template('error_invoice.html', error_msg="Discounted sample number must be provided")
+                    return render_template('CoreB/error_invoice.html', error_msg="Discounted sample number must be provided")
                 service_discount_amount_detail = float(service_discount_amount_detail)
                 dict_data[item_discount_key] = str(item_number+1)
                 dict_data[qty_discount_key] = service_discount_qty_detail
@@ -351,7 +351,7 @@ def invoices_list():
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     # use to prevent user from caching pages
-    response = make_response(render_template("invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
+    response = make_response(render_template("CoreB/invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -381,7 +381,7 @@ def invoice_details():
 
 
         # use to prevent user from caching pages
-        response = make_response(render_template('invoice_details.html', data=invoice_details, project_id=project_id, list=list, len=len, str=str))
+        response = make_response(render_template('CoreB/invoice_details.html', data=invoice_details, project_id=project_id, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

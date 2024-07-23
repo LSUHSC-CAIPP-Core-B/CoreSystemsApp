@@ -21,3 +21,25 @@ class PanelsTable(BaseDatabaseTable):
     
     def delete(self, primary_key) -> None:
         return super().delete(primary_key)
+    
+    def get_Valid_db_Name(self, Uinput: str) -> str:
+        Uinput = Uinput.lower()
+
+        if "panel" not in Uinput or "Panel" not in Uinput:
+            Uinput = f"{Uinput}_panel"
+
+        Uinput = Uinput.strip()
+
+        if " " in Uinput:
+            Uinput = Uinput.replace(' ', '_')
+        
+        return Uinput
+
+    def get_Valid_Panel_Name(self, Uinput: str) -> str:
+        if "panel" in Uinput or "Panel" in Uinput:
+            Uinput = Uinput.replace('panel', '')
+            Uinput = Uinput.replace('Panel', '')
+
+        Uinput = Uinput.strip()
+        
+        return Uinput

@@ -14,10 +14,12 @@ from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 from fuzzywuzzy import fuzz
 from flask_login import current_user
+from app.CoreC.panels.panelsTable import PanelsTable
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 
+PanelsTable = PanelsTable()
 
 @bp.route('/panels', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -80,6 +82,62 @@ def count_rows() -> pd.DataFrame:
     # Converts the results to a DataFrame
     results_df = pd.DataFrame(results)
     return results_df
+
+@bp.route('/addPanel', methods=['GET', 'POST'])
+@login_required(role=["admin", "coreC"])
+def addPanel():
+    if request.method == 'POST':
+        panel_name = request.form.get('Panel Name')
+        print(f"Input: {panel_name}")
+
+        panel_name = PanelsTable.get_Valid_Panel_Name(panel_name)
+        db_name = PanelsTable.get_Valid_db_Name(panel_name)
+        print(f"panel_name: {panel_name}")
+        name_query = f"INSERT INTO predefined_panels VALUES (null, %s, %s);"
+
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        #Execute SQL query
+        cursor.execute(name_query, (panel_name, db_name))
+
+        # Commit the transaction
+        mydb.commit()
+
+        print(f"db_name: {db_name}")
+        table_query = f"""
+            CREATE TABLE {db_name}(
+                stock_id INT Primary key,
+                FOREIGN KEY (stock_id) REFERENCES Antibodies_Stock(Stock_ID)
+            );"""
+
+        #Execute SQL query
+        cursor.execute(table_query)
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('panels.panels')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+    if request.method == 'GET':
+        data = {
+            "Panel Name": ""
+        }
+        # use to prevent user from caching pages
+        response = make_response(render_template('add_panel.html', fields = data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
 
 @bp.route('/panel_details', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])

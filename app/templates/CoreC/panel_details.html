@@ -47,6 +47,14 @@
                     <tr id="{{row}}">
                         {% for col in range(0, len(list(data[row].values()))) %}
                         <td>
+                            {% if col == 1 %}
+                            <form method="POST" action="/deletePanelAntibody">
+                                <input type="hidden" name="Panel Name" id="Panel_Name" value="{{Panel_Name}}">
+                                <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                                <button id="addAntibodyButton" class="deletebutton"
+                                    onclick="return confirm('Are you sure You want to delete this panel?')">X</button>
+                            </form>
+                            {% endif %}
                             {{ list(data[row].values())[col] }}
 
                             {% endfor %}

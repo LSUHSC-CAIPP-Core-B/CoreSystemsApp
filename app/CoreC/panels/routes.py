@@ -265,3 +265,45 @@ def addPanelAntibody():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/deletePanelAntibody', methods=['POST'])
+@login_required(role=["admin", "coreC"])
+def deletePanelAntibody():
+    if request.method == 'POST':
+        Panel_Name = request.form.get('Panel Name')
+        primaryKey = request.form.get('primaryKey')
+
+        print(f"Panel Name: {Panel_Name}")
+        print(f"Primary Key: {primaryKey}")
+
+        panel_table_name_query = f"""
+            SELECT panel_table_name
+			FROM predefined_panels
+            WHERE Panel_Name = '{Panel_Name}'
+        """
+        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name = name_df.iloc[0,0]
+        print(f"Panel Name: {name}")
+
+        delete_antibody_query = f"""
+            DELETE FROM {name}
+            where Stock_id = '{primaryKey}'
+        """
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        #Execute SQL query
+        cursor.execute(delete_antibody_query)
+
+        # Commit the transaction
+        mydb.commit()
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('panels.panels')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response

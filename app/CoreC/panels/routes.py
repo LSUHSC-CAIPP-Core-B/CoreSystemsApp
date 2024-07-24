@@ -156,6 +156,7 @@ def panel_details():
         
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
+        print(f"Columns: {columns}")
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
         
@@ -195,3 +196,72 @@ def panel_details():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+@bp.route('/addPanelAntibody', methods=['GET', 'POST'])
+@login_required(role=["admin", "coreC"])
+def addPanelAntibody():
+    if request.method == 'POST':
+        catalog_num = request.form.get('Catalog Number')
+        Panel_Name = request.form.get('Panel Name')
+        print(f"POST method Panel_Name: {Panel_Name}")
+        print(f"Catalog Number: {catalog_num}")
+
+        query = f"SELECT Catalog_Num FROM antibodies_stock;"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        print(f"Dataframe: {df}")
+        results = search_utils.search_data([catalog_num], columns_to_check=['Catalog_Num'], threshold=99, SqlData=df)
+        results = pd.DataFrame(results).drop_duplicates()
+        print(f"Results: {results}")
+        if len(results) == 0:
+            flash('Antibody not found')
+        else:
+            print(f"Antibody found: {results.iloc[0,0]}")
+
+        panel_table_name_query = f"""
+            SELECT panel_table_name
+			FROM predefined_panels
+            WHERE Panel_Name = '{Panel_Name}'
+        """
+        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name = name_df.iloc[0,0]
+        print(f"Panel_Name with iloc: {name}")
+
+        insert_Antibody_query = f"""
+            INSERT INTO {name} (Stock_id)
+            SELECT Stock_id
+            FROM antibodies_stock
+            WHERE Catalog_Num = '{results.iloc[0,0]}'
+            LIMIT 1;           
+        """
+
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        #Execute SQL query
+        cursor.execute(insert_Antibody_query)
+
+        # Commit the transaction
+        mydb.commit()
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('panels.panel_details')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+    if request.method == 'GET':
+        panel_name = request.args.get('Panel Name')
+        print(f"Panel Name: {panel_name}")
+        data = {
+            "Catalog Number": ""
+        }
+        # use to prevent user from caching pages
+        response = make_response(render_template('CoreC/add_panel_antibody.html', fields = data, Panel_Name=panel_name))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

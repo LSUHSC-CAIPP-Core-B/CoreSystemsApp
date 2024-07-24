@@ -10,7 +10,10 @@
     <div class="rowdiv">
         {% if current_user.is_admin %}
         <div class="columndiv">
-            <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
+            <form method="GET" action="/addPanelAntibody">
+                <input type="hidden" name="Panel Name" id="Panel_Name" value="{{Panel_Name}}">
+                <button id="addAntibodyButton" class="filterbutton" style="width: 175px;"> Add Antibody </button>
+            </form>
         </div>
         {% endif %}
         <script>

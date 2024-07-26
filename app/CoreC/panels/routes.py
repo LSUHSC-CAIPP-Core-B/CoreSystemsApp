@@ -264,6 +264,7 @@ def addPanelAntibody():
         print(f"Results: {results}")
         if len(results) == 0:
             flash('Antibody not found')
+            return redirect(url_for('panels.addPanelAntibody'))
         else:
             print(f"Antibody found: {results.iloc[0,0]}")
 

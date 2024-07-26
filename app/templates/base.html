@@ -33,7 +33,10 @@
         <a href="/panels">
             <h2 class="base-heading">Predefined Antibody Panels</h2>
         </a>
-        {% if current_user.is_admin %}
+        <a href="/mouse">
+            <h2 class="base-heading">Predefined Antibody Panels</h2>
+        </a>
+        {% if current_user.is_admin and current_user.is_core_c%}
         <a href="/stock">
             <h2 class="base-heading">Stock</h2>
         </a>
@@ -55,6 +58,7 @@
             <div class="dropdown-content">
                 <a href="/antibodies" class="adrop">Antibodies</a>
                 <a href="/panels" class="adrop">Predefined Antibody Panels</a>
+                <a href="/mouse" class="adrop">Mouse Database</a>
                 {% if current_user.is_admin %}
                 <a href="/stock" class="adrop">Stock</a>
                 {% endif %}

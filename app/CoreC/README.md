@@ -86,6 +86,6 @@ CREATE TABLE Mouse_Stock(
     Mouse_Description VARCHAR(256),
     Strain VARCHAR(64),
     Times_Back_Crossed INT,
-    MTA_Required TINYINT                        
+    MTA_Required VARCHAR(32)                        
 ) AUTO_INCREMENT = 2000;
 ```

@@ -144,6 +144,55 @@ def addPanel():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
+@bp.route('/deletePanel', methods=['GET'])
+@login_required(role=["admin", "coreC"])
+def deletePanel():
+    if request.method == 'GET':
+        panel_name = request.args.get('Panel_Name')
+        print(f"Panel Name: {panel_name}")
+
+        panel_table_name_query = f"""
+            SELECT panel_table_name
+			FROM predefined_panels
+            WHERE Panel_Name = '{panel_name}'
+        """
+
+        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name = name_df.iloc[0,0]
+        print(f"Panel_Name with iloc: {name}")
+
+        drop_query = f" DROP TABLE IF EXISTS {name};"
+
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        #Execute SQL query
+        cursor.execute(drop_query)
+
+        # Commit the transaction
+        mydb.commit()
+
+        delete_query = f""" 
+            DELETE FROM predefined_panels
+            Where Panel_Name = '{panel_name}'
+        """
+
+        #Execute SQL query
+        cursor.execute(delete_query)
+
+        # Commit the transaction
+        mydb.commit()
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('panels.panels')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+
 @bp.route('/panel_details', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def panel_details():
@@ -215,6 +264,7 @@ def addPanelAntibody():
         print(f"Results: {results}")
         if len(results) == 0:
             flash('Antibody not found')
+            return redirect(url_for('panels.addPanelAntibody'))
         else:
             print(f"Antibody found: {results.iloc[0,0]}")
 

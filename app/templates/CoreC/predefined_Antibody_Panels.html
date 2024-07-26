@@ -88,7 +88,7 @@
                             <td>
                                 {% if col == 0 %}
                                 {% if current_user.is_admin %}
-                                <a href="/delete_panel?Panel_id={{list(data[row].values())[0]}}"><button
+                                <a href="/deletePanel?Panel_Name={{list(data[row].values())[0]}}"><button
                                         class="deletebutton"
                                         onclick="return confirm('Are you sure You want to delete this panel?')">X</button></a>
                                 {% endif %}

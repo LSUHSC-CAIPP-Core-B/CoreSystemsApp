@@ -10,11 +10,14 @@ Advancements in flow cytometry technology have enabled a growing array of antibo
 ## Key Features
 - Antibodies
     - Designed to help users easily search for, filter, and collect detailed antibody data.
-    - Gives users the ability to download a selection of antibodies
+    - Gives users the ability to download a selection of antibodies.
 - Stock
-    - Designed to help users easily track supplies in a lab
+    - Designed to help users easily track supplies in a lab.
 - Panels
     - Facilitates the categorization of antibodies into panels based on shared characteristics and common traits.
+- Mouse Stock
+    - Designed to help users easily search for, filter, and collect detailed mouse data.
+    - Gives users the ability to download a selection of mouse data.
 
 ## Database Configuration
 To ensure proper data manipulation, the database schema must adhere to the following structure:
@@ -72,4 +75,17 @@ CREATE TABLE panel_name(
     stock_id INT Primary key,
     FOREIGN KEY (stock_id) REFERENCES Antibodies_Stock(Stock_ID)
 );
+```
+##### Mouse
+```sql
+-- MOUSE TABLE
+CREATE TABLE Mouse_Stock(
+    Stock_ID INT AUTO_INCREMENT Primary key,
+    PI_Name VARCHAR(255),
+    Genotype VARCHAR(64),
+    Mouse_Description VARCHAR(256),
+    Strain VARCHAR(64),
+    Times_Back_Crossed INT,
+    MTA_Required TINYINT                        
+) AUTO_INCREMENT = 2000;
 ```

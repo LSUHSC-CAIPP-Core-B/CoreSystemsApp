@@ -100,4 +100,7 @@ def create_app(config_class=Config):
     from app.CoreC.panels import bp as panels_bp
     app.register_blueprint(panels_bp)
 
+    from app.CoreC.mouse import bp as mouse_bp
+    app.register_blueprint(mouse_bp)
+
     return app

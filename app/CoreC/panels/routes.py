@@ -209,10 +209,9 @@ def panel_details():
         print(f"Columns: {columns}")
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
-        
-        # If a panel was not found then it gets the sql name of the panel
-        if not table_name.empty:
-            names = table_name.iloc[0]['Panel_table_name']
+        print(f"table_name: {table_name}")
+        # gets the sql name of the panel
+        names = table_name.iloc[0]['Panel_table_name']
 
         # Checks permissions for data display
         if current_user.is_admin:
@@ -224,8 +223,8 @@ def panel_details():
         data = dataFrame.to_dict('records')
 
         if not data:
-            flash('Panel is empty')
-            return redirect(url_for('panels.panels'))
+            flash(f"{panel_name}")
+            return redirect(url_for('panels.addPanelAntibody', Panel_Name=panel_name))
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -306,6 +305,9 @@ def addPanelAntibody():
     
     if request.method == 'GET':
         panel_name = request.args.get('Panel Name')
+        if panel_name == None:
+            panel_name = request.args.get('Panel_Name')
+
         print(f"Panel Name: {panel_name}")
         data = {
             "Catalog Number": ""

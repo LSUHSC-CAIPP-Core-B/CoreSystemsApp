@@ -47,7 +47,7 @@
                     <tr id="{{row}}">
                         {% for col in range(0, len(list(data[row].values()))) %}
                         <td>
-                            {% if col == 1 %}
+                            {% if col == 1 and current_user.is_admin %}
                             <form method="POST" action="/deletePanelAntibody">
                                 <input type="hidden" name="Panel Name" id="Panel_Name" value="{{Panel_Name}}">
                                 <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />

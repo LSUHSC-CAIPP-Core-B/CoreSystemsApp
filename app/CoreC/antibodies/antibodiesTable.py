@@ -55,7 +55,7 @@ class antibodiesTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
-            data = search_utils.search_data(Uinputs, columns_to_check, 70, SqlData, {'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'})
+            data = search_utils.search_data_sorted(Uinputs, columns_to_check, 70, SqlData, {'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'})
             
             # If no match is found displays empty row
             if not data:

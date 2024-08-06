@@ -106,7 +106,7 @@
               {% if list(data[row].keys())[col] == "Box Name" %}
               <td>
                 {{ list(data[row].values())[col] }}
-                {% if col == 1 %}
+                {% if col == 1 and current_user.is_admin %}
                 {% if data[row]["Included"] != 0 and data[row]["Catalog Number"] != "N/A" %}
                 <form id="deleteForm" method="POST" action="/deleteAntibody">
                   <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />

@@ -73,20 +73,21 @@ class search_utils:
         return sorted_df.to_dict(orient='records')
     
     @staticmethod
-    def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
+    def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
         print(Uinputs)
         data = SqlData
-        data['matching_ratio'] = data.apply(lambda x:fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), axis=1).to_list()
+        data['Target ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
 
-        data['Fuzzy_Ratio'] = data.apply(lambda x:fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), axis=1).to_list()
+        data['Company Ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), 2), axis=1).to_list()
 
-        data['Fuzzy_Ratio2'] = data.apply(lambda x:fuzz.ratio(x.Target_Species, Uinputs[2]), axis=1).to_list()
+        data['Species Ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Species), utils.default_process(Uinputs[2])), 2), axis=1).to_list()
 
         #if not Uinputs[0] and not Uinputs[0] and not Uinputs[2]
-        data = data.loc[(data['matching_ratio'] > threshold) | (data['Fuzzy_Ratio'] > threshold) | (data['Fuzzy_Ratio2'] > threshold)]
-        df = data.sort_values(by=['matching_ratio','Fuzzy_Ratio', 'Fuzzy_Ratio2'], ascending=False)
+        data = data.loc[(data['Target ratio'] > threshold) | (data['Company Ratio'] > threshold) | (data['Species Ratio'] > threshold)]
+        df = data.sort_values(by=['Target ratio','Company Ratio', 'Species Ratio', sort_by], ascending=[False, False, True, True])
+        print(f"Sort by: {sort_by}")
     
         if columns_rename != None:
-            df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+            df.rename(columns=columns_rename, inplace=True)
 
         return df.to_dict(orient='records')

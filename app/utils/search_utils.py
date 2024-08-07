@@ -76,16 +76,15 @@ class search_utils:
     def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
         print(Uinputs)
         data = SqlData
-        data['matching_ratio'] = data.apply(lambda x:fuzz.ratio(x.Target_Name, Uinputs[1]), axis=1).to_list()
-        df = data[data.matching_ratio > threshold]
+        data['matching_ratio'] = data.apply(lambda x:fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), axis=1).to_list()
 
-        data['Fuzzy_Ratio'] = data.apply(lambda x:fuzz.ratio(x.Company_name, Uinputs[0]), axis=1).to_list()
-        df = data[data.Fuzzy_Ratio > threshold]
+        data['Fuzzy_Ratio'] = data.apply(lambda x:fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), axis=1).to_list()
 
         data['Fuzzy_Ratio2'] = data.apply(lambda x:fuzz.ratio(x.Target_Species, Uinputs[2]), axis=1).to_list()
-        df = data[data.Fuzzy_Ratio2 > threshold]
 
-        df = df.loc[(df['matching_ratio'] > threshold) & (df['Fuzzy_Ratio'] > threshold) & (df['Fuzzy_Ratio2'] > threshold)]
+        #if not Uinputs[0] and not Uinputs[0] and not Uinputs[2]
+        df = data.loc[(data['matching_ratio'] > threshold) | (data['Fuzzy_Ratio'] > threshold) | (data['Fuzzy_Ratio2'] > threshold)]
+        print(df)
         df = df.sort_values(by=['matching_ratio','Fuzzy_Ratio', 'Fuzzy_Ratio2'], ascending=False)
     
         if columns_rename != None:

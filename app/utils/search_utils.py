@@ -33,7 +33,7 @@ class search_utils:
 
 
     @staticmethod
-    def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
+    def search_data_sort(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
         data = SqlData 
         # Define the fuzzy search function
         def fuzzy_search(row, column_search_map, threshold):
@@ -52,7 +52,7 @@ class search_utils:
         }
         print(f"Columns to check: {columns_to_check}")
         print(f"column_search_map{column_search_map}")
-        threshold = 70
+        threshold = 45
 
         # Apply the fuzzy search function to each row and create a new column for the ratio
         data['Fuzzy_Ratio'] = data.apply(lambda row: fuzzy_search(row, column_search_map, threshold), axis=1)
@@ -64,10 +64,31 @@ class search_utils:
         sorted_df = filtered_df.sort_values(by='Fuzzy_Ratio', ascending=False)
 
         # Drop the Fuzzy_Ratio column if not needed
-        sorted_df = sorted_df.drop(columns=['Fuzzy_Ratio'])
+        #sorted_df = sorted_df.drop(columns=['Fuzzy_Ratio'])
         print(f"Sorted Dataframe:\n{sorted_df}")
 
         if columns_rename != None:
             sorted_df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
 
         return sorted_df.to_dict(orient='records')
+    
+    @staticmethod
+    def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
+        print(Uinputs)
+        data = SqlData
+        data['matching_ratio'] = data.apply(lambda x:fuzz.ratio(x.Target_Name, Uinputs[1]), axis=1).to_list()
+        df = data[data.matching_ratio > threshold]
+
+        data['Fuzzy_Ratio'] = data.apply(lambda x:fuzz.ratio(x.Company_name, Uinputs[0]), axis=1).to_list()
+        df = data[data.Fuzzy_Ratio > threshold]
+
+        data['Fuzzy_Ratio2'] = data.apply(lambda x:fuzz.ratio(x.Target_Species, Uinputs[2]), axis=1).to_list()
+        df = data[data.Fuzzy_Ratio2 > threshold]
+
+        df = df.loc[(df['matching_ratio'] > threshold) & (df['Fuzzy_Ratio'] > threshold) & (df['Fuzzy_Ratio2'] > threshold)]
+        df = df.sort_values(by=['matching_ratio','Fuzzy_Ratio', 'Fuzzy_Ratio2'], ascending=False)
+    
+        if columns_rename != None:
+            df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+
+        return df.to_dict(orient='records')

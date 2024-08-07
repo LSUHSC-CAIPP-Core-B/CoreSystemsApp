@@ -83,9 +83,8 @@ class search_utils:
         data['Fuzzy_Ratio2'] = data.apply(lambda x:fuzz.ratio(x.Target_Species, Uinputs[2]), axis=1).to_list()
 
         #if not Uinputs[0] and not Uinputs[0] and not Uinputs[2]
-        df = data.loc[(data['matching_ratio'] > threshold) | (data['Fuzzy_Ratio'] > threshold) | (data['Fuzzy_Ratio2'] > threshold)]
-        print(df)
-        df = df.sort_values(by=['matching_ratio','Fuzzy_Ratio', 'Fuzzy_Ratio2'], ascending=False)
+        data = data.loc[(data['matching_ratio'] > threshold) | (data['Fuzzy_Ratio'] > threshold) | (data['Fuzzy_Ratio2'] > threshold)]
+        df = data.sort_values(by=['matching_ratio','Fuzzy_Ratio', 'Fuzzy_Ratio2'], ascending=False)
     
         if columns_rename != None:
             df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)

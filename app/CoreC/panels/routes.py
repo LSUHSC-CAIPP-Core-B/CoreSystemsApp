@@ -34,6 +34,7 @@ def panels():
 
         dataFrame.rename(columns={'Panel_name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')
+
     if request.method == 'GET':
         dataFrame = count_rows()
         print(dataFrame)
@@ -193,16 +194,14 @@ def deletePanel():
         response.headers["Expires"] = "0" # Proxies.
         return response
 
-@bp.route('/panel_details', methods=['GET', 'POST'])
+@bp.route('/panel_details', methods=['GET'])
 @login_required(role=["user", "coreC"])
 def panel_details():
     panel_name = request.args.get('Panel_Name')
-    if request.method == 'POST':
-        raise NotImplementedError()
+
     if request.method == 'GET':
         with app.app_context():
             panels_df = cache1.get('cached_dataframe')
-        
         
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
@@ -222,9 +221,14 @@ def panel_details():
             dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
         data = dataFrame.to_dict('records')
 
+        # If Panel is Empty
         if not data:
-            flash(f"{panel_name}")
-            return redirect(url_for('panels.addPanelAntibody', Panel_Name=panel_name))
+            if current_user.is_admin:
+                flash(f"{panel_name}")
+                return redirect(url_for('panels.addPanelAntibody', Panel_Name=panel_name))
+            else:
+                flash(f"{panel_name} Panel is empty")
+                return redirect(url_for('panels.panels'))
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')

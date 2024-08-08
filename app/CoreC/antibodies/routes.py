@@ -43,7 +43,8 @@ def antibodies():
         AllUinputs = [Company_name, Target_Name, Target_Species]
         
         # Creates list to store inputs that are being Used
-        Uinputs: list[str] = [i for i in AllUinputs if i]
+        Uinputs: list[str] = [i for i in AllUinputs]
+        print(f"Uinputs: {Uinputs}")
         
         # Clear the cache when new filters are applied
         with app.app_context():

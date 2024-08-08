@@ -1,4 +1,4 @@
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz, utils
 import pandas as pd
 
 class search_utils:
@@ -30,3 +30,47 @@ class search_utils:
         
         filtered_df = SqlData.loc[list(all_matches)]
         return filtered_df.to_dict(orient='records')
+    
+    @staticmethod
+    def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
+        result = any(s for s in Uinputs)
+        print(f"Inputs not used: {result}")
+        # Checks if inputs are used
+        # If inputs are used then search the df for a match
+        # Then sort according to fuzz ratio
+        if result:
+            condition = False
+
+            # Iterate over each column and its corresponding user input
+            for i, v in enumerate(columns_to_check):
+                SqlData[f'{v}_ratio'] = SqlData.apply(
+                    lambda x: round(fuzz.ratio(utils.default_process(x[v]), utils.default_process(Uinputs[i])), 2), axis=1
+                ) # Create the ratio column
+
+            # Store Ratio column names
+            rCol = [f'{i}_ratio' for i in columns_to_check]
+
+            # Update the condition to include any ratio column exceeding the threshold
+            condition = (SqlData[rCol] > threshold).any(axis=1)
+
+            # filtered dataframe
+            df = SqlData[condition]
+
+            # Creating list for ascending/descending
+            asc = [False for i in rCol]
+            # adding sort_by column
+            rCol.append(sort_by)
+            asc.append(True) # adds sort order for sort_by column
+            df = df.sort_values(by=rCol, ascending=asc)
+            # Drop ratio columns
+            df = df.drop(columns=rCol[0:len(rCol)-1])
+            SqlData = df
+        else: # inputs not used
+            print("Inputs not used")
+            SqlData = SqlData.sort_values(by=[sort_by])
+
+        # Rename columns
+        if columns_rename != None:
+            SqlData.rename(columns=columns_rename, inplace=True)
+
+        return SqlData.to_dict(orient='records')

@@ -101,7 +101,7 @@
                             <td>
                                 {{ list(data[row].values())[col] }}
                                 {% if col == 1 %}
-                                {% if data[row]["Genotype"] != "N/A" %}
+                                {% if data[row]["Genotype"] != "N/A" and current_user.is_admin %}
                                 <form id="deleteForm" method="POST" action="/deleteMouse">
                                     <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
                                     <button id="confirmBtn" class="deletebutton"

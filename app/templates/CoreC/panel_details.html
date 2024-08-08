@@ -36,9 +36,11 @@
                 <thead>
                     <tr>
                         {% for header in data[0].keys() %}
+                        {% if header != "Stock_ID" %}
                         <th>
                             <h4>{{ header }}</h4>
                         </th>
+                        {% endif %}
                         {% endfor %}
                     </tr>
                 </thead>
@@ -46,6 +48,7 @@
                     {% for row in range(0, len(data)) %}
                     <tr id="{{row}}">
                         {% for col in range(0, len(list(data[row].values()))) %}
+                        {% if list(data[row].keys())[col] != "Stock_ID" %}
                         <td>
                             {% if col == 1 and current_user.is_admin %}
                             <form method="POST" action="/deletePanelAntibody">
@@ -56,7 +59,7 @@
                             </form>
                             {% endif %}
                             {{ list(data[row].values())[col] }}
-
+                            {% endif %}
                             {% endfor %}
                             {% endfor %}
                         </td>

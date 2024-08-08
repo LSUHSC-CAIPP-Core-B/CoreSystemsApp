@@ -30,50 +30,9 @@ class search_utils:
         
         filtered_df = SqlData.loc[list(all_matches)]
         return filtered_df.to_dict(orient='records')
-
-
-    @staticmethod
-    def search_data_sort(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
-        data = SqlData 
-        # Define the fuzzy search function
-        def fuzzy_search(row, column_search_map, threshold):
-            max_ratio = 0
-            for column, target_string in column_search_map.items():
-                cell_value = utils.default_process(str(row[column]))
-                target_string = utils.default_process(target_string)
-                ratio = fuzz.ratio(target_string, cell_value)
-                if ratio > threshold:
-                    max_ratio = max(max_ratio, ratio)
-            return max_ratio if max_ratio > threshold else None
-
-        # Define the column and target string mappings for fuzzy search
-        column_search_map = {
-            k: v for k,v in zip(columns_to_check, Uinputs)
-        }
-        print(f"Columns to check: {columns_to_check}")
-        print(f"column_search_map{column_search_map}")
-        threshold = 45
-
-        # Apply the fuzzy search function to each row and create a new column for the ratio
-        data['Fuzzy_Ratio'] = data.apply(lambda row: fuzzy_search(row, column_search_map, threshold), axis=1)
-        print(f"data:{data}")
-        # Drop rows where Fuzzy_Ratio is None
-        filtered_df = data.dropna(subset=['Fuzzy_Ratio'])
-
-        # Sort the DataFrame based on the Fuzzy_Ratio column in descending order
-        sorted_df = filtered_df.sort_values(by='Fuzzy_Ratio', ascending=False)
-
-        # Drop the Fuzzy_Ratio column if not needed
-        #sorted_df = sorted_df.drop(columns=['Fuzzy_Ratio'])
-        print(f"Sorted Dataframe:\n{sorted_df}")
-
-        if columns_rename != None:
-            sorted_df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
-
-        return sorted_df.to_dict(orient='records')
     
     @staticmethod
-    def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
+    def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
         data = SqlData
         data['Target ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
 

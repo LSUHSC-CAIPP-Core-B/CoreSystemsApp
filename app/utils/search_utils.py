@@ -74,7 +74,6 @@ class search_utils:
     
     @staticmethod
     def search_data_sorted(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
-        print(Uinputs)
         data = SqlData
         data['Target ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
 
@@ -82,10 +81,9 @@ class search_utils:
 
         data['Species Ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Species), utils.default_process(Uinputs[2])), 2), axis=1).to_list()
 
-        #if not Uinputs[0] and not Uinputs[0] and not Uinputs[2]
         data = data.loc[(data['Target ratio'] > threshold) | (data['Company Ratio'] > threshold) | (data['Species Ratio'] > threshold)]
         df = data.sort_values(by=['Target ratio','Company Ratio', 'Species Ratio', sort_by], ascending=[False, False, True, True])
-        print(f"Sort by: {sort_by}")
+        df = df.drop(columns=['Target ratio','Company Ratio', 'Species Ratio'])
     
         if columns_rename != None:
             df.rename(columns=columns_rename, inplace=True)

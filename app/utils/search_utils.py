@@ -33,18 +33,28 @@ class search_utils:
     
     @staticmethod
     def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
-        data = SqlData
-        data['Target ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
+        result = any(s for s in Uinputs)
+        print(f"Inputs not used: {result}")
+        # Checks if inputs are used
+        # If inputs are used then search the df for a match
+        # Then sort according to fuzz ratio
+        if result:
+            print(f"Uinputs is Used: {Uinputs}")
+            SqlData['Target ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
 
-        data['Company Ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), 2), axis=1).to_list()
+            SqlData['Company Ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), 2), axis=1).to_list()
 
-        data['Species Ratio'] = data.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Species), utils.default_process(Uinputs[2])), 2), axis=1).to_list()
+            SqlData['Species Ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Species), utils.default_process(Uinputs[2])), 2), axis=1).to_list()
 
-        data = data.loc[(data['Target ratio'] > threshold) | (data['Company Ratio'] > threshold) | (data['Species Ratio'] > threshold)]
-        df = data.sort_values(by=['Target ratio','Company Ratio', 'Species Ratio', sort_by], ascending=[False, False, True, True])
-        df = df.drop(columns=['Target ratio','Company Ratio', 'Species Ratio'])
-    
+            SqlData = SqlData.loc[(SqlData['Target ratio'] > threshold) | (SqlData['Company Ratio'] > threshold) | (SqlData['Species Ratio'] > threshold)]
+            SqlData = SqlData.sort_values(by=['Target ratio','Company Ratio', 'Species Ratio', sort_by], ascending=[False, False, True, True])
+            SqlData = SqlData.drop(columns=['Target ratio','Company Ratio', 'Species Ratio'])
+        else: # inputs not used
+            print("Inputs not used")
+            SqlData = SqlData.sort_values(by=[sort_by])
+
+        # Rename columns
         if columns_rename != None:
-            df.rename(columns=columns_rename, inplace=True)
+            SqlData.rename(columns=columns_rename, inplace=True)
 
-        return df.to_dict(orient='records')
+        return SqlData.to_dict(orient='records')

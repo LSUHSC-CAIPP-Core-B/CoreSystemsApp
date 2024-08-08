@@ -39,16 +39,32 @@ class search_utils:
         # If inputs are used then search the df for a match
         # Then sort according to fuzz ratio
         if result:
-            print(f"Uinputs is Used: {Uinputs}")
-            SqlData['Target ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Name), utils.default_process(Uinputs[1])), 2), axis=1).to_list()
+            condition = False
 
-            SqlData['Company Ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Company_name), utils.default_process(Uinputs[0])), 2), axis=1).to_list()
+            # Iterate over each column and its corresponding user input
+            for i, v in enumerate(columns_to_check):
+                SqlData[f'{v}_ratio'] = SqlData.apply(
+                    lambda x: round(fuzz.ratio(utils.default_process(x[v]), utils.default_process(Uinputs[i])), 2), axis=1
+                ) # Create the ratio column
 
-            SqlData['Species Ratio'] = SqlData.apply(lambda x: round(fuzz.ratio(utils.default_process(x.Target_Species), utils.default_process(Uinputs[2])), 2), axis=1).to_list()
+            # Store Ratio column names
+            rCol = [f'{i}_ratio' for i in columns_to_check]
 
-            SqlData = SqlData.loc[(SqlData['Target ratio'] > threshold) | (SqlData['Company Ratio'] > threshold) | (SqlData['Species Ratio'] > threshold)]
-            SqlData = SqlData.sort_values(by=['Target ratio','Company Ratio', 'Species Ratio', sort_by], ascending=[False, False, True, True])
-            SqlData = SqlData.drop(columns=['Target ratio','Company Ratio', 'Species Ratio'])
+            # Update the condition to include any ratio column exceeding the threshold
+            condition = (SqlData[rCol] > threshold).any(axis=1)
+
+            # filtered dataframe
+            df = SqlData[condition]
+
+            # Creating list for ascending/descending
+            asc = [False for i in rCol]
+            # adding sort_by column
+            rCol.append(sort_by)
+            asc.append(True) # adds sort order for sort_by column
+            df = df.sort_values(by=rCol, ascending=asc)
+            # Drop ratio columns
+            df = df.drop(columns=rCol[0:len(rCol)-1])
+            SqlData = df
         else: # inputs not used
             print("Inputs not used")
             SqlData = SqlData.sort_values(by=[sort_by])

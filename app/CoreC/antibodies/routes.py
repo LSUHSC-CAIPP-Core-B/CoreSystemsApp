@@ -44,7 +44,6 @@ def antibodies():
         
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
-        print(f"Uinputs: {Uinputs}")
         
         # Clear the cache when new filters are applied
         with app.app_context():
@@ -157,10 +156,25 @@ def addAntibody():
                     'includedParam': included}
 
         # Executes add query
-        antibodiesTable.add(params)
+        df = antibodiesTable.add(params)
+        df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+        data = df.to_dict(orient='records')
+        
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
 
+        if not current_user.is_admin:
+            per_page = request.args.get('per_page', 20, type=int)
+            offset = (page - 1) * per_page
+        
+        #number of rows in table
+        num_rows = len(data)
+
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+        
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies')))
+        response = make_response(render_template("CoreC/antibodies_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

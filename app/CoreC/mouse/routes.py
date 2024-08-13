@@ -51,3 +51,40 @@ def mouse():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/addMouse', methods=['GET', 'POST'])
+@login_required(role=["user", "coreC"])
+def addMouse():
+    if request.method == 'POST':
+        inputs = request.form
+        
+        inputData = inputs.to_dict()
+
+        has_empty_value = any(value == "" or value is None for value in inputData.values())
+        
+        if has_empty_value:
+            flash('Fields cannot be empty')
+            return redirect(url_for('mouse.addMouse'))
+        
+        if not inputData["Times Back Crossed"].isdigit():
+            flash('"Times Back Crossed" must be a number')
+            return redirect(url_for('mouse.addMouse'))
+
+        raise NotImplementedError()
+    
+    if request.method == 'GET':
+        data = {
+            "PI": "",
+            "Genotype": "",
+            "Description": "",
+            "Strain": "",
+            "Times Back Crossed": "",
+            "MTA Required": "",
+        }
+
+        # use to prevent user from caching pages
+        response = make_response(render_template('CoreC/add_mouse.html', fields = data))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

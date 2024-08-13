@@ -96,7 +96,7 @@ def antibodies():
     return response
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def addAntibody():
     if request.method == 'POST':
         box_name = request.form.get('Box Name')
@@ -162,10 +162,6 @@ def addAntibody():
         
         page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
-
-        if not current_user.is_admin:
-            per_page = request.args.get('per_page', 20, type=int)
-            offset = (page - 1) * per_page
         
         #number of rows in table
         num_rows = len(data)
@@ -206,7 +202,7 @@ def addAntibody():
         return response
 
 @bp.route('/deleteAntibody', methods=['POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
 
@@ -222,7 +218,7 @@ def deleteAntibody():
     return response
 
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def changeAntibody():
     if request.method == 'POST':
         primary_key = request.form.get('primaryKey')
@@ -315,7 +311,7 @@ def changeAntibody():
         return response
 
 @bp.route('/downloadAntibodyCSV', methods=['GET'])
-@login_required(role=["coreC"])
+@login_required(role=["user", "coreC"])
 def downloadCSV():
     with app.app_context():
         saved_data = cache1.get('cached_dataframe')

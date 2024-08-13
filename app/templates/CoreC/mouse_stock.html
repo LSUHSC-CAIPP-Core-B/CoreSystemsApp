@@ -85,7 +85,7 @@
                     <thead>
                         <tr>
                             {% for header in data[0].keys() %}
-                            {% if header != "Stock_ID" %}
+                            {% if header not in ("Stock_ID", "user_id",) %}
                             <th>
                                 <h4>{{ header }}</h4>
                             </th>
@@ -115,7 +115,7 @@
                                 {% endif %}
                             </td>
                             {% endif %}
-                            {% if list(data[row].keys())[col] not in ("Stock_ID", "PI") %}
+                            {% if list(data[row].keys())[col] not in ("Stock_ID", "PI", "user_id") %}
                             <td>
                                 {{ list(data[row].values())[col] }}
                             </td>

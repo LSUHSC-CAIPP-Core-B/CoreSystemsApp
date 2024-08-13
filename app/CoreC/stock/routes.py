@@ -44,7 +44,7 @@ def stock():
         AllUinputs = [company, product]
         
         # Creates list to store inputs that are being Used
-        Uinputs: list[str] = [i for i in AllUinputs if i]
+        Uinputs: list[str] = [i for i in AllUinputs]
 
         # Clear the cache when new filters are applied
         with app.app_context():

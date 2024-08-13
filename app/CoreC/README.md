@@ -78,7 +78,7 @@ CREATE TABLE panel_name(
 ```
 ##### Mouse
 ```sql
--- MOUSE TABLE
+-- Mouse table
 CREATE TABLE Mouse_Stock(
     Stock_ID INT AUTO_INCREMENT Primary key,
     PI_Name VARCHAR(255),
@@ -86,6 +86,7 @@ CREATE TABLE Mouse_Stock(
     Mouse_Description VARCHAR(256),
     Strain VARCHAR(64),
     Times_Back_Crossed INT,
-    MTA_Required VARCHAR(32)                        
+    MTA_Required VARCHAR(32),
+    user_id INT
 ) AUTO_INCREMENT = 2000;
 ```

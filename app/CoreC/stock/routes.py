@@ -136,10 +136,22 @@ def addSupply():
                     'ProductParam': Product_Name
                     }
 
-        stockTable.add(params, Quantity)
+        df = stockTable.add(params, Quantity)
+        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        print(f"Dataframe: {df}")
+        data = df.to_dict(orient='records')
 
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
+        
+        #number of rows in table
+        num_rows = len(data)
+
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+        
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.stock')))
+        response = make_response(render_template("CoreC/stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

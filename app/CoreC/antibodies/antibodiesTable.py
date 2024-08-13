@@ -88,10 +88,7 @@ class antibodiesTable(BaseDatabaseTable):
         mydb.close()   
 
         # Gets newest antibody
-        if current_user.is_admin:
-            query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
-        else:
-            query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
+        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
         return df

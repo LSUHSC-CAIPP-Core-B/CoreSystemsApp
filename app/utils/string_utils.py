@@ -7,7 +7,7 @@ class string_utils:
     :rtype: None
     """
     @staticmethod
-    def isValidInput(string:str, expected:str, *, threshold:int=70) -> bool:
+    def isValidInput(string: str, expected: str, *, threshold: int=70) -> bool:
         """Checks if the input string matches the expected input
 
         :param string: Input string to be compared
@@ -19,8 +19,8 @@ class string_utils:
         :return: returns True if the input string matches the expected string
         :rtype: bool
         """
-        ProcessedInput = utils.default_process(string)
-        ProcessedExpected = utils.default_process(expected)
+        ProcessedInput: str = utils.default_process(string)
+        ProcessedExpected: str = utils.default_process(expected)
 
         if fuzz.ratio(ProcessedInput, ProcessedExpected) >= threshold:
             return True

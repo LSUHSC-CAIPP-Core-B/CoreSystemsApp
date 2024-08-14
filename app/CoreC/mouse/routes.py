@@ -1,4 +1,3 @@
-from datetime import datetime
 from io import BytesIO
 
 import mysql.connector as connection
@@ -7,20 +6,20 @@ import pymysql
 from app import login_required
 from app.CoreC.mouse import bp
 from app.CoreC.mouse.mouseTable import mouseTable
-from app.CoreC.antibodies.antibodiesTable import antibodiesTable
-from app.reader import Reader
 from app.utils.db_utils import db_utils
 from app.utils.logging_utils.logGenerator import Logger
-from app.utils.search_utils import search_utils
 from flask import (Flask, flash, jsonify, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 from flask_login import current_user
-from fuzzywuzzy import fuzz
-from jinja2 import UndefinedError
 
 mouseTable = mouseTable()
+
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
 
 @bp.route('/mouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -29,6 +28,7 @@ def mouse():
         rawInputs = request.form
 
         inputDict = rawInputs.to_dict()
+        print(inputDict)
         Uinputs = list(inputDict.values())
 
         sort = inputDict["sort"]
@@ -95,7 +95,7 @@ def addMouse():
         pagination = Pagination(page=page, per_page=per_page, total=num_rows)
         
         # use to prevent user from caching pages
-        response = make_response(render_template("CoreC/antibodies_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+        response = make_response(render_template("CoreC/mouse_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -117,3 +117,19 @@ def addMouse():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/deleteMouse', methods=['POST'])
+@login_required(role=["user", "coreC"])
+def deleteAntibody():
+    primary_key = request.form['primaryKey']
+
+    logger.info("Deletion Attempting...")
+
+    mouseTable.delete(primary_key)
+
+    # use to prevent user from caching pages
+    response = make_response(redirect(url_for('mouse.mouse')))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response

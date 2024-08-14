@@ -88,4 +88,25 @@ class mouseTable(BaseDatabaseTable):
         return super().change(params)
     
     def delete(self, primary_key) -> None:
-        return super().delete(primary_key)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+        
+        idQuery = f"SELECT user_id FROM Mouse_Stock WHERE Stock_ID = {primary_key}"
+
+        userID = db_utils.toDataframe(idQuery, 'app/Credentials/CoreC.json')
+        
+        if userID.iloc[0,0] == current_user.id:
+            # SQL DELETE query
+            query = "DELETE FROM Mouse_Stock WHERE Stock_ID = %s"
+            logger.info(f"Executing query: {query} with params: {primary_key}")
+            #Execute SQL query
+            cursor.execute(query, (primary_key,))
+
+            # Commit the transaction
+            mydb.commit()
+
+            # Close the cursor and connection
+            cursor.close()
+            mydb.close()
+
+            logger.info("Deletion Complete!")

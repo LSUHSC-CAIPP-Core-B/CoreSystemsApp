@@ -6,6 +6,7 @@ import pandas as pd
 import pymysql
 from app import login_required
 from app.CoreC.mouse import bp
+from app.CoreC.mouse.mouseTable import mouseTable
 from app.CoreC.antibodies.antibodiesTable import antibodiesTable
 from app.reader import Reader
 from app.utils.db_utils import db_utils
@@ -19,6 +20,8 @@ from flask_login import current_user
 from fuzzywuzzy import fuzz
 from jinja2 import UndefinedError
 
+mouseTable = mouseTable()
+
 @bp.route('/mouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def mouse():
@@ -28,9 +31,8 @@ def mouse():
     if request.method == 'GET':
         df = db_utils.toDataframe("SELECT * FROM Mouse_Stock", 'app/Credentials/CoreC.json')
         df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required',}, inplace=True)
-        print(f"Mouse Dataframe: {df}")
+        
         data = df.to_dict('records')
-        print(f"Mouse Dictionary: {data}")
 
         page, per_page, offset = get_page_args(page_parameter='page', 
                                             per_page_parameter='per_page')
@@ -59,6 +61,7 @@ def addMouse():
         inputs = request.form
         
         inputData = inputs.to_dict()
+        print(f"Dictionary: {inputData}")
 
         has_empty_value = any(value == "" or value is None for value in inputData.values())
         
@@ -70,7 +73,25 @@ def addMouse():
             flash('"Times Back Crossed" must be a number')
             return redirect(url_for('mouse.addMouse'))
 
-        raise NotImplementedError()
+        df = mouseTable.add(inputData)
+        df.rename(columns={'Box_Name': 'Box Name'}, inplace=True)
+        data = df.to_dict(orient='records')
+        
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
+        
+        #number of rows in table
+        num_rows = len(data)
+
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+        
+        # use to prevent user from caching pages
+        response = make_response(render_template("CoreC/antibodies_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
     
     if request.method == 'GET':
         data = {

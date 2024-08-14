@@ -47,9 +47,7 @@ class antibodiesTable(BaseDatabaseTable):
             query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
-        df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
-
-        SqlData = df
+        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
         
         # * Fuzzy Search *
         # Checks whether filters are being used

@@ -26,33 +26,42 @@ mouseTable = mouseTable()
 @login_required(role=["user", "coreC"])
 def mouse():
     if request.method == 'POST':
-        raise NotImplementedError()
+        rawInputs = request.form
+
+        inputDict = rawInputs.to_dict()
+        Uinputs = list(inputDict.values())
+
+        sort = inputDict["sort"]
+
+        Uinputs.pop(-1)
+
+        data: dict = mouseTable.display(Uinputs, sort)
     
     if request.method == 'GET':
-        df = db_utils.toDataframe("SELECT * FROM Mouse_Stock", 'app/Credentials/CoreC.json')
-        df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required',}, inplace=True)
+        df = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A';", 'app/Credentials/CoreC.json')
+        df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
         
         data = df.to_dict('records')
 
-        page, per_page, offset = get_page_args(page_parameter='page', 
-                                            per_page_parameter='per_page')
+    page, per_page, offset = get_page_args(page_parameter='page', 
+                                        per_page_parameter='per_page')
 
-        if not current_user.is_admin:
-            per_page = request.args.get('per_page', 20, type=int)
-            offset = (page - 1) * per_page
-        
-        #number of rows in table
-        num_rows = len(data)
+    if not current_user.is_admin:
+        per_page = request.args.get('per_page', 20, type=int)
+        offset = (page - 1) * per_page
+    
+    #number of rows in table
+    num_rows = len(data)
 
-        pagination_users = data[offset: offset + per_page]
-        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
-        
-        # use to prevent user from caching pages
-        response = make_response(render_template("CoreC/mouse_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
-        return response
+    pagination_users = data[offset: offset + per_page]
+    pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+    
+    # use to prevent user from caching pages
+    response = make_response(render_template("CoreC/mouse_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+    response.headers["Expires"] = "0" # Proxies.
+    return response
     
 @bp.route('/addMouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -61,7 +70,6 @@ def addMouse():
         inputs = request.form
         
         inputData = inputs.to_dict()
-        print(f"Dictionary: {inputData}")
 
         has_empty_value = any(value == "" or value is None for value in inputData.values())
         

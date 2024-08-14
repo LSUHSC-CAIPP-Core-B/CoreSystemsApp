@@ -5,6 +5,8 @@ from app.utils.logging_utils.logGenerator import Logger
 from app.utils.db_utils import db_utils
 from flask_login import current_user
 
+from app.utils.search_utils import search_utils
+
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
 LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
@@ -20,7 +22,41 @@ class mouseTable(BaseDatabaseTable):
     """
     
     def display(self, Uinputs: str, sort: str) -> dict:
-        return super().display(Uinputs, sort)
+        # Maps sorting options to their corresponding SQL names
+        sort_orders = {
+            'Times Back Crossed': 'Times_Back_Crossed',
+        }
+
+        # Check if sort is in the dictionary, if not then uses default value
+        order_by = sort_orders.get(sort, 'PI_Name')
+
+        # Validate the order_by to prevent sql injection
+        if order_by not in sort_orders.values():
+            order_by = 'PI_Name'
+
+        query = f"SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A' ORDER BY {order_by};"
+
+        # Creates Dataframe
+        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
+        
+        # * Fuzzy Search *
+        # Checks whether filters are being used
+        # If filters are used then implements fuzzy matching
+        if len(Uinputs) != 0:
+            columns_to_check = ["PI_Name", "Genotype", "Strain"]
+            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by, {'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'})
+            
+            # If no match is found displays empty row
+            if not data:
+                dataFrame = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype = 'N/A';", 'app/Credentials/CoreC.json')
+                dataFrame.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
+                data = dataFrame.to_dict('records')
+        else: # If no search filters are used
+            # renaming columns and setting data variable
+            SqlData.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
+            # Converts to a list of dictionaries
+            data = SqlData.to_dict(orient='records')
+        return data
     
     def add(self, params: dict) -> pd.DataFrame:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))

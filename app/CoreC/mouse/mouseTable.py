@@ -85,7 +85,21 @@ class mouseTable(BaseDatabaseTable):
         return df
     
     def change(self, params: dict) -> None:
-        return super().change(params)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        # SQL Change query
+        query = "UPDATE Mouse_Stock SET PI_Name = %(PI)s, Genotype = %(Genotype)s, Mouse_Description = %(Description)s, Times_Back_Crossed = %(Times Back Crossed)s, MTA_Required = %(MTA Required)s WHERE Stock_ID = %(primaryKey)s;"
+        logger.info(f"Executing query: {query} with params: {params}")
+        #Execute SQL query
+        cursor.execute(query, params)
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
     
     def delete(self, primary_key) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))

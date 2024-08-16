@@ -14,7 +14,13 @@ from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 from flask_login import current_user
 
+# mouse object
 mouseTable = mouseTable()
+
+# Cache setup
+app = Flask(__name__)
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -36,12 +42,30 @@ def mouse():
         Uinputs.pop(-1)
 
         data: dict = mouseTable.display(Uinputs, sort)
+
+        with app.app_context():
+            cache1.delete('cached_dataframe') # Clear the cache when new filters are applied
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
     
     if request.method == 'GET':
-        df = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A';", 'app/Credentials/CoreC.json')
-        df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
+        with app.app_context():
+            cached_data = cache1.get('cached_dataframe')
         
-        data = df.to_dict('records')
+        if cached_data is None:
+            with app.app_context():
+                defaultCache.delete('cached_dataframe')
+
+            df = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A';", 'app/Credentials/CoreC.json')
+            df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
+        
+            data = df.to_dict('records')
+
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
+        else:
+            # Try to get the cached DataFrame
+            with app.app_context():
+                data = cache1.get('cached_dataframe')
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')
@@ -82,7 +106,7 @@ def addMouse():
             return redirect(url_for('mouse.addMouse'))
 
         df = mouseTable.add(inputData)
-        df.rename(columns={'Box_Name': 'Box Name'}, inplace=True)
+        df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
         data = df.to_dict(orient='records')
         
         page, per_page, offset = get_page_args(page_parameter='page', 
@@ -118,9 +142,52 @@ def addMouse():
         response.headers["Expires"] = "0" # Proxies.
         return response
     
+@bp.route('/changeMouse', methods=['GET', 'POST'])
+@login_required(role=["user", "coreC"])
+def changeMouse():
+    if request.method == 'POST':
+        inputs = request.form
+            
+        inputData = inputs.to_dict()
+
+        has_empty_value = any(value == "" or value is None for value in inputData.values())
+        
+        if has_empty_value:
+            flash('Fields cannot be empty')
+            return redirect(url_for('mouse.addMouse'))
+        
+        if not inputData["Times Back Crossed"].isdigit():
+            flash('"Times Back Crossed" must be a number')
+            return redirect(url_for('mouse.addMouse'))
+        print(f"Input Data: {inputData}")
+        #Executes change query
+        mouseTable.change(inputData)
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('mouse.mouse')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
+    if request.method == 'GET':
+        primary_key = request.args.get('primaryKey')
+        query = "SELECT * FROM Mouse_Stock WHERE Stock_ID = %s;"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', (primary_key,))
+        df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
+
+        data = df.to_dict()
+        
+        # use to prevent user from caching pages
+        response = make_response(render_template('CoreC/change_mouse.html', fields = data, pkey = primary_key))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
+    
 @bp.route('/deleteMouse', methods=['POST'])
 @login_required(role=["user", "coreC"])
-def deleteAntibody():
+def deleteMouse():
     primary_key = request.form['primaryKey']
 
     logger.info("Deletion Attempting...")

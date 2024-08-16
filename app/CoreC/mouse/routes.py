@@ -200,3 +200,17 @@ def deleteMouse():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+@bp.route('/downloadMouseCSV', methods=['GET'])
+@login_required(role=["user", "coreC"])
+def downloadCSV():
+    with app.app_context():
+        saved_data = cache1.get('cached_dataframe')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+
+    csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')

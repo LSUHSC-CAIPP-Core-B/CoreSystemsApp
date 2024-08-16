@@ -320,6 +320,6 @@ def downloadCSV():
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
 
-    csv_io = antibodiesTable.download_CSV(saved_data=saved_data)
+    csv_io = antibodiesTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID'])
     
     return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

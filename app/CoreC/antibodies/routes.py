@@ -44,7 +44,6 @@ def antibodies():
         
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
-        print(f"Uinputs: {Uinputs}")
         
         # Clear the cache when new filters are applied
         with app.app_context():
@@ -97,7 +96,7 @@ def antibodies():
     return response
         
 @bp.route('/addAntibody', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def addAntibody():
     if request.method == 'POST':
         box_name = request.form.get('Box Name')
@@ -157,10 +156,21 @@ def addAntibody():
                     'includedParam': included}
 
         # Executes add query
-        antibodiesTable.add(params)
+        df = antibodiesTable.add(params)
+        df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
+        data = df.to_dict(orient='records')
+        
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
+        
+        #number of rows in table
+        num_rows = len(data)
 
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+        
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies')))
+        response = make_response(render_template("CoreC/antibodies_stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -192,7 +202,7 @@ def addAntibody():
         return response
 
 @bp.route('/deleteAntibody', methods=['POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def deleteAntibody():
     primary_key = request.form['primaryKey']
 
@@ -208,7 +218,7 @@ def deleteAntibody():
     return response
 
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
-@login_required(role=["admin"])
+@login_required(role=["admin", "coreC"])
 def changeAntibody():
     if request.method == 'POST':
         primary_key = request.form.get('primaryKey')
@@ -301,7 +311,7 @@ def changeAntibody():
         return response
 
 @bp.route('/downloadAntibodyCSV', methods=['GET'])
-@login_required(role=["coreC"])
+@login_required(role=["user", "coreC"])
 def downloadCSV():
     with app.app_context():
         saved_data = cache1.get('cached_dataframe')
@@ -310,6 +320,6 @@ def downloadCSV():
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
 
-    csv_io = antibodiesTable.download_CSV(saved_data=saved_data)
+    csv_io = antibodiesTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID'])
     
     return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Antibodies.csv')

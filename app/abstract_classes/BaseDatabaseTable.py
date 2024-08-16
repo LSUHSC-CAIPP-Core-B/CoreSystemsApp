@@ -60,17 +60,23 @@ class BaseDatabaseTable(ITable):
         raise NotImplementedError()
     
     @override
-    def download_CSV(self, saved_data: dict) -> IO[bytes]:
+    def download_CSV(self, saved_data: dict, *, dropCol: list[str] = None) -> IO[bytes]:
         """Takes the saved data and converts it to a 
         dataframe then converts the dataframe to a CSV and
         downloads the CSV file locally on the users computer
 
         :param saved_data: Data from a table
         :type saved_data: dict
+        :param dropCol: Columns to remove from the CSV file
+        :type dropCol: dict[str]
         :return: CSV string in bytes
         :rtype: IO[bytes]
         """        
         df = pd.DataFrame.from_dict(saved_data)
+
+        if dropCol != None:
+            df.drop(columns=dropCol, inplace=True)
+
         csv = df.to_csv(index=False)
         
         # Convert the CSV string to bytes and use BytesIO

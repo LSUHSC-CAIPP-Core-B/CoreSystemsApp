@@ -34,7 +34,6 @@ class search_utils:
     @staticmethod
     def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
         result = any(s for s in Uinputs)
-        print(f"Inputs not used: {result}")
         # Checks if inputs are used
         # If inputs are used then search the df for a match
         # Then sort according to fuzz ratio
@@ -66,7 +65,6 @@ class search_utils:
             df = df.drop(columns=rCol[0:len(rCol)-1])
             SqlData = df
         else: # inputs not used
-            print("Inputs not used")
             SqlData = SqlData.sort_values(by=[sort_by])
 
         # Rename columns

@@ -1,5 +1,7 @@
 from typing import IO
 
+from flask_login import current_user
+import pandas as pd
 import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
@@ -62,7 +64,8 @@ class stockTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["Company_Name", "Product_Name"]
-            data = search_utils.search_data(Uinputs, columns_to_check, 45, SqlData, {'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'})
+            print(f"Columns to check: {columns_to_check}\n Uinputs: {Uinputs}")
+            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 45, SqlData, order_by, {'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'})
             
             # If no match is found displays empty row
             if not data:
@@ -77,7 +80,7 @@ class stockTable(BaseDatabaseTable):
         return data
     
     @override
-    def add(self, params: dict, Quantity: any) -> None:
+    def add(self, params: dict, Quantity: any) -> pd.DataFrame:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
@@ -95,6 +98,11 @@ class stockTable(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+        # Gets newest supply
+        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY S.Product_Num DESC LIMIT 1;"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        return df
     
     def change(self, params: dict, Quantity: any, primary_key:any) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))

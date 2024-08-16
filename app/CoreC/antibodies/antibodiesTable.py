@@ -1,5 +1,6 @@
 from typing import IO
 
+import pandas as pd
 import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
@@ -46,9 +47,7 @@ class antibodiesTable(BaseDatabaseTable):
             query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
-        df = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
-
-        SqlData = df
+        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
         
         # * Fuzzy Search *
         # Checks whether filters are being used
@@ -69,7 +68,7 @@ class antibodiesTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
 
-    def add(self, params:dict) -> None:   
+    def add(self, params:dict) -> pd.DataFrame:   
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
@@ -84,7 +83,13 @@ class antibodiesTable(BaseDatabaseTable):
 
         # Close the cursor and connection
         cursor.close()
-        mydb.close()                    
+        mydb.close()   
+
+        # Gets newest antibody
+        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
+        
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        return df
 
     def change(self, params:dict) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))

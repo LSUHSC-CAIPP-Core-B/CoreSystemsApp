@@ -44,7 +44,7 @@ class mouseTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["PI_Name", "Genotype", "Strain"]
-            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by, {'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'})
+            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by, columns_rename={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'})
             
             # If no match is found displays empty row
             if not data:

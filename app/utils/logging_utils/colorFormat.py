@@ -14,6 +14,11 @@ LOG_COLORS = {
 }
 
 class ColoredFormatter(logging.Formatter):
+    """A custom logging formatter that adds color codes to log messages based on their severity level.
+
+    This formatter uses `colorama` to apply colors to log messages. Different colors are used for different log levels.
+    """
+    
     def format(self, record) -> str:
         """Gets the color for the current log level
 

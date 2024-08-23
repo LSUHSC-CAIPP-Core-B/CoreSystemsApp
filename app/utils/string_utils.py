@@ -1,10 +1,7 @@
 from rapidfuzz import fuzz, utils
 
 class string_utils:
-    """Useful string utilities
-
-    :return: 
-    :rtype: None
+    """A collection of utility methods for string operations.
     """
     @staticmethod
     def isValidInput(string: str, expected: str, *, threshold: int=70) -> bool:

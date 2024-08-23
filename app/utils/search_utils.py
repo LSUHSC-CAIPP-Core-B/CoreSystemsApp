@@ -2,17 +2,27 @@ from rapidfuzz import fuzz, utils
 import pandas as pd
 
 class search_utils:
-    @staticmethod
-    def search_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, columns_rename:dict=None) -> dict:
-        '''
-        Takes in user inputs, columns to check, threshold,
-        Sql dataframe and returns a dictionary of results (list of dictionaries)
+    """A utility class for performing and sorting fuzzy searches on a DataFrame.
+    """
 
-        Uinputs(list): Inputs used
-        columns_to_checks(list): All possible inputs
-        threshold(int): Search Accuracy 0-100 
-        SqlData(pd.Dataframe): Data thats being searched
-        '''    
+    @staticmethod
+    def search_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, *, columns_rename:dict=None) -> dict:
+        """Performs a fuzzy search on a SQL DataFrame using user inputs and specified columns, returning a dictionary of matching results.
+
+        :param Uinputs: List of user inputs to search for.
+        :type Uinputs: list
+        :param columns_to_check: List of columns in the DataFrame to check for matches.
+        :type columns_to_check: list
+        :param threshold: Minimum similarity score (0-100) required for a match.
+        :type threshold: int
+        :param SqlData: The DataFrame to be searched.
+        :type SqlData: pd.DataFrame
+        :param columns_rename: Optional dictionary to rename columns in the results, defaults to None
+        :type columns_rename: dict, optional
+        :return: A dictionary of search results, with each user input corresponding to a list of matching rows.
+        :rtype: dict
+        """
+
         matches_per_input: list = [set() for _ in Uinputs]  # List of sets, one for each input
 
         for input_index, i in enumerate(Uinputs):
@@ -32,7 +42,25 @@ class search_utils:
         return filtered_df.to_dict(orient='records')
     
     @staticmethod
-    def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, columns_rename:dict=None) -> dict:
+    def sort_searched_data(Uinputs:list, columns_to_check:list, threshold:int, SqlData: pd.DataFrame, sort_by:list, *, columns_rename:dict=None) -> dict:
+        """Searches and sorts data from a DataFrame based on user inputs and columns, then returns the sorted data as a dictionary.
+
+        :param Uinputs: List of user inputs to search for in the DataFrame.
+        :type Uinputs: list
+        :param columns_to_check: List of columns in the DataFrame to check for matches.
+        :type columns_to_check: list
+        :param threshold: Minimum similarity score (0-100) required for a match.
+        :type threshold: int
+        :param SqlData: The DataFrame to be searched.
+        :type SqlData: pd.DataFrame
+        :param sort_by: List of column names to sort the search results by after searching.
+        :type sort_by: list
+        :param columns_rename: Optional dictionary to rename columns in the DataFrame, defaults to None
+        :type columns_rename: dict, optional
+        :return: A dictionary of sorted search results.
+        :rtype: dict
+        """
+        
         result = any(s for s in Uinputs)
         # Checks if inputs are used
         # If inputs are used then search the df for a match

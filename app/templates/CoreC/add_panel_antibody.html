@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/page_style.css') }}">
+</head>
+
+<body>
+    <div class="header" id="gradheader">
+        <h1 class="header_text">Add new antibody to {{Panel_Name}} Panel</h1>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="updatediv one">
+        <h3>{{ messages[0] }}</h3>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/addPanelAntibody">
+        {% for key, val in fields.items() %}
+        <div>
+            <div class="updatediv one">
+                <h4> {{key}} </h4>
+            </div>
+            <div class="updatediv two">
+                <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
+                <textarea name="{{key}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+                    onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+                    id="{{key}}">{{ val }}</textarea>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="updatediv one">
+            <input type="hidden" name="Catalog Number" id="catalog_number" value="{{ val }}">
+            <input type="hidden" name="Panel Name" id="Panel_Name" value="{{ Panel_Name }}">
+            <button type="submit"
+                onclick="saveFilterByKey(['#PI_first_name', '#PI_last_name', '#PI_ID', '#PI_email', '#PI_departmnet'])"
+                class="updatebutton">Add</button>
+        </div>
+    </form>
+    <!--FUNCTIONS-->
+    <script>
+        function saveFilterByKey(keys) {
+            for (key of keys) {
+                const $select = document.querySelector(key);
+                localStorage.setItem(key, $select.value);
+            }
+        }
+        function getSavedValue(v) {
+            if (!localStorage.getItem(v)) {
+                return "";// You can change this to your defualt value. 
+            }
+            return localStorage.getItem(v);
+        }
+        function loadFilterByKey(keys) {
+            for (key of keys) {
+                const $select = document.querySelector(key);
+                $select.value = getSavedValue(key);
+            }
+        }
+    </script>
+</body>
+
+</html>

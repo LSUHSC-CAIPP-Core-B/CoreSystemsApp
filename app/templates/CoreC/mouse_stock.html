@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+
+<body>
+    <div class="header" id="gradheader">
+        <h1 class="header_text">Mouse Data</h1>
+    </div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="div-border-min">
+        <h3>{{ messages[0] }}</h3>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="{% if not current_user.is_admin %}noback_centerdiv {%else%} {% endif %}">
+        <div class="paddingdiv">
+            <div class="rowdiv">
+                {% if current_user.is_admin %}
+                <div class="columndiv">
+                    <button id="addMouseButton" class="filterbutton" style="width: 175px;"> Add Mouse </button>
+                </div>
+                {% endif %}
+                <script>
+                    $(document).ready(function () {
+                        // click event to the button
+                        $('#addMouseButton').click(function () {
+                            // Redirect to a new webpage
+                            window.location.href = '/addMouse';
+                        });
+                    });
+                </script>
+                <!-- FILTERING -->
+                <div class="columndiv">
+                    <form method="POST" action="/mouse">
+                        <div class="leftdiv">
+                            <label class="formlabel">PI</label>
+                            <input class="tableinput" type="text" name="pi_name" id="pi_name" placeholder="PI Name">
+                        </div>
+                        <div class="leftdiv">
+                            <label class="formlabel">Genotype</label>
+                            <input class="tableinput" type="text" name="genotype" id="genotype" placeholder="Genotype">
+                        </div>
+                        <div class="leftdiv">
+                            <label class="formlabel">Strain</label>
+                            <input class="tableinput" type="text" name="strain" id="strain" placeholder="Strain">
+                        </div>
+                        <div class="leftdiv">
+                            <label class="formlabel">Sort by</label>
+                            <select class="tableselect" name="sort" id="sort">
+                                <option value="PI" selected>PI</option>
+                                <option value="Times Back Crossed">Times Back Crossed</option>
+                            </select>
+                        </div>
+                        <div class="leftdiv">
+                            <button class="filterbutton"
+                                onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <br>
+    <div class="paddingdiv">
+        {% if current_user.is_admin %}
+        <!-- Display the number of rows -->
+        <p>Number of Antibodies: {{ num_rows }}</p>
+        {% endif %}
+    </div>
+    <div class="noback_centerdiv">
+        <div class="div-border-min">
+            <div
+                style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+                {{ pagination.links }}
+            </div>
+            <div class="orderdiv">
+                <table class="table_round_bottom">
+                    <thead>
+                        <tr>
+                            {% for header in data[0].keys() %}
+                            {% if header not in ("Stock_ID", "user_id",) %}
+                            <th>
+                                <h4>{{ header }}</h4>
+                            </th>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in range(0, len(data)) %}
+                        <tr id="{{row}}">
+                            {% for col in range(0, len(list(data[row].values()))) %}
+                            {% if list(data[row].keys())[col] == "PI" %}
+                            <td>
+                                {{ list(data[row].values())[col] }}
+                                {% if col == 1 %}
+                                {% if data[row]["Genotype"] != "N/A" and current_user.is_admin %}
+                                {% if data[row]["user_id"] == current_user.id %}
+                                <form id="deleteForm" method="POST" action="/deleteMouse">
+                                    <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                                    <button id="confirmBtn" class="deletebutton"
+                                        onclick="return confirm('Are you sure you want to delete this antibody?')">X</button>
+                                </form>
+                                <form method="GET" action="/changeMouse">
+                                    <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                                    <button class="filterbutton">Change Info</button>
+                                </form>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            {% if list(data[row].keys())[col] not in ("Stock_ID", "PI", "user_id") %}
+                            <td>
+                                {{ list(data[row].values())[col] }}
+                            </td>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="paddingdiv">
+        <form method="GET" action="/downloadMouseCSV">
+            <button class="filterbutton" style="width: 125px; margin-left: 1195px;">Download</button>
+        </form>
+    </div>
+</body>
+
+</html>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+  <body onload="loadFilterByKey(['#department', '#pi_name', '#sort'])">
+    <div class="header" id="gradheader">
+      <h1 class="header_text">Order PI list</h1>
+      <h2 class="header_text">List of all details about all the PI</h2>
+    </div>
+    <div class="paddingdiv">
+      <div class="rowdiv">
+        <div class="columndiv">
+          <a href="/add_pi"><button class="filterbutton"> Add PI </button></a>
+        </div>
+        <div class="columndiv">
+          <form method="POST" action="/pilist">
+            <div class="leftdiv">
+              <label class="formlabel">PI Name</label>
+              <input class="tableinput" type="text" name="pi_name" id="pi_name"
+                placeholder="PI Name"
+                autofocus>
+            </div>
+            <div class="leftdiv">
+              <label class="formlabel">Department</label>
+              <input class="tableinput" type="text" name="department" id="department"
+                placeholder="Department"
+                autofocus>
+            </div>
+            <div class="leftdiv">
+              <label class="formlabel">Sort by</label>
+              <select class="tableselect" name="sort" id="sort">
+                <option value="Original">Original order</option>
+                <option value="PI full name">PI full name</option>
+                <option value="PI ID">PI ID</option>
+                <option value="Department">Department</option>
+              </select>
+            </div>
+            <div class="leftdiv">
+              <button class="filterbutton"
+                onclick="saveFilterByKey(['#department', '#pi_name', '#sort'])">Filter</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="noback_centerdiv">
+      {% if data == [] %}
+        <h2>No data to be displayed</h2>
+        {% else %}
+    <div class="div-border-min">
+        <div style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+          {{ pagination.links }}
+        </div>
+        <div class="orderdiv">
+        <table class="table_round_bottom">
+          <thead>
+            <tr>
+              {% for header in data[0].keys() %}
+              <th>
+                <h4>{{ header }}</h4>
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in range(0, len(data)) %}
+            <tr id="{{row}}">
+              {% for col in range(0, len(list(data[row].values()))) %}
+              <td>
+              {% if col == 0%}
+              {% if current_user.is_authenticated %}
+              <a
+                      href="/delete_pi?pi_id={{list(data[row].values())[1]}}"><button
+                        class="deletebutton"
+                        onclick="return confirm('Are you sure You want to delete the PI?')">X</button></a>
+                <a
+                      href="/update_pi?pi_id_old={{list(data[row].values())[1]}}">{{
+                      list(data[row].values())[col]}}</a>
+                {% endif %}
+                {% else %}
+                  {{ list(data[row].values())[col] }}
+                {% endif %}
+                {% endfor %}
+                {% endfor %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <!--FUNCTIONS-->
+  <script>
+    function saveFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        localStorage.setItem(key, $select.value);
+      }
+    }
+    function getSavedValue  (v){
+            if (!localStorage.getItem(v)) {
+                return "";// You can change this to your defualt value. 
+            }
+            return localStorage.getItem(v);
+        }
+    function loadFilterByKey(keys) {
+      for (key of keys){
+        const $select = document.querySelector(key);
+        $select.value = getSavedValue(key);
+      }
+    }
+  </script>
+  </body>
+</html>
+{% endblock %}

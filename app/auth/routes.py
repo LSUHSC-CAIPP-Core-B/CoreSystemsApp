@@ -13,7 +13,7 @@ def login():
     POST: Login user
     """
     if request.method == 'GET':
-        return render_template('login.html')
+        return render_template('auth/login.html')
     
     if request.method == 'POST':
         email = request.form.get('email')
@@ -37,7 +37,7 @@ def login():
         if "coreB" in roles_to_check:
             return redirect(url_for('orders.orders'))
         elif "coreC" in roles_to_check:
-            return redirect(url_for('antibodies.antibodies_route'))
+            return redirect(url_for('antibodies.antibodies'))
 
 @bp.route('/signup', methods=['GET', 'POST'])
 @login_required(role=["admin"])
@@ -58,7 +58,7 @@ def signup():
         pagination = Pagination(page=page, per_page=per_page, total=total)
 
         # use to prevent user from caching pages
-        response = make_response(render_template('signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination))
+        response = make_response(render_template('auth/signup.html', users=pagination_users, page=page, per_page=per_page, pagination=pagination))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

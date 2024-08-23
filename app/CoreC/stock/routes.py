@@ -36,12 +36,21 @@ logger = LogGenerator.generateLogger()
 @login_required(role=["admin"])
 def stock():
     if request.method == 'POST':
+        company = request.form.get('Company') or ""
+        product = request.form.get('Product') or ""
+        sort = request.form.get('sort') or "Original"
+
+        # Stores all possible Inputs
+        AllUinputs = [company, product]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs: list[str] = [i for i in AllUinputs]
+
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-
-        data = create_or_filter_StockDataframe()
+        data: dict = stockTable.display(Uinputs, sort)
         with app.app_context():
             cache1.set('cached_dataframe2', data, timeout=3600)
 
@@ -52,7 +61,7 @@ def stock():
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
 
-            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
+            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' AND O.Product_Name != '0' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
             data = dataFrame.to_dict('records')
 
@@ -71,7 +80,7 @@ def stock():
     pagination = Pagination(page=page, per_page=per_page, total=num_rows)
 
     # use to prevent user from caching pages
-    response = make_response(render_template("stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
+    response = make_response(render_template("CoreC/stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
@@ -127,10 +136,22 @@ def addSupply():
                     'ProductParam': Product_Name
                     }
 
-        stockTable.add(params, Quantity)
+        df = stockTable.add(params, Quantity)
+        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        print(f"Dataframe: {df}")
+        data = df.to_dict(orient='records')
 
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                           per_page_parameter='per_page')
+        
+        #number of rows in table
+        num_rows = len(data)
+
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=num_rows)
+        
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.stock')))
+        response = make_response(render_template("CoreC/stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -146,7 +167,7 @@ def addSupply():
         }
 
         # use to prevent user from caching pages
-        response = make_response(render_template('add_supply.html', fields = data))
+        response = make_response(render_template('CoreC/add_supply.html', fields = data))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -202,7 +223,7 @@ def changeSupply():
         data = df.to_dict()
         
         # use to prevent user from caching pages
-        response = make_response(render_template('change_supply.html', fields = data, pkey = primary_key))
+        response = make_response(render_template('CoreC/change_supply.html', fields = data, pkey = primary_key))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

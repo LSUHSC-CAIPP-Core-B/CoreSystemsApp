@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+
+<body onload="loadFilterByKey(['#sort'])">
+    <!--FUNCTIONS-->
+    <script>
+        function saveFilterByKey(keys) {
+            for (key of keys) {
+                const $select = document.querySelector(key);
+                localStorage.setItem(key, $select.value);
+            }
+        }
+        function getSavedValue(v) {
+            if (!localStorage.getItem(v)) {
+                return "";// You can change this to your defualt value. 
+            }
+            return localStorage.getItem(v);
+        }
+        function loadFilterByKey(keys) {
+            for (key of keys) {
+                const $select = document.querySelector(key);
+                $select.value = getSavedValue(key);
+            }
+        }
+    </script>
+
+    <div class="header" id="gradheader">
+        <h1 class="header_text">Predefined Antibody Panels</h1>
+        <h2 class="header_text">List of all predefined antibody panels</h2>
+    </div>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="updatediv one">
+        <h3>{{ messages[0] }}</h3>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <div class="paddingdiv">
+        <div class="rowdiv">
+            {% if current_user.is_admin %}
+            <div class="columndiv">
+                <form method="GET" action="/addPanel">
+                    <button id="addPanelButton" class="filterbutton" style="width: 175px;"> Add Panel </button>
+                </form>
+            </div>
+            {% endif %}
+            <div class="columndiv">
+                <form method="POST" action="/panels">
+                    <div class="leftdiv">
+                        <label class="formlabel">Sort by</label>
+                        <select class="tableselect" name="sort" id="sort">
+                            <option value="Number of Antibodies" selected>Number of Antibodies</option>
+                        </select>
+                    </div>
+                    <div class="leftdiv">
+                        <button class="filterbutton" onclick="saveFilterByKey(['#sort'])">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="noback_centerdiv">
+        {% if data == [] %}
+        <h2>No data to be displayed</h2>
+        {% else %}
+        <div class="div-border-min">
+            <div
+                style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
+                {{ pagination.links }}
+            </div>
+            <div class="orderdiv">
+                <table class="table_round_bottom">
+                    <thead>
+                        <tr>
+                            {% for header in data[0].keys() %}
+                            <th>
+                                <h4>{{ header }}</h4>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in range(0, len(data)) %}
+                        <tr id="{{row}}">
+                            {% for col in range(0, len(list(data[row].values()))) %}
+                            <td>
+                                {% if col == 0 %}
+                                {% if current_user.is_admin %}
+                                <a href="/deletePanel?Panel_Name={{list(data[row].values())[0]}}"><button
+                                        class="deletebutton"
+                                        onclick="return confirm('Are you sure You want to delete this panel?')">X</button></a>
+                                {% endif %}
+                                <a href="/panel_details?Panel_Name={{list(data[row].values())[0]}}">{{
+                                    list(data[row].values())[col]}}</a>
+                                {% else %}
+
+                                {{ list(data[row].values())[col] }}
+
+                                {% endif %}
+
+                                {% endfor %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="paddingdiv">
+        <form method="GET" action="/downloadInvoicesCSV">
+            <button class="filterbutton" style="width: 125px; margin-left: 1195px;">Download</button>
+        </form>
+    </div>
+</body>
+
+</html>
+{% endblock %}

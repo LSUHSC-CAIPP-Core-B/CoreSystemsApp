@@ -5,6 +5,9 @@ import json
 import re
 
 class db_utils:
+    """A utility class for database operations, including reading JSON configurations, executing SQL queries, 
+    and validating date formats.
+    """
     @staticmethod
     def json_Reader(path: str) -> dict:
         """Reads a JSON file from the given path and extracts the 'db_config' section.

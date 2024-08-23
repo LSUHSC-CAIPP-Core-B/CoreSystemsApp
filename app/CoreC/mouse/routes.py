@@ -173,7 +173,7 @@ def changeMouse():
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
         query = "SELECT * FROM Mouse_Stock WHERE Stock_ID = %s;"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', (primary_key,))
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', params=(primary_key,))
         df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
 
         data = df.to_dict()

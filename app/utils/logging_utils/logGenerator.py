@@ -2,6 +2,12 @@ import logging
 from app.utils.logging_utils.colorFormat import ColoredFormatter
 
 class Logger():
+    """A class for configuring and generating a logger with console and file handlers.
+
+    This class sets up a logger that writes log messages to both the console and a specified log file.
+    It uses a custom formatter to apply colors to log messages based on their severity level.
+    """
+
     logFormat: str
     logFile: str = 'application.log'
 

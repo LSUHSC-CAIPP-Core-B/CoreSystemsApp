@@ -5,25 +5,37 @@ import json
 import re
 
 class db_utils:
+    """A utility class for database operations, including reading JSON configurations, executing SQL queries, 
+    and validating date formats.
+    """
     @staticmethod
-    def json_Reader(path: str) -> any:
-        '''
-        Takes in path to json file
-        '''
+    def json_Reader(path: str) -> dict:
+        """Reads a JSON file from the given path and extracts the 'db_config' section.
+
+        :param path: The file path to the JSON file.
+        :type path: str
+        :return: The db_config dictionary from the JSON file, or an empty dictionary if not found.
+        :rtype: dict
+        """
+        
         with open(path, 'r') as file:
             config_data = json.load(file)
-        db_config = config_data.get('db_config')
-        db_config
         db_config = config_data.get('db_config', {})
 
         return db_config
     
     @staticmethod
-    def toDataframe(query: str, path: str, params=None) -> any:
-        """
-        Takes in database query, and parameter then converts query to a dataframe.
+    def toDataframe(query: str, path: str, *, params=None) -> pd.DataFrame:
+        """Executes a SQL query on a database and converts the result into a pandas DataFrame.
 
-        return: dataframe from the query passed
+        :param query: The SQL query to be executed.
+        :type query: str
+        :param path: The file path to the JSON file containing the database connection.
+        :type path: str
+        :param params: Parameters to be passed with the SQL query, defaults to None
+        :type params: dict, optional
+        :return: The DataFrame containing the query results.
+        :rtype: pd.DataFrame
         """
 
         try:
@@ -38,10 +50,13 @@ class db_utils:
     
     @staticmethod
     def isValidDateFormat(expiration_date: str) -> bool:
-        '''
-        Takes in expiration date to check if valid format for mysql.
-        datePattern defines regex pattern for "YYYY-MM-DD"
-        '''
+        """Checks if the given expiration date string matches the MySQL date format YYYY-MM-DD.
+
+        :param expiration_date: Date string to be validated.
+        :type expiration_date: str
+        :return: True if the date string matches the "YYYY-MM-DD" format, False otherwise.
+        :rtype: bool
+        """
 
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
         
@@ -53,9 +68,14 @@ class db_utils:
 
     @staticmethod
     def isValidDate(expiration_date: str) -> bool:
-        '''
-        Takes in expiration date to check if valid date for mysql.
-        '''
+        """Validates whether the given expiration date string is a valid date according to the "YYYY-MM-DD" format.
+
+        :param expiration_date: Date string to be validated.
+        :type expiration_date: str
+        :return:  True if the string is a valid date, False otherwise.
+        :rtype: bool
+        """
+
         try: # Tries to convert the string to a datetime object
             datetime.strptime(expiration_date, "%Y-%m-%d")
             return True

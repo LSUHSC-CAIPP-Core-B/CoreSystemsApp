@@ -138,7 +138,6 @@ def addSupply():
 
         df = stockTable.add(params, Quantity)
         df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        print(f"Dataframe: {df}")
         data = df.to_dict(orient='records')
 
         page, per_page, offset = get_page_args(page_parameter='page', 

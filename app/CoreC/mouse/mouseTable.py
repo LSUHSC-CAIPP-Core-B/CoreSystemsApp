@@ -63,7 +63,6 @@ class mouseTable(BaseDatabaseTable):
         cursor = mydb.cursor()
 
         user_id = current_user.id
-        print(f"Current user id: {user_id}")
 
         # SQL Add query
         query = f"INSERT INTO Mouse_Stock VALUES (null, %(PI)s, %(Genotype)s, %(Description)s, %(Strain)s, %(Times Back Crossed)s, %(MTA Required)s, {user_id});"

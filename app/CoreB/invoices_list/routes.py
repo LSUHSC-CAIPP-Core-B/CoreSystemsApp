@@ -340,8 +340,6 @@ def invoices_list():
     
     with app.app_context():
         cache1.set('cached_data', data, timeout=3600)
-    
-    print(data)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')

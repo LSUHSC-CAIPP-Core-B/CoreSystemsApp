@@ -34,7 +34,6 @@ def mouse():
         rawInputs = request.form
 
         inputDict = rawInputs.to_dict()
-        print(inputDict)
         Uinputs = list(inputDict.values())
 
         sort = inputDict["sort"]
@@ -159,7 +158,7 @@ def changeMouse():
         if not inputData["Times Back Crossed"].isdigit():
             flash('"Times Back Crossed" must be a number')
             return redirect(url_for('mouse.addMouse'))
-        print(f"Input Data: {inputData}")
+
         #Executes change query
         mouseTable.change(inputData)
 

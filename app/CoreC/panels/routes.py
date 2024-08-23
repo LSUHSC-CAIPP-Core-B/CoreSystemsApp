@@ -37,7 +37,6 @@ def panels():
 
     if request.method == 'GET':
         dataFrame = count_rows()
-        print(dataFrame)
         dataFrame.rename(columns={'Panel_name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')
         
@@ -90,7 +89,6 @@ def count_rows() -> pd.DataFrame:
 def addPanel():
     if request.method == 'POST':
         panel_name = request.form.get('Panel Name')
-        print(f"Input: {panel_name}")
         
         if len(panel_name)  <= 1:
             flash('Please enter a panel name')
@@ -98,7 +96,6 @@ def addPanel():
 
         panel_name = PanelsTable.get_Valid_Panel_Name(panel_name)
         db_name = PanelsTable.get_Valid_db_Name(panel_name)
-        print(f"panel_name: {panel_name}")
         name_query = f"INSERT INTO predefined_panels VALUES (null, %s, %s);"
 
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
@@ -110,7 +107,6 @@ def addPanel():
         # Commit the transaction
         mydb.commit()
 
-        print(f"db_name: {db_name}")
         table_query = f"""
             CREATE TABLE {db_name}(
                 stock_id INT Primary key,
@@ -150,7 +146,6 @@ def addPanel():
 def deletePanel():
     if request.method == 'GET':
         panel_name = request.args.get('Panel_Name')
-        print(f"Panel Name: {panel_name}")
 
         panel_table_name_query = f"""
             SELECT panel_table_name
@@ -160,7 +155,6 @@ def deletePanel():
 
         name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
         name = name_df.iloc[0,0]
-        print(f"Panel_Name with iloc: {name}")
 
         drop_query = f" DROP TABLE IF EXISTS {name};"
 
@@ -205,10 +199,10 @@ def panel_details():
         
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
-        print(f"Columns: {columns}")
+
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
-        print(f"table_name: {table_name}")
+
         # gets the sql name of the panel
         names = table_name.iloc[0]['Panel_table_name']
 
@@ -256,15 +250,13 @@ def addPanelAntibody():
     if request.method == 'POST':
         catalog_num = request.form.get('Catalog Number')
         Panel_Name = request.form.get('Panel Name')
-        print(f"POST method Panel_Name: {Panel_Name}")
-        print(f"Catalog Number: {catalog_num}")
 
         query = f"SELECT Catalog_Num FROM antibodies_stock;"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
-        print(f"Dataframe: {df}")
+
         results = search_utils.search_data([catalog_num], columns_to_check=['Catalog_Num'], threshold=99, SqlData=df)
         results = pd.DataFrame(results).drop_duplicates()
-        print(f"Results: {results}")
+
         if len(results) == 0:
             flash('Antibody not found')
             return redirect(url_for('panels.addPanelAntibody'))
@@ -278,7 +270,6 @@ def addPanelAntibody():
         """
         name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
         name = name_df.iloc[0,0]
-        print(f"Panel_Name with iloc: {name}")
 
         insert_Antibody_query = f"""
             INSERT INTO {name} (Stock_id)
@@ -312,7 +303,6 @@ def addPanelAntibody():
         if panel_name == None:
             panel_name = request.args.get('Panel_Name')
 
-        print(f"Panel Name: {panel_name}")
         data = {
             "Catalog Number": ""
         }
@@ -330,9 +320,6 @@ def deletePanelAntibody():
         Panel_Name = request.form.get('Panel Name')
         primaryKey = request.form.get('primaryKey')
 
-        print(f"Panel Name: {Panel_Name}")
-        print(f"Primary Key: {primaryKey}")
-
         panel_table_name_query = f"""
             SELECT panel_table_name
 			FROM predefined_panels
@@ -340,7 +327,6 @@ def deletePanelAntibody():
         """
         name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
         name = name_df.iloc[0,0]
-        print(f"Panel Name: {name}")
 
         delete_antibody_query = f"""
             DELETE FROM {name}

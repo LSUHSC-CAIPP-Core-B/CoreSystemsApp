@@ -1,5 +1,6 @@
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 
+
 class PanelDetailsTable(BaseDatabaseTable):
     """Concrete class
     

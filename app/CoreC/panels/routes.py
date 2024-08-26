@@ -1,20 +1,16 @@
-from datetime import datetime
-from io import BytesIO
-
-import mysql.connector as connection
 import pandas as pd
 import pymysql
+from flask import (Flask, flash, make_response, redirect,
+                   render_template, request, url_for)
+from flask_caching import Cache
+from flask_login import current_user
+from flask_paginate import Pagination, get_page_args
+
 from app import login_required
 from app.CoreC.panels import bp
+from app.CoreC.panels.panelsTable import PanelsTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
-from flask import (Flask, flash, jsonify, make_response, redirect,
-                   render_template, request, send_file, url_for)
-from flask_caching import Cache
-from flask_paginate import Pagination, get_page_args
-from fuzzywuzzy import fuzz
-from flask_login import current_user
-from app.CoreC.panels.panelsTable import PanelsTable
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache

@@ -1,10 +1,10 @@
 import pandas as pd
 import pymysql
-from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
-from app.utils.logging_utils.logGenerator import Logger
-from app.utils.db_utils import db_utils
 from flask_login import current_user
 
+from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
+from app.utils.db_utils import db_utils
+from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
 
 # Logging set up

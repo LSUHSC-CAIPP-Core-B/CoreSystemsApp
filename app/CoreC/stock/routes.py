@@ -1,24 +1,17 @@
-import json
-import re
-from datetime import datetime
 from io import BytesIO
 
-import mysql.connector as connection
 import pandas as pd
-import pymysql
-from app import login_required
-from app.CoreC.stock import bp
-from app.CoreC.stock.stockTable import stockTable
-from app.reader import Reader
-from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
-from app.utils.search_utils import search_utils
-from flask import (Flask, flash, jsonify, make_response, redirect,
+from flask import (Flask, flash, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
-from fuzzywuzzy import fuzz, process
-from jinja2 import UndefinedError
+
+from app import login_required
+from app.CoreC.stock import bp
+from app.CoreC.stock.stockTable import stockTable
+from app.utils.db_utils import db_utils
+from app.utils.logging_utils.logGenerator import Logger
+
 
 app = Flask(__name__)
 

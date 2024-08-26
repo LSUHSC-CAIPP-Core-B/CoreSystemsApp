@@ -79,25 +79,6 @@ def stock():
     response.headers["Expires"] = "0" # Proxies.
     return response
 
-def create_or_filter_StockDataframe():
-    company = request.form.get('Company') or ""
-    product = request.form.get('Product') or ""
-    sort = request.form.get('sort') or "Original"
-
-    # Stores all possible Inputs
-    AllUinputs = [company, product]
-    
-    # Creates list to store inputs that are being Used
-    Uinputs: list[str] = [i for i in AllUinputs if i]
-
-    
-    # Maps sorting options to their corresponding SQL names
-    sort_orders = {
-        'Product': 'Product_Name',
-        'Cost': 'Unit_Price'
-    }
-    return stockTable.display(Uinputs, sort, sort_orders)
-
 @bp.route('/addSupply', methods=['GET', 'POST'])
 @login_required(role=["admin"])
 def addSupply():

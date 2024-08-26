@@ -3,7 +3,12 @@ from typing import IO
 
 
 class ITable(ABC):
-    """Interface for tables
+    """Abstract base class that acts as an interface for table operations.
+
+    This interface defines methods for managing table data, including
+    displaying, adding, modifying, deleting entries, and downloading
+    data in CSV format. Subclasses must implement these methods to
+    provide specific functionality.
 
     :param ABC: Helper class that provides a standard way 
     to create an ABC (Abstract Class) using inheritance

@@ -1,5 +1,6 @@
 from rapidfuzz import fuzz, utils
 
+
 class string_utils:
     """A collection of utility methods for string operations.
     """

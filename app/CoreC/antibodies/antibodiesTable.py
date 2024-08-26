@@ -1,15 +1,14 @@
-from typing import IO
-
 import pandas as pd
 import pymysql
+from flask import flash
+from flask_login import current_user
+from fuzzywuzzy import fuzz
+from typing_extensions import override
+
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
-from flask import flash
-from fuzzywuzzy import fuzz
-from typing_extensions import override
-from flask_login import current_user
 
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'

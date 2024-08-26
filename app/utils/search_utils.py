@@ -1,5 +1,6 @@
-from rapidfuzz import fuzz, utils
 import pandas as pd
+from rapidfuzz import fuzz, utils
+
 
 class search_utils:
     """A utility class for performing and sorting fuzzy searches on a DataFrame.

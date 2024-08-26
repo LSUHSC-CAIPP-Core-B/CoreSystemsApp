@@ -1,5 +1,7 @@
 import logging
+
 from app.utils.logging_utils.colorFormat import ColoredFormatter
+
 
 class Logger():
     """A class for configuring and generating a logger with console and file handlers.

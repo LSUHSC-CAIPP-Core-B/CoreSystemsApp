@@ -2,3 +2,4 @@ my_app/
 **/__pycache__/
 .hintrc
 .log
+users.db

@@ -1,10 +1,10 @@
 import pandas as pd
 import pymysql
-from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
-from app.utils.logging_utils.logGenerator import Logger
-from app.utils.db_utils import db_utils
 from flask_login import current_user
 
+from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
+from app.utils.db_utils import db_utils
+from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
 
 # Logging set up
@@ -63,7 +63,6 @@ class mouseTable(BaseDatabaseTable):
         cursor = mydb.cursor()
 
         user_id = current_user.id
-        print(f"Current user id: {user_id}")
 
         # SQL Add query
         query = f"INSERT INTO Mouse_Stock VALUES (null, %(PI)s, %(Genotype)s, %(Description)s, %(Strain)s, %(Times Back Crossed)s, %(MTA Required)s, {user_id});"

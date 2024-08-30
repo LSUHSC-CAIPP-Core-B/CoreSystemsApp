@@ -9,67 +9,63 @@ from app.interfaces.ITable import ITable
 
 
 class BaseDatabaseTable(ITable):
-    """Abstract class
+    """Abstract base class for database tables that display and manage
+    database information.
 
-    For tables that display database information
-
-    :param ITable: interface for tables
-    :type ITable: type
+    Inherits from `ITable` and provides a framework for implementing
+    database table operations, including adding, changing, deleting
+    entries, and downloading data as CSV.
     """    
 
     @override
     def display(self, Uinputs: str, sort: str) -> dict[any]:
-        """Filters table then displays it 
+        """Filter and display the table based on user inputs and sorting criteria.
 
-        :param Uinputs: User Inputs
+        :param Uinputs: User inputs for filtering the table.
         :type Uinputs: str
-        :param sort: what to sort by
+        :param sort: Criteria for sorting the table.
         :type sort: str
-        :param sort_orders: Maps sorting options to their corresponding SQL names
-        :type sort_orders: dict
-        :return: data
+        :return: Filtered and sorted table data.
         :rtype: dict
         """
         raise NotImplementedError()
     
     @abstractmethod
     def add(self, params:dict) -> None:
-        """Executes query to add an antibody to the database
+        """Execute a query to add an entry to the database.
 
-        :param params: Maps parameter names to corresponding input variable names
+        :param params: Maps parameter names to corresponding input variable names.
         :type params: dict
         """
         raise NotImplementedError()
     
     @abstractmethod    
     def change(self, params:dict) -> None:
-        """Executes query to change an antibody in the database
+        """Execute a query to modify an existing entry in the database.
 
-        :param params: Maps parameter names to corresponding input variable names
+        :param params: Maps parameter names to corresponding input variable names.
         :type params: dict
         """
         raise NotImplementedError()
     
     @abstractmethod
     def delete(self, primary_key) -> None:
-        """Executes query to delete an antibody from the database
+        """Execute a query to delete an entry from the database based on the primary key.
 
-        :param primary_key: primary key
+        :param primary_key: The primary key of the entry to be deleted.
         :type primary_key: _type_
         """
         raise NotImplementedError()
     
     @override
     def download_CSV(self, saved_data: dict, *, dropCol: list[str] = None) -> IO[bytes]:
-        """Takes the saved data and converts it to a 
-        dataframe then converts the dataframe to a CSV and
-        downloads the CSV file locally on the users computer
+        """Convert saved data to a CSV file and return it as a byte stream.
 
-        :param saved_data: Data from a table
+        :param saved_data: Dictionary containing the table data to be saved in the CSV file.
         :type saved_data: dict
-        :param dropCol: Columns to remove from the CSV file
-        :type dropCol: dict[str]
-        :return: CSV string in bytes
+        :param dropCol: Optional list of columns to remove from the CSV file.
+        :type dropCol: List[str], optional
+        :return: Byte stream of the CSV file.
         :rtype: IO[bytes]
         """        
         df = pd.DataFrame.from_dict(saved_data)

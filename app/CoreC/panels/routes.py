@@ -26,7 +26,7 @@ def panels():
         dataFrame = count_rows()
 
         if sort == "Number of Antibodies":
-            dataFrame = dataFrame.sort_values(by='antibody_num', ascending=True)
+            dataFrame.sort_values(by='antibody_num', ascending=True, inplace=True)
 
         dataFrame.rename(columns={'Panel_name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')

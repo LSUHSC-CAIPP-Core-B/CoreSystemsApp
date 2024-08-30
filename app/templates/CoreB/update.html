@@ -11,7 +11,7 @@
                 <h1 class="header_text">Update entry</h1>
                 <h2 class="header_text">Approve the changes with update button</h2>
               </div>
-            <form method="POST" action="/update?question_id={{request.args.get('question_id')}}&order_num={{request.args.get('order_num')}}">
+            <form method="POST" action="/update?question_id={{request.args.get('question_id')}}&order_num={{request.args.get('order_num')}}&page={{request.args.get('page')}}">
                 {% for key, val in fields.items() %}
                 {% if key != "Question" %}        
                 <div>

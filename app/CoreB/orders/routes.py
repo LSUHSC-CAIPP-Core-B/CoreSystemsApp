@@ -57,18 +57,17 @@ def orders():
 
         if cached_data is None:
             with app.app_context():
-                defaultCache.delete('cached_dataframe')
+                cache1.delete('cached_data')
 
             sort = "Request Date"
             data = sorted(data, key=lambda d: d[sort], reverse=True)
 
             with app.app_context():
-                defaultCache.set('cached_dataframe', data, timeout=3600)
+                cache1.set('cached_data', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
         else:
-            # Try to get the cached DataFrame
-            with app.app_context():
-                data = cache1.get('cached_data')
+            data = cached_data
 
+    page = request.args.get('page', 1, type=int)
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
     total = len(data)
@@ -135,14 +134,19 @@ def update():
             return redirect(url_for('orders.orders'))
 
         reader.saveDataCSV(data, unprocessed_df)
-
-        # Updates cache
+        
         with app.app_context():
-            cache1.delete('cached_data')
-        with app.app_context():
-            cache1.set('cached_data', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+            cached_data = cache1.get('cached_data')
+            if cached_data:
+                updated_cached_data = [
+                    row if dict['Question'] == question_id else dict
+                    for dict in cached_data
+                ]
+                cache1.set('cached_data', updated_cached_data, timeout=3600)
 
-        return redirect(url_for('orders.orders'))
+        current_page = request.args.get('page', 1)
+
+        return redirect(url_for('orders.orders', page=current_page))
 
 @bp.route('/delete', methods=['GET'])
 @login_required(role=["admin", "coreB"])

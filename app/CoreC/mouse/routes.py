@@ -26,6 +26,21 @@ logger = LogGenerator.generateLogger()
 @bp.route('/mouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def mouse():
+    """
+    Handle the `/mouse` route to display and filter mouse data.
+
+    **Methods:**
+        - `GET`: Retrieve and paginate cached mouse data or load from the database if not cached.
+        - `POST`: Apply filters from form inputs, sort the results, and update the cache with the filtered data.
+
+    **Caching:**
+        - Filtered data is cached for 1 hour under `cached_dataframe`.
+        - Clears the cache when new filters are applied.
+
+    **Response:**
+        - Renders the `CoreC/mouse_stock.html` template with the paginated mouse data.
+        - Implements pagination and prevents client-side caching with appropriate headers.
+    """
     if request.method == 'POST':
         rawInputs = request.form
 

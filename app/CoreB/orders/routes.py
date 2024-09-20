@@ -145,7 +145,7 @@ def update():
                 ]
                 cache1.set('cached_data', updated_cached_data, timeout=3600)
                 
-                updated_row = next((row for row in cached_data if row['Question'] == question_id), None)
+                updated_row = next((row for row in updated_cached_data if row['Question'] == question_id), None)
                 print(f"Updated Row: {updated_row}")
                 OrderDatabaseHandler.update(question_id, updated_row)
         

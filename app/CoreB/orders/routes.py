@@ -9,6 +9,7 @@ from app import db
 from flask_caching import Cache
 import redis
 from io import BytesIO
+from app.CoreB.orders.order_database_handler import OrderDatabaseHandler
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
@@ -134,7 +135,7 @@ def update():
             return redirect(url_for('orders.orders'))
 
         reader.saveDataCSV(data, unprocessed_df)
-        
+
         with app.app_context():
             cached_data = cache1.get('cached_data')
             if cached_data:
@@ -143,7 +144,11 @@ def update():
                     for dict in cached_data
                 ]
                 cache1.set('cached_data', updated_cached_data, timeout=3600)
-
+                
+                updated_row = next((row for row in cached_data if row['Question'] == question_id), None)
+                print(f"Updated Row: {updated_row}")
+                OrderDatabaseHandler.update(question_id, updated_row)
+        
         current_page = request.args.get('page', 1)
 
         return redirect(url_for('orders.orders', page=current_page))

@@ -26,6 +26,21 @@ logger = LogGenerator.generateLogger()
 @bp.route('/mouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def mouse():
+    """
+    Handle the `/mouse` route to display and filter mouse data.
+
+    **Methods:**
+        - `GET`: Retrieve and paginate cached mouse data or load from the database if not cached.
+        - `POST`: Apply filters from form inputs, sort the results, and update the cache with the filtered data.
+
+    **Caching:**
+        - Filtered data is cached for 1 hour under `cached_dataframe`.
+        - Clears the cache when new filters are applied.
+
+    **Response:**
+        - Renders the `CoreC/mouse_stock.html` template with the paginated mouse data.
+        - Implements pagination and prevents client-side caching with appropriate headers.
+    """
     if request.method == 'POST':
         rawInputs = request.form
 
@@ -85,6 +100,19 @@ def mouse():
 @bp.route('/addMouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def addMouse():
+    """
+    Handle the `/addMouse` route to add a new mouse record to the stock.
+
+    **Methods:**
+        - `POST`: Validate and add new mouse data. 
+          Ensures no empty fields and ensures `Times Back Crossed` is a number. 
+          Updates the mouse stock data and renders the updated stock page.
+        - `GET`: Display an empty form for adding new mouse data.
+
+    **Response:**
+        - If successful, renders the `CoreC/mouse_stock.html` template with paginated mouse data.
+        - Prevents client-side caching with appropriate headers.
+    """
     if request.method == 'POST':
         inputs = request.form
         
@@ -140,6 +168,20 @@ def addMouse():
 @bp.route('/changeMouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def changeMouse():
+    """
+    Handle the `/changeMouse` route to update an existing mouse record.
+
+    **Methods:**
+        - `POST`: Validates and updates the mouse data. 
+          Ensures no empty fields and ensures that `Times Back Crossed` is a number. 
+          Redirects to the mouse stock page after updating.
+        - `GET`: Display a form pre-filled with the details of the mouse record to be updated.
+
+    **Response:**
+        - If successful, redirects to the `mouse` page.
+        - Renders the `CoreC/change_mouse.html` template for GET requests.
+        - Prevents client-side caching with appropriate headers.
+    """
     if request.method == 'POST':
         inputs = request.form
             
@@ -183,6 +225,16 @@ def changeMouse():
 @bp.route('/deleteMouse', methods=['POST'])
 @login_required(role=["user", "coreC"])
 def deleteMouse():
+    """
+    Handle the `/deleteMouse` route to delete a mouse record.
+
+    **Methods:**
+        - `POST`: Delete the mouse record specified by the `primaryKey` field.
+
+    **Response:**
+        - Redirects to the `mouse` page after deletion.
+        - Prevents client-side caching with appropriate headers.
+    """
     primary_key = request.form['primaryKey']
 
     logger.info("Deletion Attempting...")

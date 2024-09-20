@@ -89,12 +89,11 @@ class search_utils:
             # adding sort_by column
             rCol.append(sort_by)
             asc.append(True) # adds sort order for sort_by column
-            df = df.sort_values(by=rCol, ascending=asc)
+            df.sort_values(by=rCol, ascending=asc, inplace=True)
             # Drop ratio columns
-            df = df.drop(columns=rCol[0:len(rCol)-1])
-            SqlData = df
+            SqlData = df.drop(columns=rCol[0:len(rCol)-1])
         else: # inputs not used
-            SqlData = SqlData.sort_values(by=[sort_by])
+            SqlData.sort_values(by=[sort_by], inplace=True)
 
         # Rename columns
         if columns_rename != None:

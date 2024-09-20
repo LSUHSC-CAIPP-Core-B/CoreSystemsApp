@@ -24,6 +24,21 @@ logger = LogGenerator.generateLogger()
 @bp.route('/antibodies', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
 def antibodies():
+    """
+    Handle the `/antibodies` route to display and filter antibody stock data.
+
+    **Methods:**
+        - `GET`: Retrieve and paginate cached data or load from the database if not cached.
+        - `POST`: Apply filters (`company_name`, `target_name`, `target_species`) and sorting, then cache the results.
+
+    **Caching:**
+        - Filtered data is cached for 1 hour under `cached_dataframe`.
+
+    **Response:**
+        - Renders `CoreC/antibodies_stock.html`.
+        - Prevents client-side caching with appropriate headers.
+    """
+
     if request.method == 'POST':
         Company_name = request.form.get('company_name') or ""
         Target_Name = request.form.get('target_name') or ""
@@ -89,6 +104,23 @@ def antibodies():
 @bp.route('/addAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreC"])
 def addAntibody():
+    """
+    Handle the `/addAntibody` route to add a new antibody record to the stock.
+
+    **Methods:**
+        - `GET`: Render the form to add a new antibody with empty fields.
+        - `POST`: Validate form inputs, add the antibody to the database, and display the updated stock.
+
+    **Validation:**
+        - Ensures required fields like `catalog_num` and `expiration_date` are properly formatted.
+        - Validates numeric inputs for `titration` and `cost`.
+
+    **Response:**
+        - On `POST`, redirects back to the form with error messages if validation fails.
+        - On successful addition, renders `CoreC/antibodies_stock.html` with updated data.
+        - Prevents client-side caching with appropriate headers.
+    """
+
     if request.method == 'POST':
         box_name = request.form.get('Box Name')
         company_name = request.form.get('Company')
@@ -195,6 +227,20 @@ def addAntibody():
 @bp.route('/deleteAntibody', methods=['POST'])
 @login_required(role=["admin", "coreC"])
 def deleteAntibody():
+    """
+    Handle the `/deleteAntibody` route to delete an antibody record from the stock.
+
+    **Methods:**
+        - `POST`: Deletes the antibody record identified by the provided `primaryKey`.
+
+    **Parameters:**
+        - `primaryKey`: The unique identifier for the antibody record to be deleted.
+
+    **Response:**
+        - Redirects to the main antibody stock page (`/antibodies`) after deletion.
+        - Prevents client-side caching with appropriate headers.
+    """
+
     primary_key = request.form['primaryKey']
 
     logger.info("Deletion Attempting...")
@@ -211,6 +257,27 @@ def deleteAntibody():
 @bp.route('/changeAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreC"])
 def changeAntibody():
+    """
+    Handle the `/changeAntibody` route to modify an existing antibody record.
+
+    **Methods:**
+        - `GET`: Retrieve and display the current details of the selected antibody for editing.
+        - `POST`: Validate and update the antibody record with the new details provided in the form.
+
+    **Parameters:**
+        - `primaryKey`: The unique identifier for the antibody record being modified.
+        - Form inputs: Fields such as `Box Name`, `Company`, `Catalog Number`, `Target`, `Target Species`, etc.
+
+    **Validation:**
+        - Ensures fields like `catalog_num`, `expiration_date`, `titration`, and `cost` are correctly formatted.
+        - Converts `included` field to a valid format before updating.
+
+    **Response:**
+        - On successful update, redirects to the main antibody stock page (`/antibodies`).
+        - If validation fails, redirects back to the form with error messages.
+        - Prevents client-side caching with appropriate headers.
+    """
+    
     if request.method == 'POST':
         primary_key = request.form.get('primaryKey')
         box_name = request.form.get('Box Name')

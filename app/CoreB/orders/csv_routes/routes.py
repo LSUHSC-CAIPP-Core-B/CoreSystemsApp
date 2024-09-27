@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
-from app.CoreB.orders import bp
+from app.CoreB.orders.csv_routes import bp
 from app.reader import Reader, find
 from app.models import Invoice
 from app import login_required
@@ -9,7 +9,7 @@ from app import db
 from flask_caching import Cache
 import redis
 from io import BytesIO
-from app.CoreB.orders.order_database_handler import OrderDatabaseHandler
+from app.CoreB.orders.csv_routes.order_database_handler import OrderDatabaseHandler
 
 reader = Reader("CAIPP_Order.csv")
 information_reader = Reader("PI_ID - PI_ID.csv")
@@ -20,7 +20,7 @@ app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
-@bp.route('/orders', methods=['GET', 'POST'])
+@bp.route('/o', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
 def orders():
     """

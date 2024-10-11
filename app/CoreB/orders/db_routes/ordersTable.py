@@ -55,9 +55,6 @@ class ordersTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
     
-    def add(self, params: dict) -> None:
-        return super().add(params)
-    
     def change(self, params: dict) -> None:
         return super().change(params)
 

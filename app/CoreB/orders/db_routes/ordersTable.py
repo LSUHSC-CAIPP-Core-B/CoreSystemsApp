@@ -27,6 +27,7 @@ class ordersTable(BaseDatabaseTable):
 
         if order_by == 'Not Sorted':
             print(f"order_by = {order_by}")
+            order_by = 'Index'
             query = "Select * FROM CoreB_Order;"
         else:
             print(f"Else\norder_by = {order_by}")

@@ -5,10 +5,13 @@ from app import login_required
 from app.CoreB.orders.db_routes import bp
 from flask_caching import Cache
 from app.utils.db_utils import db_utils
+from app.CoreB.orders.db_routes.ordersTable import ordersTable
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+ordersTable = ordersTable()
 
 @bp.route('/orders', methods=['GET', 'POST'])
 @login_required(role=["user", "coreB"])
@@ -17,8 +20,26 @@ def orders():
     GET: Display list of all orders made
     POST: Display filtered list of all orders made
     """
+    data = []
     if request.method == 'POST':
-        pass
+        # search vars
+        service_type = request.form.get('service_type') or ""
+        pi_name = request.form.get('pi_name') or ""
+        sort = request.form.get('sort') or "Original"
+
+        # Stores all possible Inputs
+        AllUinputs = [service_type, pi_name]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs: list[str] = [i for i in AllUinputs]
+        
+        # Clear the cache when new filters are applied
+        with app.app_context():
+            cache1.delete('cached_dataframe')
+
+        data = ordersTable.display(Uinputs, sort)
+        with app.app_context():
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
     if request.method == 'GET':
         with app.app_context():
@@ -70,4 +91,13 @@ def delete():
 @bp.route('/downloadOrdersCSV', methods=['GET'])
 @login_required(role=["coreB"])
 def downloadCSV():
-    raise NotImplementedError()
+    with app.app_context():
+        saved_data = cache1.get('cached_dataframe')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+
+    csv_io = ordersTable.download_CSV(saved_data=saved_data)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Orders.csv')

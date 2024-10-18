@@ -28,7 +28,7 @@ def orders():
         sort = request.form.get('sort') or "Original"
 
         # Stores all possible Inputs
-        AllUinputs = [service_type, pi_name]
+        AllUinputs = [pi_name]
         
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
@@ -37,7 +37,7 @@ def orders():
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = ordersTable.display(Uinputs, sort)
+        data = ordersTable.display(Uinputs, sort, service_type)
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
@@ -51,10 +51,13 @@ def orders():
             
             dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
             data = dataFrame.to_dict('records')
+
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
         else:
             # Try to get cached Dataframe
             with app.app_context():
-                data = cache1.get('cached_datafrane')
+                data = cache1.get('cached_dataframe')
     
     page = request.args.get('page', 1, type=int)
     page, per_page, offset = get_page_args(page_parameter='page', 

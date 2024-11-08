@@ -36,7 +36,8 @@ class PanelsTable(BaseDatabaseTable):
         return Uinput
 
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
-        if "panel" in Uinput or "Panel" in Uinput:
+        insensitiveUinput = Uinput.casefold();
+        if "panel" in insensitiveUinput:
             Uinput = Uinput.replace('panel', '')
             Uinput = Uinput.replace('Panel', '')
 

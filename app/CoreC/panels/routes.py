@@ -344,3 +344,21 @@ def deletePanelAntibody():
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.
     return response
+
+@bp.route('/changePanelName', methods=['GET', 'POST'])
+@login_required(role=["admin", "coreC"])
+def changePanelName():
+    if request.method == 'GET':
+        panel_name = request.args.get('Panel Name')
+        if panel_name == None:
+            panel_name = request.args.get('Panel_Name')
+
+        data = {
+            "Catalog Number": ""
+        }
+        # use to prevent user from caching pages
+        response = make_response(render_template('CoreC/change_panel_name.html', fields = data, Panel_Name=panel_name))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response

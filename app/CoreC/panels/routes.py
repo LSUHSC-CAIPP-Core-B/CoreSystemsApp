@@ -354,7 +354,7 @@ def changePanelName():
             panel_name = request.args.get('Panel_Name')
 
         data = {
-            "Catalog Number": ""
+            "New Panel Name": ""
         }
         # use to prevent user from caching pages
         response = make_response(render_template('CoreC/change_panel_name.html', fields = data, Panel_Name=panel_name))

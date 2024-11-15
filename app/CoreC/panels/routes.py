@@ -348,6 +348,19 @@ def deletePanelAntibody():
 @bp.route('/changePanelName', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreC"])
 def changePanelName():
+    if request.method == 'POST':
+        Panel_Name = request.form.get('Panel Name')
+        new_Panel_Name = request.form.get('New Panel Name')
+        print(f"Panel Name: {Panel_Name}")
+        print(f"New Panel Name: {new_Panel_Name}")
+
+        New_Valid_Pname = PanelsTable.get_Valid_Panel_Name(new_Panel_Name)
+        New_Panel_Dbname = PanelsTable.get_Valid_db_Name(New_Valid_Pname)
+        print(f"New Valid Panel Name: {New_Valid_Pname}")
+        print(f"New Panel DB Name: {New_Panel_Dbname}")
+
+        raise NotImplementedError('POST method for changePanelName not implemented')
+    
     if request.method == 'GET':
         panel_name = request.args.get('Panel Name')
         if panel_name == None:

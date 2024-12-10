@@ -69,7 +69,7 @@ def count_rows() -> pd.DataFrame:
         table_name = row['Panel_table_name']
         
         # Constructs the COUNT query
-        count_query = f"SELECT COUNT(*) as antibody_num FROM {table_name}"
+        count_query = f"SELECT COUNT(*) as antibody_num FROM `{table_name}`"
         count_df = db_utils.toDataframe(count_query, 'app/Credentials/CoreC.json')
         count = count_df['antibody_num'].iloc[0]
         
@@ -195,19 +195,21 @@ def panel_details():
         
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
+        print(f"\npanels_df: {panels_df}\n")
 
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
+        print(f"table_name: {table_name}")
 
         # gets the sql name of the panel
         names = table_name.iloc[0]['Panel_table_name']
 
         # Checks permissions for data display
         if current_user.is_admin:
-            dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Box_Name, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype, a.Size, a.Concentration, DATE_FORMAT(a.Expiration_Date, '%m/%d/%Y') AS Expiration_Date,  a.Titration,  a.Cost FROM Antibodies_Stock a JOIN {names} m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
+            dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Box_Name, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype, a.Size, a.Concentration, DATE_FORMAT(a.Expiration_Date, '%m/%d/%Y') AS Expiration_Date,  a.Titration,  a.Cost FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         else:
-            dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM Antibodies_Stock a JOIN {names} m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
+            dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
             dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
         data = dataFrame.to_dict('records')
 
@@ -349,17 +351,60 @@ def deletePanelAntibody():
 @login_required(role=["admin", "coreC"])
 def changePanelName():
     if request.method == 'POST':
-        Panel_Name = request.form.get('Panel Name')
+        panel_name = request.form.get('Panel Name')
         new_Panel_Name = request.form.get('New Panel Name')
-        print(f"Panel Name: {Panel_Name}")
+        print(f"Panel Name: {panel_name}")
         print(f"New Panel Name: {new_Panel_Name}")
+
+        # If there is no change to the panel then message the user that panel exist
+        if panel_name == new_Panel_Name:
+            flash(f"{new_Panel_Name} Panel already exist")
+            return redirect(url_for('panels.changePanelName', Panel_Name=panel_name))
+
+        changeIDQuery = f"SELECT Panel_id from predefined_panels WHERE Panel_Name = '{panel_name}'"
+        id_dataframe = db_utils.toDataframe(changeIDQuery, 'app/Credentials/CoreC.json')
+        print(f"\nid Dataframe: {id_dataframe}")
+        panel_id = id_dataframe.loc[0, "Panel_id"]
+        print(f"panel_id: {panel_id}\n")
 
         New_Valid_Pname = PanelsTable.get_Valid_Panel_Name(new_Panel_Name)
         New_Panel_Dbname = PanelsTable.get_Valid_db_Name(New_Valid_Pname)
         print(f"New Valid Panel Name: {New_Valid_Pname}")
-        print(f"New Panel DB Name: {New_Panel_Dbname}")
+        print(f"New Panel DB Name: {New_Panel_Dbname}\n")
 
-        raise NotImplementedError('POST method for changePanelName not implemented')
+
+        oldDBNameQuery = f"SELECT Panel_table_name from predefined_panels where Panel_Name = '{panel_name}';"
+        Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'app/Credentials/CoreC.json')
+        print(f"Dataframe:\n{Old_Panel_Df}")
+        Old_Panel_Dbname = Old_Panel_Df.loc[0, "Panel_table_name"]
+        print(f"Old Panel database name: {Old_Panel_Dbname}\n")
+
+        
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        cursor = mydb.cursor()
+
+        changeNameQuery = f"RENAME TABLE `{Old_Panel_Dbname}` TO `{New_Panel_Dbname}`"
+        cursor.execute(changeNameQuery)
+
+        # SQL Change query
+        query = f"UPDATE predefined_panels SET Panel_Name = '{new_Panel_Name}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = '{panel_id}';"
+        #Execute SQL query
+        cursor.execute(query)
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()
+        
+
+        # use to prevent user from caching pages
+        response = make_response(redirect(url_for('panels.panels')))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
+        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
+        response.headers["Expires"] = "0" # Proxies.
+        return response
     
     if request.method == 'GET':
         panel_name = request.args.get('Panel Name')

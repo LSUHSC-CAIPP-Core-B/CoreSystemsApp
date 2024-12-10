@@ -23,7 +23,7 @@ class PanelsTable(BaseDatabaseTable):
         return super().delete(primary_key)
     
     def get_Valid_db_Name(self, Uinput: str) -> str:
-        Uinput = Uinput.lower()
+        Uinput = self.get_Valid_Panel_Name(Uinput)
 
         if "panel" not in Uinput or "Panel" not in Uinput:
             Uinput = f"{Uinput}_panel"
@@ -34,12 +34,11 @@ class PanelsTable(BaseDatabaseTable):
             Uinput = Uinput.replace(' ', '_')
         
         return Uinput
-
+    
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
         insensitiveUinput = Uinput.casefold();
         if "panel" in insensitiveUinput:
             Uinput = Uinput.replace('panel', '')
-            Uinput = Uinput.replace('Panel', '')
 
         Uinput = Uinput.strip()
         

@@ -1,4 +1,5 @@
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
+import re
 
 
 class PanelsTable(BaseDatabaseTable):
@@ -23,8 +24,6 @@ class PanelsTable(BaseDatabaseTable):
         return super().delete(primary_key)
     
     def get_Valid_db_Name(self, Uinput: str) -> str:
-        Uinput = self.get_Valid_Panel_Name(Uinput)
-
         if "panel" not in Uinput or "Panel" not in Uinput:
             Uinput = f"{Uinput}_panel"
 
@@ -36,10 +35,13 @@ class PanelsTable(BaseDatabaseTable):
         return Uinput
     
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
-        insensitiveUinput = Uinput.casefold();
-        if "panel" in insensitiveUinput:
-            Uinput = Uinput.replace('panel', '')
-
-        Uinput = Uinput.strip()
+        insensitiveUinput = Uinput.casefold()
+        patterns = [' panel ', ' panel', 'panel ', 'panel']
         
+        # Combines patterns into a single regex
+        regex = '|'.join(re.escape(pattern) for pattern in patterns)
+        
+        #Perform case-insensitive replacement while preserving original case
+        Uinput = re.sub(regex, ' ', Uinput, flags=re.IGNORECASE).strip()
+
         return Uinput

@@ -356,11 +356,6 @@ def changePanelName():
         print(f"Panel Name: {panel_name}")
         print(f"New Panel Name: {new_Panel_Name}")
 
-        # If there is no change to the panel then message the user that panel exist
-        if panel_name == new_Panel_Name:
-            flash(f"{new_Panel_Name} Panel already exist")
-            return redirect(url_for('panels.changePanelName', Panel_Name=panel_name))
-
         changeIDQuery = f"SELECT Panel_id from predefined_panels WHERE Panel_Name = '{panel_name}'"
         id_dataframe = db_utils.toDataframe(changeIDQuery, 'app/Credentials/CoreC.json')
         print(f"\nid Dataframe: {id_dataframe}")
@@ -371,6 +366,11 @@ def changePanelName():
         New_Panel_Dbname = PanelsTable.get_Valid_db_Name(New_Valid_Pname)
         print(f"New Valid Panel Name: {New_Valid_Pname}")
         print(f"New Panel DB Name: {New_Panel_Dbname}\n")
+
+        # If there is no change to the panel then message the user that panel exist
+        if panel_name == New_Valid_Pname:
+            flash(f"{new_Panel_Name} Panel already exist")
+            return redirect(url_for('panels.changePanelName', Panel_Name=panel_name))
 
 
         oldDBNameQuery = f"SELECT Panel_table_name from predefined_panels where Panel_Name = '{panel_name}';"
@@ -387,7 +387,7 @@ def changePanelName():
         cursor.execute(changeNameQuery)
 
         # SQL Change query
-        query = f"UPDATE predefined_panels SET Panel_Name = '{new_Panel_Name}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = '{panel_id}';"
+        query = f"UPDATE predefined_panels SET Panel_Name = '{New_Valid_Pname}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = '{panel_id}';"
         #Execute SQL query
         cursor.execute(query)
 

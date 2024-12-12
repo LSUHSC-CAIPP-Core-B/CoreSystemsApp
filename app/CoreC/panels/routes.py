@@ -351,35 +351,30 @@ def deletePanelAntibody():
 @login_required(role=["admin", "coreC"])
 def changePanelName():
     if request.method == 'POST':
+        # Gets Old panel name and the new panel name
         panel_name = request.form.get('Panel Name')
         new_Panel_Name = request.form.get('New Panel Name')
-        print(f"Panel Name: {panel_name}")
-        print(f"New Panel Name: {new_Panel_Name}")
 
+        # Gets Panel ID
         changeIDQuery = f"SELECT Panel_id from predefined_panels WHERE Panel_Name = '{panel_name}'"
         id_dataframe = db_utils.toDataframe(changeIDQuery, 'app/Credentials/CoreC.json')
-        print(f"\nid Dataframe: {id_dataframe}")
         panel_id = id_dataframe.loc[0, "Panel_id"]
-        print(f"panel_id: {panel_id}\n")
 
+        # Generates a valid panel name and Panel SQL name
         New_Valid_Pname = PanelsTable.get_Valid_Panel_Name(new_Panel_Name)
         New_Panel_Dbname = PanelsTable.get_Valid_db_Name(New_Valid_Pname)
-        print(f"New Valid Panel Name: {New_Valid_Pname}")
-        print(f"New Panel DB Name: {New_Panel_Dbname}\n")
 
         # If there is no change to the panel then message the user that panel exist
         if panel_name == New_Valid_Pname:
             flash(f"{new_Panel_Name} Panel already exist")
             return redirect(url_for('panels.changePanelName', Panel_Name=panel_name))
 
-
+        # Gets Old SQL Panel Name
         oldDBNameQuery = f"SELECT Panel_table_name from predefined_panels where Panel_Name = '{panel_name}';"
         Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'app/Credentials/CoreC.json')
-        print(f"Dataframe:\n{Old_Panel_Df}")
         Old_Panel_Dbname = Old_Panel_Df.loc[0, "Panel_table_name"]
-        print(f"Old Panel database name: {Old_Panel_Dbname}\n")
 
-        
+        # SQL connection
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 

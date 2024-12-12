@@ -24,6 +24,14 @@ class PanelsTable(BaseDatabaseTable):
         return super().delete(primary_key)
     
     def get_Valid_db_Name(self, Uinput: str) -> str:
+        """Replaces spaces with underscores
+
+        Args:
+            Uinput (str): User Input
+
+        Returns:
+            str: Valid SQL Name
+        """
         if "panel" not in Uinput or "Panel" not in Uinput:
             Uinput = f"{Uinput}_panel"
 
@@ -35,7 +43,17 @@ class PanelsTable(BaseDatabaseTable):
         return Uinput
     
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
+        """Removes the word panel from the User Input
+
+        Args:
+            Uinput (str): User Input
+
+        Returns:
+            str: String without the word panel
+        """
         insensitiveUinput = Uinput.casefold()
+
+        #patterns to be replaced with a space
         patterns = [' panel ', ' panel', 'panel ', 'panel']
         
         # Combines patterns into a single regex

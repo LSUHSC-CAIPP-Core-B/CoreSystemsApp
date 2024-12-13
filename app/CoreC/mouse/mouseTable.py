@@ -108,7 +108,7 @@ class mouseTable(BaseDatabaseTable):
 
         userID = db_utils.toDataframe(idQuery, 'app/Credentials/CoreC.json')
         
-        if userID.iloc[0,0] == current_user.id:
+        if userID.iloc[0,0] == current_user.id or current_user.is_admin:
             # SQL DELETE query
             query = "DELETE FROM Mouse_Stock WHERE Stock_ID = %s"
             logger.info(f"Executing query: {query} with params: {primary_key}")

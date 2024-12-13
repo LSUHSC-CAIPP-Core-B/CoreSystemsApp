@@ -52,7 +52,7 @@
                                 <input type="hidden" name="Panel Name" id="Panel_Name" value="{{Panel_Name}}">
                                 <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
                                 <button id="addAntibodyButton" class="deletebutton"
-                                    onclick="return confirm('Are you sure You want to delete this panel?')">X</button>
+                                    onclick="return confirm('Are you sure you want to remove this antibody from {{Panel_Name}} panel?')">X</button>
                             </form>
                             {% endif %}
                             {{ list(data[row].values())[col] }}

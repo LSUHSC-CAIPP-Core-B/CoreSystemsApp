@@ -18,10 +18,10 @@
     </div>
     {% endif %}
     {% endwith %}
-    <div class="{% if not current_user.is_admin %}noback_centerdiv {%else%} {% endif %}">
+    <div class="">
         <div class="paddingdiv">
             <div class="rowdiv">
-                {% if current_user.is_admin %}
+                {% if current_user.is_core_c %}
                 <div class="columndiv">
                     <button id="addMouseButton" class="filterbutton" style="width: 175px;"> Add Mouse </button>
                 </div>
@@ -69,7 +69,7 @@
     <br>
     <br>
     <div class="paddingdiv">
-        {% if current_user.is_admin %}
+        {% if current_user.is_core_c %}
         <!-- Display the number of rows -->
         <p>Number of Mice: {{ num_rows }}</p>
         {% endif %}
@@ -101,8 +101,8 @@
                             <td>
                                 {{ list(data[row].values())[col] }}
                                 {% if col == 1 %}
-                                {% if data[row]["Genotype"] != "N/A" and current_user.is_admin %}
-                                {% if data[row]["user_id"] == current_user.id %}
+                                {% if data[row]["Genotype"] != "N/A" and current_user.is_core_c %}
+                                {% if data[row]["user_id"] == current_user.id or current_user.is_admin %}
                                 <form id="deleteForm" method="POST" action="/deleteMouse">
                                     <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
                                     <button id="confirmBtn" class="deletebutton"

@@ -256,19 +256,21 @@ def deleteMouse():
 @bp.route('/downloadMouseCSV', methods=['GET'])
 @login_required(role=["user", "coreC"])
 def downloadCSV():
+    # Gets number of rows from html and cast as a integer
     num_rows = int(request.args.get('num_rows'))
+
     with app.app_context():
         saved_data = cache1.get('cached_dataframe')
     
     if saved_data is None:
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
-        
-    if num_rows == 0:
+
+    if num_rows == 0: # If the database had no rows (Empty) then send a message to the user
         flash(' No records to download')
         return redirect(url_for('mouse.mouse'))
-    elif num_rows > 0:
-        print('\nDatabase not empty\n')
+    
+    elif num_rows > 0: #If the message is not empty then download CSV
         csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
     
         return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')

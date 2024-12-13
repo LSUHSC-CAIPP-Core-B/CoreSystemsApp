@@ -257,7 +257,6 @@ def deleteMouse():
 @login_required(role=["user", "coreC"])
 def downloadCSV():
     num_rows = int(request.args.get('num_rows'))
-    print(f"\nNumber of rows: {num_rows}\n")
     with app.app_context():
         saved_data = cache1.get('cached_dataframe')
     
@@ -266,7 +265,6 @@ def downloadCSV():
             saved_data = defaultCache.get('cached_dataframe')
         
     if num_rows == 0:
-        print('\nDatabase Empty\n')
         flash(' No records to download')
         return redirect(url_for('mouse.mouse'))
     elif num_rows > 0:

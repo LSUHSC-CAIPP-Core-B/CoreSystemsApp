@@ -51,7 +51,12 @@ def mouse():
 
         Uinputs.pop(-1)
 
-        data: dict = mouseTable.display(Uinputs, sort)
+        # ! For excepting raise ValueError(ValueError: Cannot set a DataFrame with multiple columns to the single column PI_Name_ratio
+        try:
+            data: dict = mouseTable.display(Uinputs, sort)
+        except ValueError:
+            flash(' No records to filter')
+            return redirect(url_for('mouse.mouse'))
 
         with app.app_context():
             cache1.delete('cached_dataframe') # Clear the cache when new filters are applied
@@ -251,13 +256,21 @@ def deleteMouse():
 @bp.route('/downloadMouseCSV', methods=['GET'])
 @login_required(role=["user", "coreC"])
 def downloadCSV():
+    num_rows = int(request.args.get('num_rows'))
+    print(f"\nNumber of rows: {num_rows}\n")
     with app.app_context():
         saved_data = cache1.get('cached_dataframe')
     
     if saved_data is None:
         with app.app_context():
             saved_data = defaultCache.get('cached_dataframe')
-
-    csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
+        
+    if num_rows == 0:
+        print('\nDatabase Empty\n')
+        flash(' No records to download')
+        return redirect(url_for('mouse.mouse'))
+    elif num_rows > 0:
+        print('\nDatabase not empty\n')
+        csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
     
-    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')
+        return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')

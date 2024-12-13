@@ -270,7 +270,7 @@ def downloadCSV():
         flash(' No records to download')
         return redirect(url_for('mouse.mouse'))
     
-    elif num_rows > 0: #If the message is not empty then download CSV
+    elif num_rows > 0: #If the message is not empty then download CSV file
         csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
     
         return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')

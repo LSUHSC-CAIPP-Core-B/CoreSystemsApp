@@ -55,7 +55,13 @@ def antibodies():
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data: dict = antibodiesTable.display(Uinputs, sort)
+        # ! For excepting raise ValueError(ValueError: Cannot set a DataFrame with multiple columns to the single column Company_name_ratio
+        try:
+            data: dict = antibodiesTable.display(Uinputs, sort)
+        except ValueError:
+            flash(' No records to filter')
+            return redirect(url_for('antibodies.antibodies'))
+
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
             

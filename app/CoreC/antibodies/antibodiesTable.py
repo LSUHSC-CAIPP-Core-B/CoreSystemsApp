@@ -126,14 +126,14 @@ class antibodiesTable(BaseDatabaseTable):
 
         logger.info("Deletion Complete!")
 
-    def isIncludedValidInput(self, included: str) -> str | bool:
+    def isIncludedValidInput(self, included: str) -> Union[str, bool]:
         """# * Checking to see if included is Yes or No *
         Finds match using fuzzywuzzy library
 
         :param included: Included Variable
         :type included: str
         :return: returns string included or boolean false
-        :rtype: str | bool
+        :rtype: str or bool
         """        
 
         YesScore = fuzz.ratio("yes", included.lower())

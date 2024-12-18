@@ -3,6 +3,7 @@ import pymysql
 from flask import flash
 from flask_login import current_user
 from fuzzywuzzy import fuzz
+from typing import Union
 from typing_extensions import override
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable

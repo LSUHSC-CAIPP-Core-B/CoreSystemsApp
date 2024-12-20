@@ -43,7 +43,13 @@ def stock():
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data: dict = stockTable.display(Uinputs, sort)
+        # ! For excepting raise ValueError(ValueError: Cannot set a DataFrame with multiple columns to the single column Company_name_ratio
+        try:
+            data: dict = stockTable.display(Uinputs, sort)
+        except ValueError:
+            flash(' No records to filter')
+            return redirect(url_for('mouse.mouse'))
+
         with app.app_context():
             cache1.set('cached_dataframe2', data, timeout=3600)
 

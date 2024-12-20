@@ -9,7 +9,7 @@
 
 <body>
     <div class="header" id="gradheader">
-        <h1 class="header_text">Change Mouse Information</h1>
+        <h1 class="header_text">Change {{Panel_Name}} Panel Name</h1>
     </div>
 
     {% with messages = get_flashed_messages() %}
@@ -20,32 +20,24 @@
     {% endif %}
     {% endwith %}
 
-    <form method="POST" action="/changeMouse">
-        <input type="hidden" name="primaryKey" value="{{ pkey }}">
+    <form method="POST" action="/changePanelName">
         {% for key, val in fields.items() %}
-        {% if key not in ("Stock_ID", "user_id") %}
         <div>
-            {% set first_val = val.values() | first %}
             <div class="updatediv one">
-                {% if key == "PI" %}
-                <h4> {{ key ~ " Name (Your Name)" }} </h4>
-                {% elif key == "MTA Required" %}
-                <h4> {{ "Is MTA Required? (Yes or No)" }} </h4>
-                {% else %}
                 <h4> {{key}} </h4>
-                {% endif %}
             </div>
             <div class="updatediv two">
                 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
                 <textarea name="{{key}}" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'
                     onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"'
-                    id="{{key}}">{{ first_val }}</textarea>
+                    id="{{key}}">{{ val }}</textarea>
             </div>
         </div>
-        {% endif %}
         {% endfor %}
         <div class="updatediv one">
-            <button
+            <input type="hidden" name="New Panel Name" id="New_Panel_Name" value="{{ val }}">
+            <input type="hidden" name="Panel Name" id="Panel_Name" value="{{ Panel_Name }}">
+            <button type="submit"
                 onclick="saveFilterByKey(['#PI_first_name', '#PI_last_name', '#PI_ID', '#PI_email', '#PI_departmnet'])"
                 class="updatebutton">Change</button>
         </div>

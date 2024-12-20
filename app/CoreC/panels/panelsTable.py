@@ -1,4 +1,5 @@
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
+import re
 
 
 class PanelsTable(BaseDatabaseTable):
@@ -23,8 +24,14 @@ class PanelsTable(BaseDatabaseTable):
         return super().delete(primary_key)
     
     def get_Valid_db_Name(self, Uinput: str) -> str:
-        Uinput = Uinput.lower()
+        """Replaces spaces with underscores
 
+        Args:
+            Uinput (str): User Input
+
+        Returns:
+            str: Valid SQL Name
+        """
         if "panel" not in Uinput or "Panel" not in Uinput:
             Uinput = f"{Uinput}_panel"
 
@@ -34,12 +41,25 @@ class PanelsTable(BaseDatabaseTable):
             Uinput = Uinput.replace(' ', '_')
         
         return Uinput
-
+    
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
-        if "panel" in Uinput or "Panel" in Uinput:
-            Uinput = Uinput.replace('panel', '')
-            Uinput = Uinput.replace('Panel', '')
+        """Removes the word panel from the User Input
 
-        Uinput = Uinput.strip()
+        Args:
+            Uinput (str): User Input
+
+        Returns:
+            str: String without the word panel
+        """
+        insensitiveUinput = Uinput.casefold()
+
+        #patterns to be replaced with a space
+        patterns = [' panel ', ' panel', 'panel ', 'panel']
         
+        # Combines patterns into a single regex
+        regex = '|'.join(re.escape(pattern) for pattern in patterns)
+        
+        #Perform case-insensitive replacement while preserving original case
+        Uinput = re.sub(regex, ' ', Uinput, flags=re.IGNORECASE).strip()
+
         return Uinput

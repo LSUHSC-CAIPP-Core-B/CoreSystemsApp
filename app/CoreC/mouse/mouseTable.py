@@ -88,7 +88,7 @@ class mouseTable(BaseDatabaseTable):
         cursor = mydb.cursor()
 
         # SQL Change query
-        query = "UPDATE Mouse_Stock SET PI_Name = %(PI)s, Genotype = %(Genotype)s, Mouse_Description = %(Description)s, Times_Back_Crossed = %(Times Back Crossed)s, MTA_Required = %(MTA Required)s WHERE Stock_ID = %(primaryKey)s;"
+        query = "UPDATE Mouse_Stock SET PI_Name = %(PI)s, Genotype = %(Genotype)s, Mouse_Description = %(Description)s, Strain = %(Strain)s, Times_Back_Crossed = %(Times Back Crossed)s, MTA_Required = %(MTA Required)s WHERE Stock_ID = %(primaryKey)s;"
         logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
@@ -108,7 +108,7 @@ class mouseTable(BaseDatabaseTable):
 
         userID = db_utils.toDataframe(idQuery, 'app/Credentials/CoreC.json')
         
-        if userID.iloc[0,0] == current_user.id:
+        if userID.iloc[0,0] == current_user.id or current_user.is_admin:
             # SQL DELETE query
             query = "DELETE FROM Mouse_Stock WHERE Stock_ID = %s"
             logger.info(f"Executing query: {query} with params: {primary_key}")

@@ -13,7 +13,7 @@
   </div>
   {% with messages = get_flashed_messages() %}
   {% if messages %}
-  <div class="div-border-min">
+  <div class="updatediv one">
     <h3>{{ messages[0] }}</h3>
   </div>
   {% endif %}
@@ -81,6 +81,7 @@
     {% endif %}
   </div>
   <div class="noback_centerdiv">
+    {% if data and len(data) > 0 %}
     <div class="div-border-min">
       <div
         style="background-color: #333333; height: 40px; border-top-right-radius: 14px; border-top-left-radius: 14px;">
@@ -133,6 +134,11 @@
         </table>
       </div>
     </div>
+    {% else %}
+      <div class="empty-message" style="text-align: center; padding: 20px; font-size: 18px; color: #555;">
+          <p> No Records </p>
+      </div>
+    {% endif %}
   </div>
   <div class="paddingdiv">
     <form method="GET" action="/downloadAntibodyCSV">

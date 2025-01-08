@@ -122,9 +122,16 @@
                                 {% endif %}
                             </td>
                             {% endif %}
-                            {% if list(data[row].keys())[col] not in ("Stock_ID", "PI", "user_id") %}
+                            {% if list(data[row].keys())[col] not in ("Stock_ID", "PI", "Description", "user_id") %}
                             <td>
                                 {{ list(data[row].values())[col] }}
+                            </td>
+                            {% endif %}
+                            {% if list(data[row].keys())[col] == "Description" %}
+                            <td>
+                                <a
+                                    href="/displayMouseFile?Description={{list(data[row].values())[0]}}&primaryKey={{ data[row]['Stock_ID'] }}">{{
+                                    list(data[row].values())[col]}}</a>
                             </td>
                             {% endif %}
                             {% endfor %}

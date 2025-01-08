@@ -1,3 +1,4 @@
+import os
 from flask import (Flask, flash, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
@@ -274,3 +275,23 @@ def downloadCSV():
         csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
     
         return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')
+
+UPLOAD_FOLDER = 'uploads'
+
+@bp.route('/uploadMouseFile', methods=['POST'])
+@login_required(role=["user", "coreC"])
+def uploadFile():
+    # Ensure 'uploads' directory exists
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    # Get the uploaded file
+    file = request.files.get('uploaded_file')
+
+    if not file or file.filename == '':
+        return "No file selected!", 400  # Bad Request status code
+
+    # Save the file to the uploads folder
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+    
+    return redirect(url_for('mouse.mouse'))

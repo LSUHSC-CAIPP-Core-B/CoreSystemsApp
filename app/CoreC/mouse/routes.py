@@ -308,7 +308,11 @@ def displayFile():
 
     # Path to the PDF file
     file_path = os.path.join(UPLOAD_FOLDER, f'{primary_key}.pdf')
-    print(f"File Path: {file_path}")
+
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        flash('Description PDF not uploaded')
+        return redirect(url_for('mouse.mouse'))
 
     # Send the PDF file to the user's browser
     return send_file(file_path, mimetype='application/pdf', as_attachment=False)

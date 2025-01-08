@@ -137,11 +137,13 @@
                             {% endfor %}
                             <!-- Upload column -->
                             <td>
+                                {% if data[row]["user_id"] == current_user.id or current_user.is_admin %}
                                 <form method="POST" action="/uploadMouseFile" enctype="multipart/form-data">
                                     <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}">
                                     <input type="file" name="uploaded_file" accept=".pdf" required>
                                     <button type="submit" class="filterbutton">Upload</button>
                                 </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

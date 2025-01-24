@@ -73,7 +73,7 @@ def antibodies():
                 defaultCache.delete('cached_dataframe')
 
             if current_user.is_admin:
-                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             else:
                 dataFrame = db_utils.toDataframe("SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
@@ -140,6 +140,7 @@ def addAntibody():
         concentration = request.form.get('Concentration')
         expiration_date = request.form.get('Expiration Date')
         titration = request.form.get('Titration')
+        volume = request.form.get('Volume')
         cost = request.form.get('Cost')
         included = request.form.get('Included')
 
@@ -180,7 +181,8 @@ def addAntibody():
                     'sizeParam': size, 
                     'concentrationParam': concentration, 
                     'DateParam': expiration_date, 
-                    'titrationParam': titration, 
+                    'titrationParam': titration,
+                    'volumeParam': volume, 
                     'costParam': cost, 
                     'includedParam': included}
 
@@ -219,6 +221,7 @@ def addAntibody():
             "Concentration": "",
             "Expiration Date": "",
             "Titration": "",
+            "Volume": "",
             "Cost": "",
             "Included": ""
         }
@@ -298,6 +301,7 @@ def changeAntibody():
         concentration = request.form.get('Concentration')
         expiration_date = request.form.get('Expiration Date')
         titration = request.form.get('Titration')
+        volume = request.form.get('Volume')
         cost = request.form.get('Cost ($)')
         included = request.form.get('Included')
 
@@ -338,7 +342,8 @@ def changeAntibody():
                     'sizeParam': size, 
                     'concentrationParam': concentration, 
                     'DateParam': expiration_date, 
-                    'titrationParam': titration, 
+                    'titrationParam': titration,
+                    'volumeParam': volume, 
                     'costParam': cost, 
                     'includedParam': included,
                     'Pkey': primary_key}
@@ -355,7 +360,7 @@ def changeAntibody():
 
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
-        query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
+        query = "SELECT Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost, Included FROM Antibodies_Stock WHERE Stock_ID = %s;"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', params=(primary_key,))
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         

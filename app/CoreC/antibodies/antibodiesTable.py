@@ -30,7 +30,8 @@ class antibodiesTable(BaseDatabaseTable):
             'Price': 'Cost',
             'Catalog Number': 'Catalog_Num',
             'Expiration Date': 'Expiration_Date',
-            'Box Name': 'Box_Name'
+            'Box Name': 'Box_Name',
+            'Low Volume': 'Volume'
         }
 
         # Check if sort is in the dictionary, if not then uses default value
@@ -41,7 +42,7 @@ class antibodiesTable(BaseDatabaseTable):
             order_by = 'Target_Name'  
 
         if current_user.is_admin:
-            query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
+            query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
         else:
             query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
@@ -57,7 +58,7 @@ class antibodiesTable(BaseDatabaseTable):
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -72,7 +73,7 @@ class antibodiesTable(BaseDatabaseTable):
         cursor = mydb.cursor()
 
         # SQL Add query
-        query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(costParam)s, null, %(includedParam)s);"
+        query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(volumeParam)s, %(costParam)s, null, %(includedParam)s);"
         logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)
@@ -85,7 +86,7 @@ class antibodiesTable(BaseDatabaseTable):
         mydb.close()   
 
         # Gets newest antibody
-        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
+        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
         return df
@@ -95,7 +96,7 @@ class antibodiesTable(BaseDatabaseTable):
         cursor = mydb.cursor()
 
         # SQL Change query
-        query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
+        query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Volume = %(volumeParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
         logger.info(f"Executing query: {query} with params: {params}")
         #Execute SQL query
         cursor.execute(query, params)

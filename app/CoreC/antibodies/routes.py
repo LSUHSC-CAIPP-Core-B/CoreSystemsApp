@@ -368,7 +368,7 @@ def changeAntibody():
         if df.iloc[0,13] == 1:
             df.iloc[0,13] = "Yes"
         else:
-            df.iloc[0,13] == "No"
+            df.iloc[0,13] = "No"
 
         data = df.to_dict()
         

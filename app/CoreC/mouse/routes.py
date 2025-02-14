@@ -1,3 +1,4 @@
+import os
 from flask import (Flask, flash, make_response, redirect,
                    render_template, request, send_file, url_for)
 from flask_caching import Cache
@@ -274,3 +275,44 @@ def downloadCSV():
         csv_io = mouseTable.download_CSV(saved_data=saved_data, dropCol=['Stock_ID', 'user_id'])
     
         return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Mouse Data.csv')
+
+# Defines UPLOAD_FOLDER as an absolute path relative to the project root (going up three levels)
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..', '..', 'uploads')
+
+@bp.route('/uploadMouseFile', methods=['POST'])
+@login_required(role=["user", "coreC"])
+def uploadFile():
+    primary_key = request.form.get('primaryKey')
+    fileName = f"{primary_key}.pdf"
+    
+    # Ensure 'uploads' directory exists
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    # Get the uploaded file from HTML form
+    file = request.files.get('uploaded_file')
+
+    # checks if file is empty
+    if not file or file.filename == '':
+        return "No file selected!", 400  # Bad Request status code
+
+    # Save the file to the uploads folder
+    file_path = os.path.join(UPLOAD_FOLDER, fileName)
+    file.save(file_path)
+    
+    return redirect(url_for('mouse.mouse'))
+
+@bp.route('/displayMouseFile', methods=['GET'])
+@login_required(role=["user", "coreC"])
+def displayFile():
+    primary_key = request.args.get('primaryKey')
+
+    # Path to the PDF file
+    file_path = os.path.join(UPLOAD_FOLDER, f'{primary_key}.pdf')
+
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        flash('Description PDF not uploaded')
+        return redirect(url_for('mouse.mouse'))
+
+    # Send the PDF file to the user's browser
+    return send_file(file_path, mimetype='application/pdf', as_attachment=False)

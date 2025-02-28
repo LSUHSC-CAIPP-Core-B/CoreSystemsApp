@@ -365,10 +365,7 @@ def changeAntibody():
         df.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog Number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
         
         # Converts 1 to yes and 0 to no from the included column
-        if df.iloc[0,13] == 1:
-            df.iloc[0,13] = "Yes"
-        else:
-            df.iloc[0,13] = "No"
+        df.at[0,'Included'] = {1: "Yes", 0: "No"}.get(df.at[0,'Included'], "No")
 
         data = df.to_dict()
         

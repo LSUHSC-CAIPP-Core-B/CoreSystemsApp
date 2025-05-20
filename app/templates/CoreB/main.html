@@ -79,6 +79,7 @@
           <thead>
             <tr>
               {% for header in data[0].keys() %}
+              {% if header != "Index" %}
               {% if header == "Question" %}
               {% else %}
               <th>
@@ -99,6 +100,7 @@
                 {% endif %}
                 {% endif %}
               </th>
+              {% endif %}
               {% endif %}
               {% endfor %}
             </tr>

@@ -64,7 +64,8 @@ def antibodies():
 
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
-            
+
+    # Grabs Data from database and updates cache            
     if request.method == 'GET':
         with app.app_context():
             cached_data = cache1.get('cached_dataframe')
@@ -86,15 +87,16 @@ def antibodies():
             # Try to get the cached DataFrame
             with app.app_context():
                 data = cache1.get('cached_dataframe')
-
+    
     page, per_page, offset = get_page_args(page_parameter='page', 
                                            per_page_parameter='per_page')
-
+    
+    # If user is not admin then display 20 rows for each page
     if not current_user.is_admin:
         per_page = request.args.get('per_page', 20, type=int)
         offset = (page - 1) * per_page
     
-    #number of rows in table
+    #number of total rows in table
     num_rows = len(data)
 
     pagination_users = data[offset: offset + per_page]

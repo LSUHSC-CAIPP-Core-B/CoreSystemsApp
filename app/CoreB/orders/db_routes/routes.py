@@ -68,7 +68,7 @@ def orders():
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     # use to prevent user from caching pages
-    response = make_response(render_template('CoreB/main.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
+    response = make_response(render_template('CoreB/orders.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
     response.headers["Pragma"] = "no-cache" # HTTP 1.0.
     response.headers["Expires"] = "0" # Proxies.

@@ -2,10 +2,10 @@ from flask import Flask, render_template, request, redirect, send_file, url_for,
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 from app import login_required
-from app.CoreB.orders.db_routes import bp
+from app.CoreB.orders import bp
 from flask_caching import Cache
 from app.utils.db_utils import db_utils
-from app.CoreB.orders.db_routes.ordersTable import ordersTable
+from app.CoreB.orders.ordersTable import ordersTable
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache

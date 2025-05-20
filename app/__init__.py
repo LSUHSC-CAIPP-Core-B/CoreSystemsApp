@@ -61,11 +61,11 @@ def create_app(config_class=Config):
             admin_role = Role(role="admin")
             user_role = Role(role="user")
             coreb_role = Role(role="coreB")
-            corec_role = Role(role="coreC")
+            _role = Role(role="coreC")
             db.session.add(admin_role)
             db.session.add(user_role)
             db.session.add(coreb_role)
-            db.session.add(corec_role)
+            db.session.add(_role)
             db.session.commit()
 
     @login_manager.user_loader
@@ -83,7 +83,7 @@ def create_app(config_class=Config):
     #from app.CoreB.orders.csv_routes import bp as main_bp
     #app.register_blueprint(main_bp)
 
-    from app.CoreB.orders.db_routes import bp as main_bp
+    from app.CoreB.orders import bp as main_bp
     app.register_blueprint(main_bp)
 
     from app.CoreB.invoices_list import bp as invoices_bp

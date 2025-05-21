@@ -74,7 +74,7 @@ def antibodies():
                 defaultCache.delete('cached_dataframe')
 
             if current_user.is_admin:
-                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, DATE_FORMAT(Expiration_Date, '%m/%d/%Y') AS Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             else:
                 dataFrame = db_utils.toDataframe("SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
@@ -306,6 +306,7 @@ def changeAntibody():
         volume = request.form.get('Volume')
         cost = request.form.get('Cost ($)')
         included = request.form.get('Included')
+        print(f"Included: {included}")
 
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num == "N/A":
@@ -330,8 +331,11 @@ def changeAntibody():
             flash('Cost must be a number')
             return redirect(url_for('antibodies.addAntibody'))
 
-        if not (included := antibodiesTable.isIncludedValidInput(included)):
-            return redirect(url_for('antibodies.addAntibody'))
+        included = antibodiesTable.isIncludedValidInput(included)
+
+        if (included == "Not Valid"):
+            print(f"included: {included}")
+            return redirect(url_for('antibodies.changeAntibody', primaryKey= primary_key))
 
         params = {'BoxParam': box_name,
                     'CompanyParam': company_name, 

@@ -134,13 +134,14 @@ class antibodiesTable(BaseDatabaseTable):
 
         :param included: Included Variable
         :type included: str
-        :return: returns string included or boolean false
+        :return: returns converted included or string "Not Valid"
         :rtype: str or bool
         """        
 
         YesScore = fuzz.ratio("yes", included.lower())
         NoScore = fuzz.ratio("no", included.lower())
         threshold = 80
+        print(f"\nYesScore: {YesScore}\nNoScore: {NoScore}\n")
         
         if YesScore >= threshold:
             return (included := 1)
@@ -148,4 +149,4 @@ class antibodiesTable(BaseDatabaseTable):
             return (included := 0)
         else:
             flash('Included field must be "Yes" or "No"')
-            return False
+            return "Not Valid"

@@ -195,11 +195,9 @@ def panel_details():
         
         # Searches for the existing panel
         columns = [col for col in panels_df.columns if col]
-        print(f"\npanels_df: {panels_df}\n")
 
         table_name_dict = search_utils.search_data([panel_name], columns_to_check=columns, threshold=90, SqlData=panels_df)
         table_name = pd.DataFrame(table_name_dict)
-        print(f"table_name: {table_name}")
 
         # gets the sql name of the panel
         names = table_name.iloc[0]['Panel_table_name']
@@ -245,6 +243,7 @@ def panel_details():
 @bp.route('/addPanelAntibody', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreC"])
 def addPanelAntibody():
+    # Searches for existing antibody to add to the panel
     if request.method == 'POST':
         catalog_num = request.form.get('Catalog Number')
         Panel_Name = request.form.get('Panel Name')

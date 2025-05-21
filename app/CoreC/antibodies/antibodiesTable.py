@@ -87,7 +87,7 @@ class antibodiesTable(BaseDatabaseTable):
         mydb.close()   
 
         # Gets newest antibody
-        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 1 ORDER BY Stock_ID DESC LIMIT 1;"
+        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Stock_ID DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
         return df
@@ -141,7 +141,6 @@ class antibodiesTable(BaseDatabaseTable):
         YesScore = fuzz.ratio("yes", included.lower())
         NoScore = fuzz.ratio("no", included.lower())
         threshold = 80
-        print(f"\nYesScore: {YesScore}\nNoScore: {NoScore}\n")
         
         if YesScore >= threshold:
             return (included := 1)

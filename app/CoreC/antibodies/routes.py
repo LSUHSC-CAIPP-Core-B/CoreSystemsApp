@@ -169,7 +169,9 @@ def addAntibody():
             flash('Cost must be a number')
             return redirect(url_for('antibodies.addAntibody'))
 
-        if not (included := antibodiesTable.isIncludedValidInput(included)):
+        included = antibodiesTable.isIncludedValidInput(included)
+
+        if (included == "Not Valid"):
             return redirect(url_for('antibodies.addAntibody'))
 
         params = {'BoxParam': box_name,
@@ -306,7 +308,6 @@ def changeAntibody():
         volume = request.form.get('Volume')
         cost = request.form.get('Cost ($)')
         included = request.form.get('Included')
-        print(f"Included: {included}")
 
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num == "N/A":
@@ -334,7 +335,6 @@ def changeAntibody():
         included = antibodiesTable.isIncludedValidInput(included)
 
         if (included == "Not Valid"):
-            print(f"included: {included}")
             return redirect(url_for('antibodies.changeAntibody', primaryKey= primary_key))
 
         params = {'BoxParam': box_name,

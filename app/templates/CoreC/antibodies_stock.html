@@ -38,6 +38,12 @@
         <!-- FILTERING -->
         <div class="columndiv">
           <form method="POST" action="/antibodies">
+            {% if current_user.is_admin %}
+            <div class="leftdiv">
+              <label class="formlabel">Box</label>
+              <input class="tableinput" type="text" name="Box Name" id="Box Name" placeholder="Box Name">
+            </div>
+            {% endif %}
             <div class="leftdiv">
               <label class="formlabel">Company</label>
               <input class="tableinput" type="text" name="company_name" id="company_name" placeholder="Company Name">

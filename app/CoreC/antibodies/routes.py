@@ -40,13 +40,14 @@ def antibodies():
     """
 
     if request.method == 'POST':
+        box_name = request.form.get('Box Name')
         Company_name = request.form.get('company_name') or ""
         Target_Name = request.form.get('target_name') or ""
         Target_Species = request.form.get('target_species') or ""
         sort = request.form.get('sort') or 'Original'
 
         # Stores all possible Inputs
-        AllUinputs = [Company_name, Target_Name, Target_Species]
+        AllUinputs = [box_name, Company_name, Target_Name, Target_Species]
         
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]

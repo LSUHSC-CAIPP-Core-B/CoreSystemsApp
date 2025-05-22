@@ -50,12 +50,17 @@ class antibodiesTable(BaseDatabaseTable):
 
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
-        
+
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
-            columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
+            if current_user.is_admin:
+                columns_to_check = ["Box_Name", "Company_name", "Target_Name", "Target_Species"]
+            else:
+                columns_to_check = ["Company_name", "Target_Name", "Target_Species"]
+                Uinputs.remove(None)
+            
             data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by, columns_rename={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'})
             
             # If no match is found displays empty row

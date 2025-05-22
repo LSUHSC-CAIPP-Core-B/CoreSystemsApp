@@ -5,6 +5,7 @@ from flask_login import current_user
 from fuzzywuzzy import fuzz
 from typing import Union
 from typing_extensions import override
+from typing import Hashable, Any
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
@@ -25,7 +26,7 @@ class antibodiesTable(BaseDatabaseTable):
     :type BaseDatabaseTable: type
     """   
     @override
-    def display(self, Uinputs: str, sort: str) -> dict:
+    def display(self, Uinputs: list[Any], sort: str) -> list[dict[Hashable, Any]]:
         # Maps sorting options to their corresponding SQL names
         sort_orders = {
             'Price': 'Cost',
@@ -69,7 +70,7 @@ class antibodiesTable(BaseDatabaseTable):
             data = SqlData.to_dict(orient='records')
         return data
 
-    def add(self, params:dict) -> pd.DataFrame:   
+    def add(self, params: dict[str, Any]) -> pd.DataFrame:   
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
@@ -92,7 +93,7 @@ class antibodiesTable(BaseDatabaseTable):
         df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
         return df
 
-    def change(self, params:dict) -> None:
+    def change(self, params: dict[str, Any]) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 
@@ -109,7 +110,7 @@ class antibodiesTable(BaseDatabaseTable):
         cursor.close()
         mydb.close()
     
-    def delete(self, primary_key) -> None:
+    def delete(self, primary_key: str) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
         cursor = mydb.cursor()
 

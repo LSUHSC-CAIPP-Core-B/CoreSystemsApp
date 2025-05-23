@@ -81,7 +81,17 @@ def update():
     GET: Display edit screen of specified order
     POST: Update values of specified order
     """
-    raise NotImplementedError()
+    if request.method == "GET":
+        question_id = request.args.get('question_id')
+        query = "Select * FROM coreB_order WHERE `Index` = %s;"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(question_id,))
+
+        update_data = df.iloc[0]
+
+        return render_template('CoreB/update.html', fields = update_data)
+    
+    elif request.method == "POST":
+        raise NotImplementedError()
 
 @bp.route('/delete', methods=['GET'])
 @login_required(role=["admin", "coreB"])

@@ -93,11 +93,6 @@ def update():
         return render_template('CoreB/update.html', fields = update_data)
     
     elif request.method == "POST":
-        index  = request.args.get('question_id')
-        project_ID = request.args.get('order_num')
-        
-
-        passed_parameters: ImmutableMultiDict[str, str] = request.form
         params = request.form.to_dict()
         
         #replace spaces in the key names with underscores
@@ -113,6 +108,9 @@ def update():
         cursor.execute(query, valid_params)
 
         # Commit the transaction
+        mydb.commit()
+
+        # Commit the transaction
         cursor.close()
         mydb.close()
 
@@ -126,7 +124,24 @@ def delete():
     """
     GET: Delete order
     """
-    raise NotImplementedError()
+    Index = request.args.get('question_id')
+    
+    mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+    cursor = mydb.cursor()
+
+    # SQL DELETE query
+    query = "DELETE FROM coreb_order WHERE `Index` = %s"
+    #Execute SQL query
+    cursor.execute(query, (Index,))
+
+    # Commit the transaction
+    mydb.commit()
+
+    # Close the cursor and connection
+    cursor.close()
+    mydb.close()
+
+    return redirect(url_for('orders.orders'))
 
 @bp.route('/downloadOrdersCSV', methods=['GET'])
 @login_required(role=["coreB"])

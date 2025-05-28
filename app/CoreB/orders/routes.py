@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
+import pymysql
 from app import login_required
 from app.CoreB.orders import bp
 from flask_caching import Cache
 from app.utils.db_utils import db_utils
 from app.CoreB.orders.ordersTable import ordersTable
+from werkzeug.datastructures import ImmutableMultiDict
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
@@ -91,7 +93,32 @@ def update():
         return render_template('CoreB/update.html', fields = update_data)
     
     elif request.method == "POST":
-        raise NotImplementedError()
+        index  = request.args.get('question_id')
+        project_ID = request.args.get('order_num')
+        
+
+        passed_parameters: ImmutableMultiDict[str, str] = request.form
+        params = request.form.to_dict()
+        
+        #replace spaces in the key names with underscores
+        valid_params = {k.replace(" ", "_"): v for k, v in params.items()}
+        
+
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+        cursor = mydb.cursor()
+
+        # SQL Change query
+        query = "UPDATE coreb_order SET `Project ID` = %(Project_ID)s, `Responsible Person` = %(Responsible_Person)s, `Complete status` = %(Complete_status)s, `Bill` = %(Bill)s, `Paid` = %(Paid)s, `Authoship Disclosure Agreement` = %(Authoship_Disclosure_Agreement)s, `Request Date` = %(Request_Date)s, `If it is an existing project` = %(If_it_is_an_existing_project)s, `PI Name` = %(PI_Name)s, `Funding Source` = %(Funding_Source)s, `Account number and billing contact person` = %(Account_number_and_billing_contact_person)s, `Project title` = %(Project_title)s, `Project Description` = %(Project_Description)s, `Service Type` = %(Service_Type)s, `RNA Analysis Service Type` = %(RNA_Analysis_Service_Type)s, `DNA Analysis Service Type` = %(DNA_Analysis_Service_Type)s, `Protein Analysis Service Type` = %(Protein_Analysis_Service_Type)s, `Metabolite Analysis Service Type` = %(Metabolite_Analysis_Service_Type)s, `Organism and Species` = %(Organism_and_Species)s, `Data Type` = %(Data_Type)s, `Library Preparation` = %(Library_Preparation)s, `Expected sample#` = %(Expected_sample#)s, `Please list all comparisons` = %(Please_list_all_comparisons)s, `Expected Completion Time`= %(Expected_Completion_Time)s, `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  WHERE `Index` = %(Index)s;"
+        #Execute SQL query
+        cursor.execute(query, valid_params)
+
+        # Commit the transaction
+        cursor.close()
+        mydb.close()
+
+        current_page = request.args.get('page', 1)
+
+        return redirect(url_for('orders.orders', page=current_page))
 
 @bp.route('/delete', methods=['GET'])
 @login_required(role=["admin", "coreB"])

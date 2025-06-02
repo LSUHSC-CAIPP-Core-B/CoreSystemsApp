@@ -3,6 +3,7 @@ from flask_paginate import Pagination, get_page_args
 from app.CoreB.pi_list import bp
 from app.reader import Reader, find
 from app import login_required
+from app.utils.db_utils import db_utils
 
 information_reader = Reader("PI_ID - PI_ID.csv")
 
@@ -40,19 +41,23 @@ def pilist():
     POST: Dispaly filtered list of all PIs
     """
     # get PI list data
-    data = information_reader.getRawDataCSV(headers=True, dict=True)
+
+    if request.method == 'GET':
+        dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
+        data = dataFrame.to_dict('records')
 
     if request.method == 'POST':
-        # search vars
-        department = request.form.get('department') or ""
-        pi_name = request.form.get('pi_name') or ""
-        # filter dict
-        data = [dict for dict in data if dict['Department'].lower().__contains__(department.lower())]
-        data = [dict for dict in data if dict['PI full name'].lower().__contains__(pi_name.lower())]
-        sort = request.form.get('sort') or "Original"
-        # sort dict
-        if sort != 'Original':
-            data = sorted(data, key=lambda d: d[sort])
+        pi_name = request.form.get('PI full name')
+        dept = request.form.get('Department')
+        sort = request.form.get('sort')
+        
+        # Stores all possible Inputs
+        AllUinputs = [pi_name, dept]
+        
+        # Creates list to store inputs that are being Used
+        Uinputs: list[str] = [i for i in AllUinputs]
+
+        raise NotImplementedError()
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')

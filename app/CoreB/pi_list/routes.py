@@ -1,11 +1,19 @@
-from flask import render_template, request, redirect, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 from app.CoreB.pi_list import bp
 from app.reader import Reader, find
 from app import login_required
 from app.utils.db_utils import db_utils
+from app.CoreB.pi_list.pi_table import PI_table
+from flask_caching import Cache
 
 information_reader = Reader("PI_ID - PI_ID.csv")
+
+app = Flask(__name__)
+cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
+defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+PI_table = PI_table()
 
 @bp.route('/information', methods=['GET'])
 @login_required(role=["admin", "coreB"])
@@ -57,7 +65,14 @@ def pilist():
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
 
-        raise NotImplementedError()
+        # Clear the cache when new filters are applied
+        with app.app_context():
+            cache1.delete('cached_dataframe')
+
+        data = PI_table.display(Uinputs, sort)
+
+        with app.app_context():
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
     page, per_page, offset = get_page_args(page_parameter='page', 
                                         per_page_parameter='per_page')

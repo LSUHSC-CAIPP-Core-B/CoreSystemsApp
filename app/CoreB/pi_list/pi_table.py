@@ -1,4 +1,6 @@
 from typing import IO, Hashable, Any
+
+import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
@@ -49,7 +51,20 @@ class PI_table(BaseDatabaseTable):
         return data
     
     def change(self, params):
-        return super().change(params)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+        cursor = mydb.cursor()
+
+        # SQL Change query
+        query = "UPDATE pi_info SET `PI full name` = %(PI_full_name)s, `PI ID` = %(PI_ID)s, email = %(email)s, Department = %(Department)s   WHERE `index` = %(index)s;"
+        #Execute SQL query
+        cursor.execute(query, params)
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Commit the transaction
+        cursor.close()
+        mydb.close()
     
     def add(self, params):
         return super().add(params)

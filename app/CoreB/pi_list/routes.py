@@ -180,70 +180,21 @@ def update():
     POST: Update selected PI data
     """
     if request.method == 'GET':
-        # variable to hold CSV data
-        data = information_reader.getRawDataCSV(headers=True, dict=True)
+        old_pi_full_name = request.args.get('pi_id_old')
+        query = "Select * FROM pi_info WHERE `PI full name` = %s"
 
-        pi_id_old = request.args.get('pi_id_old')
-        data = [dict for dict in data if dict['PI ID'].__contains__(pi_id_old)]
-        update_data = data[0]
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(old_pi_full_name,))
+        update_data = df.iloc[0]
 
-        pi_full_name = update_data["PI full name"].split("_")
-        pi_first_name = pi_full_name[0]
-        pi_last_name = pi_full_name[1]
-
-        update_data_new = {
-            'PI first name': pi_first_name,
-            'PI last name': pi_last_name,
-            'PI ID': update_data['PI ID'],
-            'email': update_data['email'],
-            'Department': update_data['Department']
-        }
-
-        return render_template('pi/update_pi.html', fields = update_data_new, pi_id_old = pi_id_old)
+        return render_template('pi/update_pi.html', fields = update_data, pi_id_old = old_pi_full_name)
   
     elif request.method == 'POST':
-        pi_id_old = request.args.get('pi_id_old')
+        params = request.form.to_dict()
 
-        # variable to hold CSV data
-        data = information_reader.getRawDataCSV(headers=True, dict=True)
+        #replace spaces in the key names with underscores
+        valid_params = {k.replace(" ", "_"): v for k, v in params.items()}
 
-        # updated row
-        row = {}
-        pi_full_name = ""
-        
-        # join PI first and last name to match database format and check if PI ID already exists in DB
-        for key, val in dict(request.form).items():
-            # fields cannot be empty
-            if val.strip() == "":
-                flash('Fields cannot be empty')
-                return redirect(url_for('pi_list.update', pi_id_old = pi_id_old))
-            
-            # if not PI first name and not last name we just add it to the row dictionary that will replace the old data
-            # when the value is first or last name we want to add them to a variable first to join them and the nadd to the row dictionary
-            # when adding pi id we check if it already exists before we add it
-            if key != 'PI first name':
-                if key == 'PI last name':
-                    pi_full_name += "_" + val
-                    row['PI full name'] = pi_full_name
-                elif key == "PI ID":
-                    # check if PI ID already exists
-                    for d in data:
-                        if val == d["PI ID"] and val != pi_id_old:
-                            flash('PI with this ID already exists, please pick a new one.')
-                            return redirect(url_for('pi_list.update', pi_id_old = pi_id_old))
-
-                    row[key] = val
-                else:
-                    row[key] = val           
-            else:
-                pi_full_name += val
-
-
-        id = find(data, "PI ID", pi_id_old)
-        if id != None:
-            data[int(id)] = row
-
-        information_reader.saveRawDataCSV(data)
+        PI_table.change(valid_params)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('pi_list.pilist')))

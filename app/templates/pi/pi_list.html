@@ -70,7 +70,7 @@
               {% for col in range(0, len(list(data[row].values()))) %}
               {% if list(data[row].keys())[col] != "index" %}
               <td>
-              {% if col == 0%}
+              {% if col == 1 %}
               {% if current_user.is_authenticated %}
               <a
                       href="/delete_pi?pi_id={{list(data[row].values())[1]}}"><button

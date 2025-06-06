@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
+import pandas as pd
 from app.CoreB.pi_list import bp
 from app.reader import Reader, find
 from app import login_required
@@ -171,7 +172,7 @@ def delete_pi():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
-    
+
 @bp.route('/update_pi', methods=['GET', 'POST'])
 @login_required(role=["admin", "coreB"])
 def update():
@@ -185,11 +186,49 @@ def update():
 
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(old_pi_full_name,))
         update_data = df.iloc[0]
+        index = update_data['index']
 
-        return render_template('pi/update_pi.html', fields = update_data, pi_id_old = old_pi_full_name)
+        #Seperate first and last name
+        name_array = update_data["PI full name"].split("_")
+        update_data['PI first name'] = name_array[0]
+        update_data['PI last name'] = name_array[1]
+
+        #Remove full name column
+        del update_data["PI full name"]
+
+        #Change order to put first and last name in front
+        column_order = ["PI first name", "PI last name", "PI ID", "email", "Department"]
+        update_data = update_data[column_order]
+
+        return render_template('pi/update_pi.html', fields = update_data, pi_id_old = old_pi_full_name, index=index)
   
     elif request.method == 'POST':
         params = request.form.to_dict()
+
+        old_pi_full_name = request.args.get('pi_id_old')
+
+        index = request.form.get('index')
+        pi_query = "SELECT `PI ID` FROM pi_info WHERE `index` = %s"
+        PI_id = db_utils.toDataframe(pi_query, 'app/Credentials/CoreB.json', params=(index,))
+
+        query = "Select `PI ID` FROM pi_info"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        
+        # Check if the PI ID is available or taken
+        for v in df['PI ID']:
+            if v == request.form.get('PI ID') and v != PI_id.iat[0,0]:
+                flash('PI with this ID already exists, please pick a new one.')
+                return redirect(url_for('pi_list.update', pi_id_old = old_pi_full_name))
+        
+
+        #Reconstruct first and last name into full name
+        fname = request.form.get('PI first name')
+        lname = request.form.get('PI last name')
+        full_name = "_".join([fname, lname])
+
+        params.pop("PI first name")
+        params.pop("PI last name")
+        params['PI full name'] = full_name
 
         #replace spaces in the key names with underscores
         valid_params = {k.replace(" ", "_"): v for k, v in params.items()}

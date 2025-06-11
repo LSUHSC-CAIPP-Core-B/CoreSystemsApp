@@ -67,7 +67,26 @@ class PI_table(BaseDatabaseTable):
         mydb.close()
     
     def add(self, params):
-        return super().add(params)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+        cursor = mydb.cursor()
+
+        # SQL Add query
+        query = "INSERT INTO pi_info VALUES (null, %(PI_full_name)s, %(PI_ID)s, %(email)s, %(Department)s);"
+        #Execute SQL query
+        cursor.execute(query, params)
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()   
+
+        # Gets newest antibody
+        query = f"SELECT * FROM pi_info ORDER BY `index` DESC LIMIT 1;"
+        
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        return df
     
     def delete(self, primary_key):
         return super().delete(primary_key)

@@ -98,11 +98,11 @@ def add_pi():
     """
     if request.method == 'GET':
         pi_data = {
-            "PI_first_name": "",
-            "PI_last_name": "",
-            "PI_ID": "",
-            "PI_email": "",
-            "PI_departmnet": ""
+            "PI first name": "",
+            "PI last name": "",
+            "PI ID": "",
+            "PI email": "",
+            "PI departmnet": ""
         }
         # use to prevent user from caching pages
         response = make_response(render_template('pi/add_pi.html', fields = pi_data))
@@ -112,19 +112,22 @@ def add_pi():
         return response
 
     elif request.method == 'POST':
-        first_name = request.form.get('PI_first_name')
-        last_name = request.form.get('PI_last_name')
-        pi_id = request.form.get('PI_ID').strip()
-        email = request.form.get('PI_email')
-        department = request.form.get('PI_departmnet')
+        first_name = request.form.get('PI first name')
+        last_name = request.form.get('PI last name')
+        pi_id = request.form.get('PI ID').strip()
+        email = request.form.get('PI email')
+        department = request.form.get('PI departmnet')
 
         # fields cannot be empty
         if first_name == "" or last_name == "" or pi_id == "" or email == "" or department == "":
             flash('Fields cannot be empty')
             return redirect(url_for('pi_list.add_pi'))
         
-        # get csv data
-        data = information_reader.getRawDataCSV(headers=True, dict=True)
+        # get PI data
+        query = "Select * FROM pi_info"
+
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        data = df.to_dict(orient='records')
 
         # check if PI ID already exists
         for d in data:
@@ -135,18 +138,25 @@ def add_pi():
 
         # new row
         row = {
-            'PI full name':first_name + "_" + last_name,
-            'PI ID':pi_id,
+            'PI_full_name':first_name + "_" + last_name,
+            'PI_ID':pi_id,
             'email':email,
             'Department':department
         }
 
-        data.append(row)
-
-        information_reader.saveRawDataCSV(data)
+        # Add row in database
+        df = PI_table.add(row)
+        data = df.to_dict(orient='records')
                 
+        page, per_page, offset = get_page_args(page_parameter='page', 
+                                        per_page_parameter='per_page')
+        total = len(data)
+
+        pagination_users = data[offset: offset + per_page]
+        pagination = Pagination(page=page, per_page=per_page, total=total)
+
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('pi_list.pilist')))
+        response = make_response(render_template('pi/pi_list.html', data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

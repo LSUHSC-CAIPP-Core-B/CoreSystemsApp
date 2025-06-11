@@ -169,12 +169,10 @@ def delete_pi():
     GET: Delete PI
     """
     if request.method == 'GET':
-        # variable to hold CSV data
-        data = information_reader.getRawDataCSV(headers=True, dict=False)
-        pi_id = request.args.get('pi_id')
-        data = data[data["PI ID"].str.contains(pi_id) == False]
-        data_dict = data.to_dict()
-        information_reader.saveRawDataCSV(data_dict)
+        primary_key = request.args.get('p_key')
+        print(f"pi id: {primary_key}")
+
+        PI_table.delete(primary_key)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('pi_list.pilist')))

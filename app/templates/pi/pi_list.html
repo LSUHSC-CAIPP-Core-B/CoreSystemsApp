@@ -73,7 +73,7 @@
               {% if col == 1 %}
               {% if current_user.is_authenticated %}
               <a
-                      href="/delete_pi?pi_id={{list(data[row].values())[1]}}"><button
+                      href="/delete_pi?p_key={{list(data[row].values())[0]}}"><button
                         class="deletebutton"
                         onclick="return confirm('Are you sure You want to delete the PI?')">X</button></a>
                 <a

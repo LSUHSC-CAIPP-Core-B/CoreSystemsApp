@@ -89,4 +89,18 @@ class PI_table(BaseDatabaseTable):
         return df
     
     def delete(self, primary_key):
-        return super().delete(primary_key)
+        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+        cursor = mydb.cursor()
+
+        # SQL DELETE query
+        query = "DELETE FROM pi_info WHERE `index` = %s"
+
+        #Execute SQL query
+        cursor.execute(query, (primary_key,))
+
+        # Commit the transaction
+        mydb.commit()
+
+        # Close the cursor and connection
+        cursor.close()
+        mydb.close()

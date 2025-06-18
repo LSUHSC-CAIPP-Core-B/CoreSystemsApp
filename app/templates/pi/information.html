@@ -21,10 +21,10 @@
             </thead>
             <tbody>
               <tr>
-                {% for col in range(0, len(list(data.values()))) %}
+                {% for value in data.values() %}
                 <td>
                  
-                  {{ list(data.values())[col] }}
+                  {{ value }}
 
                 </td>
                 {% endfor %}

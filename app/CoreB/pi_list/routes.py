@@ -28,12 +28,16 @@ def information():
         order_num = request.args.get('order_num').split("_")[0]
 
         # get specific PI data
-        data = [dict for dict in data if dict['PI ID'].lower().__contains__(order_num.lower())]
+        query = f"SELECT `PI full name`, `PI ID`, email, Department FROM pi_info"
+        data = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+
         if len(data) == 0:
             flash('There is no PI with given ID in Project ID')
             return redirect(url_for('orders.orders'))
         else:
-            pi_data = data[0]
+            filtered_data = data[data['PI ID'] == order_num].iloc[0]
+            filtered_data['PI full name'] = filtered_data['PI full name'].replace("_", " ")
+            pi_data = filtered_data.to_dict()
 
         # use to prevent user from caching pages
         response = make_response(render_template('pi/information.html', data=pi_data, order_num=order_num, list=list, len=len, str=str))

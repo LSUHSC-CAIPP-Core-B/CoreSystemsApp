@@ -25,12 +25,12 @@
                 
                 <input type = "hidden" name = "Services Number" value = "{{ len(invoices) }}">
                 {% for val in range(0, len(invoices)) %}
-                <input type = "hidden" name = "service {{ val }} name" value = "{{ invoices[val].service_type }}">
+                <input type = "hidden" name = "service {{ val }} name" value = "{{ invoices[val]['service_type'] }}">
                 <div>
                     <div class="updatediv one" style="padding-top: 50px;">
-                        <h3> {{invoices[val].service_type}} </h3>
+                        <h3> {{invoices[val]['service_type']}} </h3>
                     </div>
-                    {% if invoices[val].service_type != "All services discount" %}
+                    {% if invoices[val]['service_type'] != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Service samples number</h4>
                     </div>
@@ -38,44 +38,44 @@
                         {% if val == 0%}
                         <input type = "number" name = "service {{ val }} qty"  value = "{{ sample_num }}" min="0" style="margin: auto;">
                         {% else %}
-                        <input type = "number" name = "service {{ val }} qty"  value = "{{ invoices[val].service_sample_number }}" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} qty"  value = "{{ invoices[val]['service_sample_number'] }}" min="0" style="margin: auto;">
                         {% endif %}
                     {% else %}
-                    <input type = "hidden" name = "service {{ val }} qty"  value = "{{ invoices[val].service_sample_number }}" min="0" style="margin: auto;">
+                    <input type = "hidden" name = "service {{ val }} qty"  value = "{{ invoices[val]['service_sample_number'] }}" min="0" style="margin: auto;">
                     {% endif %}
                     </div>
-                    {% if invoices[val].service_type != "All services discount" %}
+                    {% if invoices[val]['service_type'] != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Service price per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} price" value = "{{ invoices[val].service_sample_price }}" min="0" step=".01" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} price" value = "{{ invoices[val]['service_sample_price'] }}" min="0" step=".01" style="margin: auto;">
                     </div>
                     {% else %}
-                    <input type = "hidden" name = "service {{ val }} price" value = "{{ invoices[val].service_sample_price }}" min="0" step=".01" style="margin: auto;">
+                    <input type = "hidden" name = "service {{ val }} price" value = "{{ invoices[val]['service_sample_price'] }}" min="0" step=".01" style="margin: auto;">
                     {% endif %}
                     <div class="updatediv one">
                         <h4> Discount reason</h4>
                     </div>
                     <div class="updatediv two">
 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
-<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given">{{ invoices[val].discount_reason }}</textarea>
+<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given">{{ invoices[val]['discount_reason'] }}</textarea>
                     </div>
-                    {% if invoices[val].service_type != "All services discount" %}
+                    {% if invoices[val]['service_type'] != "All services discount" %}
                     <div class="updatediv one">
                         <h4> Discounted samples number</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount qty" value = "{{ invoices[val].discount_sample_number }}" min="0" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount qty" value = "{{ invoices[val]['discount_sample_number'] }}" min="0" style="margin: auto;">
                     </div>
                     <div class="updatediv one">
                         <h4> Discount amount per sample</h4>
                     </div>
                     <div class="updatediv two">
-                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ invoices[val].discount_sample_amount }}" min="0" step=".01" style="margin: auto;">
+                        <input type = "number" name = "service {{ val }} discount amount" value = "{{ invoices[val]['discount_sample_amount'] }}" min="0" step=".01" style="margin: auto;">
                     </div>
                     {% else %}
-                    <input type = "hidden" name = "service {{ val }} discount qty" value = "{{ invoices[val].discount_sample_number }}" min="0" style="margin: auto;">
+                    <input type = "hidden" name = "service {{ val }} discount qty" value = "{{ invoices[val]['discount_sample_number'] }}" min="0" style="margin: auto;">
                     <div class="updatediv one">
                         <h4> Discount amount [%] </h4>
                     </div>

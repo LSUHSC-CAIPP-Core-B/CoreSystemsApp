@@ -11,6 +11,7 @@ from datetime import datetime
 from app.pdfwriter import PdfWriter
 from app.reader import Reader
 import numpy as np
+from app.utils.db_utils import db_utils
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
@@ -83,48 +84,14 @@ def invoice():
                 "Manager Name": manager_name,
                 "PI Name": pi_name
             }
-        services_to_find_data = services_reader.getRawDataCSV(dict=True)
-        services_data = list_services(services_str, services_to_find_data)
 
-        # get invoice data from DB for each service or make a record if none exists
-        invoices = []
-        total_price_sum = 0.0
-        for service_data in services_data:
-            invoice = Invoice.query.filter_by(project_id = order_num, service_type=service_data["Service"]).first()
-            if invoice == None:
-                invoice = Invoice(project_id = order_num, 
-                                service_type = service_data["Service"],
-                                service_sample_number = 0.0,
-                                service_sample_price = float(service_data["Price"]), 
-                                total_price = 0.0,
-                                discount_sample_number = 0.0,
-                                discount_sample_amount = 0.0,
-                                discount_reason = "", 
-                                total_discount = 0.0)
-                db.session.add(invoice)
-            invoices.append(invoice)
-            total_price_sum += invoice.total_price
+        query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        invoices  = df.to_dict(orient='records')
 
-        invoice = Invoice.query.filter_by(project_id = order_num, service_type="All services discount").first()
-        if invoice == None:
-            invoice = Invoice(project_id = order_num, 
-                            service_type = "All services discount",
-                            service_sample_number = 0.0,
-                            service_sample_price = 0.0, 
-                            total_price = 0.0,
-                            discount_sample_number = 0.0,
-                            discount_sample_amount = 0.0,
-                            discount_reason = "", 
-                            total_discount = 0.0)
-            
-            db.session.add(invoice)
-        invoices.append(invoice)
-        db.session.commit()
-
-        if total_price_sum == 0:
-            percent_discount = 0
-        else:
-            percent_discount = (invoice.total_discount/total_price_sum) * 100.0
+        total_price_sum = sum(inv["total_price"] for inv in invoices if inv["service_type"] != "All services discount")
+        discount_row = next((inv for inv in invoices if inv["service_type"] == "All services discount"), None)
+        percent_discount = (discount_row["total_discount"] / total_price_sum * 100.0) if total_price_sum and discount_row else 0
 
         response = make_response(render_template('CoreB/edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

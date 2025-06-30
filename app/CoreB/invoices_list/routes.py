@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, make_response, send_file, sen
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
+import pymysql
 from app.CoreB.invoices_list import bp
 from app import login_required
 from app.models import Invoice
@@ -319,7 +320,7 @@ def invoices_list():
 @login_required(["coreB", "admin"])
 def invoice_details():
     """
-    GET: Delete invoice
+    GET: Displays invoice information
     """
     if request.method == 'GET':
         project_id = request.args['project_id']
@@ -352,12 +353,22 @@ def delete_invoice():
     if request.method == 'GET':
         project_id = request.args['project_id']
 
-        # get invoices with specified project id
-        invoice = Invoice.query.filter_by(project_id=project_id).all()
-        if invoice:
-            for inv in invoice:
-                db.session.delete(inv)
-            db.session.commit()
+        if project_id:
+            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
+            cursor = mydb.cursor()
+
+            # SQL DELETE query
+            query = "DELETE FROM Invoice WHERE `index` = %s"
+
+            #Execute SQL query
+            cursor.execute(query, (project_id,))
+
+            # Commit the transaction
+            mydb.commit()
+
+            # Close the cursor and connection
+            cursor.close()
+            mydb.close()
         
         response = make_response(redirect(url_for('invoices_list.invoices_list')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

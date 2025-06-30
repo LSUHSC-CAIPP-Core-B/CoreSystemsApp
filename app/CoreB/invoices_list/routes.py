@@ -265,45 +265,38 @@ def invoices_list():
     with app.app_context():
         cache1.delete('cached_data')
 
-    # get invoice list data from DB
-    invoices = Invoice.query.all()
+    query = f"SELECT * FROM Invoice"
+    df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
 
-    # lists to sum data into
-    data = []
-    project_ids = []
-    total_prices = []
-    total_discounts = []
+    if df.empty:
+        data = []
+    else:
+        #Group by project_id and compute sums
+        grouped = df.groupby("project_id").agg({
+            "total_price": "sum",
+            "total_discount": "sum"
+        }).reset_index()
+    
+    # Compute final price
+    grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
 
-    # for every invoice sum values from single project together
-    for invoice in invoices:
-        invoice_project_id = invoice.project_id
-        if invoice_project_id not in project_ids:
-            project_ids.append(invoice_project_id)
-            total_prices.append(invoice.total_price)
-            total_discounts.append(invoice.total_discount)
-        else:
-            total_prices[project_ids.index(invoice_project_id)] += invoice.total_price
-            total_discounts[project_ids.index(invoice_project_id)] += invoice.total_discount
+    #rename for display
+    grouped = grouped.rename(columns={
+        "project_id": "Project ID",
+        "total_price": "Total price",
+        "total_discount": "Total discount",
+        "final_price": "Final price"
+    })
 
-    final_prices = np.array(total_prices) - np.array(total_discounts)
-
-    # for each project ID get data into list of dicts to display
-    for p_id in range(0, len(project_ids)):
-        invoice_dict = {}
-        invoice_dict["Project ID"] = project_ids[p_id]
-        invoice_dict["Total price"] = total_prices[p_id]
-        invoice_dict["Total discount"] = total_discounts[p_id]
-        invoice_dict["Final price"] = final_prices[p_id]
-        data.append(invoice_dict)
+    data = grouped.to_dict(orient="records")
 
     if request.method == 'POST':
         sort = request.form.get('sort') or "Original"
         # sort dict
         if sort != 'Original':
             if sort != 'Project ID':
-                data = sorted(data, key=lambda d: d[sort], reverse=True)
-            else:
-                data = sorted(data, key=lambda d: d[sort])
+                reverse = sort != "Project ID"
+                data = sorted(data, key=lambda d: d[sort], reverse=reverse)
     
     with app.app_context():
         cache1.set('cached_data', data, timeout=3600)

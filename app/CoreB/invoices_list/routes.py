@@ -324,18 +324,16 @@ def invoice_details():
     if request.method == 'GET':
         project_id = request.args['project_id']
 
-        invoice_details = []
+        query = f"SELECT service_type, total_price, total_discount FROM Invoice WHERE project_id = '{project_id}'"
+        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
 
-        # get invoices with specified project id
-        invoice = Invoice.query.filter_by(project_id=project_id).all()
-        if invoice:
-            for inv in invoice:
-                invoice_detail_dict = {
-                    'Service': inv.service_type,
-                    'Total price': inv.total_price,
-                    'Total discount': inv.total_discount
-                }
-                invoice_details.append(invoice_detail_dict)
+        df = df.rename(columns={
+            "service_type": "Service",
+            "total_price": "Total price",
+            "total_discount": "Total discount"
+        })
+
+        invoice_details = df.to_dict(orient="records") if not df.empty else []
 
 
         # use to prevent user from caching pages

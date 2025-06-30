@@ -4,6 +4,7 @@ from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 import pymysql
+from sqlalchemy import text
 from app.CoreB.invoices_list import bp
 from app import login_required
 from app.models import Invoice
@@ -107,19 +108,15 @@ def gen_invoice():
     POST: Generate invoice PDF file
     """
     if request.method == 'POST':
-        # get order data to input automatically into invoice
-        order_num = request.form.get("Order Number") or ""
-        pi_name = request.form.get('PI Name') or ""
-        pi_name_line = "Service for " + pi_name
-        acc_num = request.form.get('Account Number') or ""
-        manager_name = request.form.get('Manager Name') or ""
-        services_num = request.form.get('Services Number') or 0
-        biorender_accounts = request.form.get('BioRender Accounts') or ""
-
-        # based on order data prepare inputs
+        order_num = request.form.get("Order Number", "")
+        pi_name = request.form.get('PI Name', "")
+        pi_name_line = f"Service for {pi_name}"
+        acc_num = request.form.get('Account Number', "")
+        manager_name = request.form.get('Manager Name', "")
+        services_num = int(request.form.get('Services Number', 0))
+        biorender_accounts = request.form.get('BioRender Accounts', "")
         date = datetime.now().strftime('%m/%d/%Y')
 
-        # dictionary of data to put into PDF
         dict_data = {
             'DEBIT ACCOUNTRow1': acc_num,
             'DEPT REQUISITION Row1': order_num,
@@ -128,130 +125,97 @@ def gen_invoice():
             'DESCRIPTIONRow2': pi_name_line
         }
 
-        # services details
-        # initial row number values to start from in the invoice PDF
+        # Initialize
         service_row = 4
         item_number = 1
-        # initial grand total prices
-        grand_total_discount = 0.0
         grand_total = 0.0
-        total_service_amount = 0.0
-        # services to not caount per sample
-        services_no_unit_price_data = services_no_price_reader.getRawDataCSV(dict=True)
-        services_no_unit_price = [snop["Service"] for snop in services_no_unit_price_data]
-        # loop all services
-        for i in range(0, int(services_num)):
-            # get needed values from invoice form, create variable names to match their names in html file
-            get_name_key = "service " + str(i) + " name"
-            get_qty_key = "service " + str(i) + " qty"
-            get_discount_reason_key = "service " + str(i) + " discount reason"
-            get_discount_qty_key = "service " + str(i) + " discount qty"
-            get_discount_amount_key = "service " + str(i) + " discount amount"
-            service_price_key = "service " + str(i) + " price"
-            service_name_detail = request.form.get(get_name_key)
-            service_qty_detail = request.form.get(get_qty_key)
-            service_discount_reason_detail = request.form.get(get_discount_reason_key)
-            service_discount_qty_detail = request.form.get(get_discount_qty_key)
-            service_discount_amount_detail = request.form.get(get_discount_amount_key)
-            service_price_detail = request.form.get(service_price_key)
+        grand_total_discount = 0.0
 
-            # if service is the last discount put it at the bottom of the PDF
-            if service_name_detail == "All services discount":
+        # Load service list that should not be charged per sample
+        services_no_unit_price = [s["Service"] for s in services_no_price_reader.getRawDataCSV(dict=True)]
+
+        # Process each service
+        for i in range(services_num):
+            # Get form fields
+            name = request.form.get(f"service {i} name")
+            qty = float(request.form.get(f"service {i} qty") or 0)
+            discount_reason = request.form.get(f"service {i} discount reason", "")
+            discount_qty = float(request.form.get(f"service {i} discount qty") or 0)
+            discount_amt = float(request.form.get(f"service {i} discount amount") or 0)
+            price = float(request.form.get(f"service {i} price") or 0)
+
+            # Set the discount row to render last
+            if name == "All services discount":
                 service_row = 21
 
-            # Discount details keys
-            item_discount_key = "ITEM Row" + str(service_row + 1)
-            qty_discount_key = "QTYRow" + str(service_row + 1)
-            unit_discount_key = "UNITRow" + str(service_row + 1) 
-            service_discount_reason_key = "DESCRIPTIONRow" + str(service_row + 1)
-            service_discount_amount_key = "UNIT COSTRow" + str(service_row + 1)
-            service_discount_total_key = "TOTALRow" + str(service_row + 1)
+            # Fill dict_data for PDF generation
+            if name != "All services discount":
+                # Service row
+                dict_data[f"ITEM Row{service_row}"] = str(item_number)
+                dict_data[f"QTYRow{service_row}"] = str(qty)
+                dict_data[f"UNITRow{service_row}"] = "ea"
+                dict_data[f"DESCRIPTIONRow{service_row}"] = name
+                dict_data[f"UNIT COSTRow{service_row}"] = f"$ {price}"
 
-            if service_name_detail != "All services discount":
-                # Service details keys
-                item_key = "ITEM Row" + str(service_row)
-                qty_key = "QTYRow" + str(service_row)
-                unit_key = "UNITRow" + str(service_row)
-                service_name_key = "DESCRIPTIONRow" + str(service_row)
-                service_amount_key = "UNIT COSTRow" + str(service_row)
-                service_total_key = "TOTALRow" + str(service_row)
+                total = price if name in services_no_unit_price else price * qty
+                dict_data[f"TOTALRow{service_row}"] = f"$ {total}"
+                grand_total += total
+            else:
+                total = 0
 
-                # Service details values
-                if service_price_detail == "":
-                    return render_template('CoreB/error_invoice.html', error_msg="Service price must be provided")
-                elif service_qty_detail == "":
-                    return render_template('CoreB/error_invoice.html', error_msg="Service samples must be provided")
-            
-                service_price_detail = float(service_price_detail)
-                dict_data[item_key] = str(item_number)
-                dict_data[qty_key] = service_qty_detail
-                dict_data[unit_key] = "ea"
-                dict_data[service_name_key] = service_name_detail
-                dict_data[service_amount_key] = "$ " + str(service_price_detail)
-                if service_name_detail in services_no_unit_price:
-                    total_service_amount = service_price_detail
-                else:
-                    total_service_amount = float(service_qty_detail) * service_price_detail
-                grand_total += total_service_amount
-                dict_data[service_total_key] = "$ " + str(total_service_amount)
+            # Discount row
+            if discount_reason:
+                if name == "All services discount":
+                    discount_amt = grand_total * (discount_amt / 100.0)
+                    discount_qty = 1
+                total_discount = discount_amt * discount_qty
+                dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
+                dict_data[f"QTYRow{service_row + 1}"] = str(discount_qty)
+                dict_data[f"UNITRow{service_row + 1}"] = "ea"
+                dict_data[f"DESCRIPTIONRow{service_row + 1}"] = discount_reason
+                dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {discount_amt}"
+                dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {total_discount}"
+                grand_total_discount += total_discount
+            else:
+                total_discount = 0
 
-            # var to insert total discount amount to DB
-            total_discount_amount = 0.0
+            # Update invoice row in MySQL
+            sql = text("""
+                UPDATE Invoice
+                SET
+                    service_sample_number = :qty,
+                    service_sample_price = :price,
+                    total_price = :total,
+                    discount_sample_number = :discount_qty,
+                    discount_sample_amount = :discount_amt,
+                    discount_reason = :discount_reason,
+                    total_discount = :total_discount
+                WHERE project_id = :order_num AND service_type = :service_type
+            """)
+            with db.engine.begin() as conn:
+                conn.execute(sql, {
+                    "qty": qty,
+                    "price": price,
+                    "total": total,
+                    "discount_qty": discount_qty,
+                    "discount_amt": discount_amt,
+                    "discount_reason": discount_reason,
+                    "total_discount": total_discount,
+                    "order_num": order_num,
+                    "service_type": name
+                })
 
-            if service_name_detail == "All services discount":
-                service_discount_qty_detail = 1.0
-                total_service_amount = 0.0
-
-            # Discount details values
-            if service_discount_reason_detail != None and len(service_discount_reason_detail) != 0:
-                if service_discount_amount_detail == "":
-                    return render_template('CoreB/error_invoice.html', error_msg="Discount amount must be provided")
-                elif service_discount_qty_detail == "":
-                    return render_template('CoreB/error_invoice.html', error_msg="Discounted sample number must be provided")
-                service_discount_amount_detail = float(service_discount_amount_detail)
-                dict_data[item_discount_key] = str(item_number+1)
-                dict_data[qty_discount_key] = service_discount_qty_detail
-                dict_data[unit_discount_key] = "ea"
-                dict_data[service_discount_reason_key] = service_discount_reason_detail
-                if service_name_detail == "All services discount":
-                    service_discount_amount_detail = grand_total * (service_discount_amount_detail/100)
-                dict_data[service_discount_amount_key] = "-$ " + str(service_discount_amount_detail)
-                total_discount_amount = float(service_discount_qty_detail) * service_discount_amount_detail
-                grand_total_discount += total_discount_amount
-                dict_data[service_discount_total_key] = "-$ " + str(total_discount_amount)
-
-            # change values of invoice record
-            existing_invoice = Invoice.query.filter_by(project_id = order_num, service_type = service_name_detail).first()
-
-            existing_invoice.service_sample_number = float(service_qty_detail)
-            existing_invoice.service_sample_price = service_price_detail
-            existing_invoice.total_price = total_service_amount
-            existing_invoice.discount_sample_number = float(service_discount_qty_detail)
-            existing_invoice.discount_sample_amount = service_discount_amount_detail
-            existing_invoice.discount_reason = service_discount_reason_detail
-            existing_invoice.total_discount = total_discount_amount
-            db.session.commit()
-
-
-            # increment row to put data info into
             service_row += 2
             item_number += 2
 
-        # grand total price of service
-        service_grand_total_key = "TOTALGRAND TOTAL"
-        dict_data[service_grand_total_key] = "$ " + str(grand_total - grand_total_discount)
+        # Final grand total
+        dict_data["TOTALGRAND TOTAL"] = f"$ {grand_total - grand_total_discount}"
 
-        # list BioRender accounts
+        # Add BioRender accounts if any
         if biorender_accounts:
-            biorender_title_row = 6
-            biorender_row = 7
-            item_key = "DESCRIPTIONRow" + str(biorender_title_row)
-            dict_data[item_key] = "License for"
-            biorender_accounts_list = biorender_accounts.split(",")
-            for biorender_account in biorender_accounts_list:
-                item_key = "DESCRIPTIONRow" + str(biorender_row)
-                dict_data[item_key] = str(biorender_account)
-                biorender_row += 1
+            dict_data["DESCRIPTIONRow6"] = "License for"
+            for idx, account in enumerate(biorender_accounts.split(",")):
+                dict_data[f"DESCRIPTIONRow{7 + idx}"] = account.strip()
 
         pdfWriter.fillForm(dict_data)
         return send_from_directory('static', "filled-out-v2.pdf")

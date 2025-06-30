@@ -358,7 +358,7 @@ def delete_invoice():
             cursor = mydb.cursor()
 
             # SQL DELETE query
-            query = "DELETE FROM Invoice WHERE `index` = %s"
+            query = "DELETE FROM Invoice WHERE `project_id` = %s"
 
             #Execute SQL query
             cursor.execute(query, (project_id,))

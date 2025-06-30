@@ -51,6 +51,30 @@ class db_utils:
             mydb.close()
     
     @staticmethod
+    def execute(query: str, path: str, *, params=None):
+        """Executes a write SQL command (INSERT, UPDATE, DELETE).
+
+        :param query:The SQL query to be executed.
+        :type query: str
+        :param path: The file path to the JSON file containing the database connection.
+        :type path: str
+        :param params: Parameters to bind to the SQL statement, defaults to None
+        :type params: dict, optional
+        """
+        try:
+            db_config = db_utils.json_Reader(path)
+            connection = pymysql.connect(**db_config)
+            with connection.cursor() as cursor:
+                cursor.execute(query, params or {})
+            connection.commit()
+            connection.close()
+        except Exception as e:
+            print(f"[DB EXEC ERROR]: {e}")
+            if connection:
+                connection.rollback()
+                connection.close()
+
+    @staticmethod
     def isValidDateFormat(expiration_date: str) -> bool:
         """Checks if the given expiration date string matches the MySQL date format YYYY-MM-DD.
 

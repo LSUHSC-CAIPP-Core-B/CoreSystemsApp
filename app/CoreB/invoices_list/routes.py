@@ -179,31 +179,28 @@ def gen_invoice():
             else:
                 total_discount = 0
 
-            # Update invoice row in MySQL
-            sql = text("""
-                UPDATE Invoice
-                SET
-                    service_sample_number = :qty,
-                    service_sample_price = :price,
-                    total_price = :total,
-                    discount_sample_number = :discount_qty,
-                    discount_sample_amount = :discount_amt,
-                    discount_reason = :discount_reason,
-                    total_discount = :total_discount
-                WHERE project_id = :order_num AND service_type = :service_type
-            """)
-            with db.engine.begin() as conn:
-                conn.execute(sql, {
-                    "qty": qty,
-                    "price": price,
-                    "total": total,
-                    "discount_qty": discount_qty,
-                    "discount_amt": discount_amt,
-                    "discount_reason": discount_reason,
-                    "total_discount": total_discount,
-                    "order_num": order_num,
-                    "service_type": name
-                })
+            db_utils.execute("""
+                UPDATE invoices SET
+                    service_sample_number = %(qty)s,
+                    service_sample_price = %(price)s,
+                    total_price = %(total)s,
+                    discount_sample_number = %(discount_qty)s,
+                    discount_sample_amount = %(discount_amt)s,
+                    discount_reason = %(discount_reason)s,
+                    total_discount = %(total_discount)s
+                WHERE project_id = %(order_num)s AND service_type = %(service_type)s
+            """, 'app/Credentials/CoreB.json', params={
+                "qty": qty,
+                "price": price,
+                "total": total,
+                "discount_qty": discount_qty,
+                "discount_amt": discount_amt,
+                "discount_reason": discount_reason,
+                "total_discount": total_discount,
+                "order_num": order_num,
+                "service_type": name
+            })
+
 
             service_row += 2
             item_number += 2

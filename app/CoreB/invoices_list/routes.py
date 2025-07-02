@@ -20,8 +20,6 @@ cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
-services_reader = Reader("services.csv")  # services is a file to list all available services with their prices
-services_no_price_reader = Reader("services_with_no_unit_price.csv")  # this file is to list all services that their price is not calculated based on samples
 
 def list_services(services_str, services_to_find):
     """
@@ -132,7 +130,8 @@ def gen_invoice():
         grand_total_discount = 0.0
 
         # Load service list that should not be charged per sample
-        services_no_unit_price = [s["Service"] for s in services_no_price_reader.getRawDataCSV(dict=True)]
+        services_no_unit_price_df = pd.read_csv("services_with_no_unit_price.csv")
+        services_no_unit_price = services_no_unit_price_df["Service"].tolist()
 
         # Process each service
         for i in range(services_num):
@@ -180,7 +179,7 @@ def gen_invoice():
                 total_discount = 0
 
             db_utils.execute("""
-                UPDATE invoices SET
+                UPDATE Invoice SET
                     service_sample_number = %(qty)s,
                     service_sample_price = %(price)s,
                     total_price = %(total)s,

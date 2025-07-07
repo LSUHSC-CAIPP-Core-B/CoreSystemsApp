@@ -60,8 +60,8 @@ def pilist():
         data = dataFrame.to_dict('records')
 
     if request.method == 'POST':
-        pi_name = request.form.get('PI full name')
-        dept = request.form.get('Department')
+        pi_name = request.form.get('pi_name')
+        dept = request.form.get('department')
         sort = request.form.get('sort')
         
         # Stores all possible Inputs

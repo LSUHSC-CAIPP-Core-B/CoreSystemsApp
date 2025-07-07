@@ -29,7 +29,7 @@
             <div class="leftdiv">
               <label class="formlabel">Sort by</label>
               <select class="tableselect" name="sort" id="sort">
-                <option value="Original">Original order</option>
+                <option value="Original" selected>Original order</option>
                 <option value="PI full name">PI full name</option>
                 <option value="PI ID">PI ID</option>
                 <option value="Department">Department</option>
@@ -73,7 +73,7 @@
               {% if col == 1 %}
               {% if current_user.is_authenticated %}
               <a
-                      href="/delete_pi?p_key={{list(data[row].values())[0]}}"><button
+                      href="/delete_pi?={{list(data[row].values())[0]}}"><button
                         class="deletebutton"
                         onclick="return confirm('Are you sure You want to delete the PI?')">X</button></a>
                 <a

@@ -22,7 +22,7 @@ class PI_table(BaseDatabaseTable):
         }
 
         # Check if sort is in the dictionary, if not then uses default value
-        order_by = sort_orders.get(sort, 'Not Sorted')
+        order_by = sort_orders.get(sort, 'Original')
 
         query = "Select * FROM pi_info;"
 
@@ -36,7 +36,8 @@ class PI_table(BaseDatabaseTable):
         if len(Uinputs) != 0:
             columns_to_check = ["PI full name", "Department"]
             
-            if order_by == 'Not Sorted':
+            
+            if order_by == 'Original':
                 data = search_utils.search_data(Uinputs, columns_to_check, 50, SqlData)
             else:
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)

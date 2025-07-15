@@ -72,6 +72,8 @@ class search_utils:
 
             # Iterate over each column and its corresponding user input
             for i, v in enumerate(columns_to_check):
+                SqlData[v] = SqlData[v].astype(str)
+
                 SqlData[f'{v}_ratio'] = SqlData.apply(
                     lambda x: round(fuzz.ratio(utils.default_process(x[v]), utils.default_process(Uinputs[i])), 2), axis=1
                 ) # Create the ratio column

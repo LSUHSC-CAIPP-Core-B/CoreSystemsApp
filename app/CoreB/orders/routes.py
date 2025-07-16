@@ -87,7 +87,7 @@ def update():
     """
     if request.method == "GET":
         question_id = request.args.get('question_id')
-        query = "Select * FROM coreB_order WHERE `Index` = %s;"
+        query = "Select * FROM CoreB_Order WHERE `Index` = %s;"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(question_id,))
 
         update_data = df.iloc[0]
@@ -105,7 +105,7 @@ def update():
         cursor = mydb.cursor()
 
         # SQL Change query
-        query = "UPDATE coreb_order SET `Project ID` = %(Project_ID)s, `Responsible Person` = %(Responsible_Person)s, `Complete status` = %(Complete_status)s, `Bill` = %(Bill)s, `Paid` = %(Paid)s, `Authoship Disclosure Agreement` = %(Authoship_Disclosure_Agreement)s, `Request Date` = %(Request_Date)s, `If it is an existing project` = %(If_it_is_an_existing_project)s, `PI Name` = %(PI_Name)s, `Funding Source` = %(Funding_Source)s, `Account number and billing contact person` = %(Account_number_and_billing_contact_person)s, `Project title` = %(Project_title)s, `Project Description` = %(Project_Description)s, `Service Type` = %(Service_Type)s, `RNA Analysis Service Type` = %(RNA_Analysis_Service_Type)s, `DNA Analysis Service Type` = %(DNA_Analysis_Service_Type)s, `Protein Analysis Service Type` = %(Protein_Analysis_Service_Type)s, `Metabolite Analysis Service Type` = %(Metabolite_Analysis_Service_Type)s, `Organism and Species` = %(Organism_and_Species)s, `Data Type` = %(Data_Type)s, `Library Preparation` = %(Library_Preparation)s, `Expected sample#` = %(Expected_sample#)s, `Please list all comparisons` = %(Please_list_all_comparisons)s, `Expected Completion Time`= %(Expected_Completion_Time)s, `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  WHERE `Index` = %(Index)s;"
+        query = "UPDATE CoreB_Order SET `Project ID` = %(Project_ID)s, `Responsible Person` = %(Responsible_Person)s, `Complete status` = %(Complete_status)s, `Bill` = %(Bill)s, `Paid` = %(Paid)s, `Authoship Disclosure Agreement` = %(Authoship_Disclosure_Agreement)s, `Request Date` = %(Request_Date)s, `If it is an existing project` = %(If_it_is_an_existing_project)s, `PI Name` = %(PI_Name)s, `Funding Source` = %(Funding_Source)s, `Account number and billing contact person` = %(Account_number_and_billing_contact_person)s, `Project title` = %(Project_title)s, `Project Description` = %(Project_Description)s, `Service Type` = %(Service_Type)s, `RNA Analysis Service Type` = %(RNA_Analysis_Service_Type)s, `DNA Analysis Service Type` = %(DNA_Analysis_Service_Type)s, `Protein Analysis Service Type` = %(Protein_Analysis_Service_Type)s, `Metabolite Analysis Service Type` = %(Metabolite_Analysis_Service_Type)s, `Organism and Species` = %(Organism_and_Species)s, `Data Type` = %(Data_Type)s, `Library Preparation` = %(Library_Preparation)s, `Expected sample#` = %(Expected_sample#)s, `Please list all comparisons` = %(Please_list_all_comparisons)s, `Expected Completion Time`= %(Expected_Completion_Time)s, `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  WHERE `Index` = %(Index)s;"
         #Execute SQL query
         cursor.execute(query, valid_params)
 
@@ -132,7 +132,7 @@ def delete():
     cursor = mydb.cursor()
 
     # SQL DELETE query
-    query = "DELETE FROM coreb_order WHERE `Index` = %s"
+    query = "DELETE FROM CoreB_Order WHERE `Index` = %s"
     #Execute SQL query
     cursor.execute(query, (Index,))
 

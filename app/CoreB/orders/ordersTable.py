@@ -46,11 +46,7 @@ class ordersTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["PI Name"]
-            print(f"order by = {order_by}")
-            if order_by == 'Not Sorted':
-                data = search_utils.search_data(Uinputs, columns_to_check, 50, SqlData)
-            else:
-                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
+            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
             
             # If no match is found displays empty row
             if not data:

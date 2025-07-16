@@ -62,7 +62,13 @@ class search_utils:
         :return: A dictionary of sorted search results.
         :rtype: list[dict[Hashable, Any]]
         """
+        print(f"Sort by: {sort_by}")
+        if "Request Date" in SqlData.columns:
+            SqlData["Request Date"] = pd.to_datetime(SqlData["Request Date"], format="%m/%d/%y", errors="coerce")
         
+        SqlData["Request Date"] = SqlData["Request Date"].dt.strftime('%Y-%m-%d')
+        print(f"Date column: {SqlData['Request Date']}")
+
         result = any(s for s in Uinputs)
         # Checks if inputs are used
         # If inputs are used then search the df for a match
@@ -93,10 +99,23 @@ class search_utils:
             rCol.append(sort_by)
             asc.append(True) # adds sort order for sort_by column
             df.sort_values(by=rCol, ascending=asc, inplace=True)
+
+            if sort_by == "Request Date":
+                df.sort_values(by=rCol, ascending=False, inplace=True)
+            elif sort_by == "Not Sorted":
+                df.sort_values(by=[sort_by], ascending=True, inplace=True)
+
             # Drop ratio columns
             SqlData = df.drop(columns=rCol[0:len(rCol)-1])
         else: # inputs not used
-            SqlData.sort_values(by=[sort_by], inplace=True)
+            print(f"\n\nsort by2: {sort_by}\n")
+            if sort_by == "Request Date":
+                SqlData.sort_values(by=[sort_by], ascending=False, inplace=True)
+            elif sort_by == "Not Sorted":
+                print("\nCondition\n")
+                SqlData.sort_values(by=["Request Date"], ascending=True, inplace=True)
+            else:
+                SqlData.sort_values(by=[sort_by], inplace=True)
 
         # Rename columns
         if columns_rename != None:

@@ -52,8 +52,6 @@ def orders():
                 defaultCache.delete('cached_dataframe')
             
             dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
-            dataFrame["Request Date"] = pd.to_datetime(dataFrame["Request Date"], format="%m/%d/%y", errors="coerce")
-            dataFrame["Request Date"] = dataFrame["Request Date"].dt.strftime('%Y-%m-%d')
             data = dataFrame.to_dict('records')
 
             with app.app_context():

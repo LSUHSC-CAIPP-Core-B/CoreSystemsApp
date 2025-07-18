@@ -62,13 +62,7 @@ class search_utils:
         :return: A dictionary of sorted search results.
         :rtype: list[dict[Hashable, Any]]
         """
-        print(f"Sort by: {sort_by}")
-        if "Request Date" in SqlData.columns:
-            SqlData["Request Date"] = pd.to_datetime(SqlData["Request Date"], format="%m/%d/%y", errors="coerce")
         
-        SqlData["Request Date"] = SqlData["Request Date"].dt.strftime('%Y-%m-%d')
-        print(f"Date column: {SqlData['Request Date']}")
-
         result = any(s for s in Uinputs)
         # Checks if inputs are used
         # If inputs are used then search the df for a match

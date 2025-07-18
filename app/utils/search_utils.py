@@ -62,7 +62,7 @@ class search_utils:
         :return: A dictionary of sorted search results.
         :rtype: list[dict[Hashable, Any]]
         """
-        
+
         result = any(s for s in Uinputs)
         # Checks if inputs are used
         # If inputs are used then search the df for a match
@@ -92,12 +92,13 @@ class search_utils:
             # adding sort_by column
             rCol.append(sort_by)
             asc.append(True) # adds sort order for sort_by column
-            df.sort_values(by=rCol, ascending=asc, inplace=True)
 
             if sort_by == "Request Date":
                 df.sort_values(by=rCol, ascending=False, inplace=True)
             elif sort_by == "Not Sorted":
                 df.sort_values(by=[sort_by], ascending=True, inplace=True)
+            else:
+                df.sort_values(by=rCol, ascending=asc, inplace=True)
 
             # Drop ratio columns
             SqlData = df.drop(columns=rCol[0:len(rCol)-1])

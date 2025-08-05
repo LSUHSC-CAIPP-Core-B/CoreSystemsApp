@@ -27,10 +27,11 @@ def orders():
         # search vars
         service_type = request.form.get('service_type') or ""
         pi_name = request.form.get('pi_name') or ""
+        project_id = request.form.get('project_id') or ""
         sort = request.form.get('sort') or "Original"
 
         # Stores all possible Inputs
-        AllUinputs = [pi_name]
+        AllUinputs = [pi_name, project_id]
         
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]

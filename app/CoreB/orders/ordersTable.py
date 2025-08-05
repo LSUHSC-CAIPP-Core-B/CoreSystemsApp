@@ -39,13 +39,13 @@ class ordersTable(BaseDatabaseTable):
 
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
-        print(f"Dataframe:\n{SqlData}")
 
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
-            columns_to_check = ["PI Name"]
+            print(f"Uinputs: {Uinputs}")
+            columns_to_check = ["PI Name", "Project ID"]
             data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
             
             # If no match is found displays empty row

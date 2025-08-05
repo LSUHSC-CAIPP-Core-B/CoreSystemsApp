@@ -39,9 +39,8 @@ class db_utils:
         :return: The DataFrame containing the query results.
         :rtype: pd.DataFrame
         """
-
+        mydb = pymysql.connect(**db_utils.json_Reader(path))
         try:
-            mydb = pymysql.connect(**db_utils.json_Reader(path))
             result_dataFrame = pd.read_sql_query(query, mydb, params=params)
             
             mydb.close()
@@ -63,7 +62,7 @@ class db_utils:
         """
         db_config = db_utils.json_Reader(path)
         connection = pymysql.connect(**db_config)
-        
+
         try:
             with connection.cursor() as cursor:
                 cursor.execute(query, params or {})

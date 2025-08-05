@@ -53,7 +53,7 @@ def orders():
             
             dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
             data = dataFrame.to_dict('records')
-
+            
             with app.app_context():
                 defaultCache.set('cached_dataframe', data, timeout=3600)
         else:

@@ -61,9 +61,10 @@ class db_utils:
         :param params: Parameters to bind to the SQL statement, defaults to None
         :type params: dict, optional
         """
+        db_config = db_utils.json_Reader(path)
+        connection = pymysql.connect(**db_config)
+        
         try:
-            db_config = db_utils.json_Reader(path)
-            connection = pymysql.connect(**db_config)
             with connection.cursor() as cursor:
                 cursor.execute(query, params or {})
             connection.commit()

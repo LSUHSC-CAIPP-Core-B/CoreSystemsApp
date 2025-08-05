@@ -95,9 +95,7 @@ class search_utils:
 
             if sort_by == "Request Date":
                 df.sort_values(by=rCol, ascending=False, inplace=True)
-            elif sort_by == "Not Sorted":
-                df.sort_values(by=[sort_by], ascending=True, inplace=True)
-            elif sort_by is None:
+            elif sort_by == "Not Sorted" or sort_by is None:
                 df
             else:
                 df.sort_values(by=rCol, ascending=asc, inplace=True)

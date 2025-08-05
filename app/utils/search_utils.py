@@ -44,7 +44,7 @@ class search_utils:
         return filtered_df.to_dict(orient='records')
     
     @staticmethod
-    def sort_searched_data(Uinputs: list[Any], columns_to_check: list[str], threshold: int, SqlData: pd.DataFrame, sort_by: list[str], *, columns_rename: dict[str]=None) -> list[dict[Hashable, Any]]:
+    def sort_searched_data(Uinputs: list[Any], columns_to_check: list[str], threshold: int, SqlData: pd.DataFrame, sort_by: list[str] = None, *, columns_rename: dict[str]=None) -> list[dict[Hashable, Any]]:
         """Searches and sorts data from a DataFrame based on user inputs and columns, then returns the sorted data as a dictionary.
 
         :param Uinputs: List of user inputs to search for in the DataFrame.
@@ -97,6 +97,8 @@ class search_utils:
                 df.sort_values(by=rCol, ascending=False, inplace=True)
             elif sort_by == "Not Sorted":
                 df.sort_values(by=[sort_by], ascending=True, inplace=True)
+            elif sort_by is None:
+                df
             else:
                 df.sort_values(by=rCol, ascending=asc, inplace=True)
 
@@ -109,6 +111,8 @@ class search_utils:
             elif sort_by == "Not Sorted":
                 print("\nCondition\n")
                 SqlData.sort_values(by=["Request Date"], ascending=True, inplace=True)
+            elif sort_by is None:
+                SqlData
             else:
                 SqlData.sort_values(by=[sort_by], inplace=True)
 

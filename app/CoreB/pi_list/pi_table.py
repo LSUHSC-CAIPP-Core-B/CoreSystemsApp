@@ -28,19 +28,21 @@ class PI_table(BaseDatabaseTable):
 
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
-        
+        print(SqlData)
 
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
+            print(f"len(Uinputs != 0)")
+            print(f"order_by: {order_by}")
             columns_to_check = ["PI full name", "Department"]
             
             
             if order_by == 'Original':
-                data = search_utils.search_data(Uinputs, columns_to_check, 50, SqlData)
+                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
             else:
-                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
+                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
             
             # If no match is found displays empty row
             if not data:

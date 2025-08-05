@@ -102,19 +102,38 @@ def update():
 
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
         cursor = mydb.cursor()
+        print("\nNew formatted query\n")
 
         # SQL Change query
-        query = "UPDATE CoreB_Order SET `Project ID` = %(Project_ID)s, `Responsible Person` = %(Responsible_Person)s, `Complete status` = %(Complete_status)s, `Bill` = %(Bill)s, `Paid` = %(Paid)s, `Authoship Disclosure Agreement` = %(Authoship_Disclosure_Agreement)s, `Request Date` = %(Request_Date)s, `If it is an existing project` = %(If_it_is_an_existing_project)s, `PI Name` = %(PI_Name)s, `Funding Source` = %(Funding_Source)s, `Account number and billing contact person` = %(Account_number_and_billing_contact_person)s, `Project title` = %(Project_title)s, `Project Description` = %(Project_Description)s, `Service Type` = %(Service_Type)s, `RNA Analysis Service Type` = %(RNA_Analysis_Service_Type)s, `DNA Analysis Service Type` = %(DNA_Analysis_Service_Type)s, `Protein Analysis Service Type` = %(Protein_Analysis_Service_Type)s, `Metabolite Analysis Service Type` = %(Metabolite_Analysis_Service_Type)s, `Organism and Species` = %(Organism_and_Species)s, `Data Type` = %(Data_Type)s, `Library Preparation` = %(Library_Preparation)s, `Expected sample#` = %(Expected_sample#)s, `Please list all comparisons` = %(Please_list_all_comparisons)s, `Expected Completion Time`= %(Expected_Completion_Time)s, `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  WHERE `Index` = %(Index)s;"
+        query = """UPDATE CoreB_Order SET `Project ID` = %(Project_ID)s,
+            `Responsible Person` = %(Responsible_Person)s,
+            `Complete status` = %(Complete_status)s,
+            `Bill` = %(Bill)s,
+            `Paid` = %(Paid)s,
+            `Authoship Disclosure Agreement` = %(Authoship_Disclosure_Agreement)s,
+            `Request Date` = %(Request_Date)s,
+            `If it is an existing project` = %(If_it_is_an_existing_project)s,
+            `PI Name` = %(PI_Name)s, 
+            `Funding Source` = %(Funding_Source)s,
+            `Account number and billing contact person` = %(Account_number_and_billing_contact_person)s, 
+            `Project title` = %(Project_title)s, 
+            `Project Description` = %(Project_Description)s, 
+            `Service Type` = %(Service_Type)s, 
+            `RNA Analysis Service Type` = %(RNA_Analysis_Service_Type)s, 
+            `DNA Analysis Service Type` = %(DNA_Analysis_Service_Type)s, 
+            `Protein Analysis Service Type` = %(Protein_Analysis_Service_Type)s, 
+            `Metabolite Analysis Service Type` = %(Metabolite_Analysis_Service_Type)s, 
+            `Organism and Species` = %(Organism_and_Species)s, 
+            `Data Type` = %(Data_Type)s, 
+            `Library Preparation` = %(Library_Preparation)s, 
+            `Expected sample#` = %(Expected_sample#)s, 
+            `Please list all comparisons` = %(Please_list_all_comparisons)s, 
+            `Expected Completion Time`= %(Expected_Completion_Time)s, 
+            `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  
+            WHERE `Index` = %(Index)s;"""
         #Execute SQL query
-        cursor.execute(query, valid_params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Commit the transaction
-        cursor.close()
-        mydb.close()
-
+        db_utils.execute(query, 'app/Credentials/CoreB.json', params=valid_params)
+        
         current_page = request.args.get('page', 1)
 
         return redirect(url_for('orders.orders', page=current_page))

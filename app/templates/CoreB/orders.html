@@ -130,7 +130,7 @@
                     style=" height: 36px; padding-left: 7px; padding-right: 7px; padding-top: 11px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
                     {% if len(list(data[row].values())[col]) <= 3%} <!-- If too short then its not a Project ID so need asignment-->
                     <a
-                      href="/update?question_id={{list(data[row].values())[0]}}&order_num={{list(data[row].values())[1]}}&page={{page}}">ASIGN
+                      href="/update?question_id={{list(data[row].values())[0]}}&order_num={{list(data[row].values())[1]}}&page={{page}}">ASSIGN
                     </a>
                     {% else %}
                     <a

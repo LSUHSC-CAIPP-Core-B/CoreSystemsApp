@@ -4,7 +4,7 @@ from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 import pymysql
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from app.CoreB.invoices_list import bp
 from app import login_required
 from app.models import Invoice
@@ -87,7 +87,39 @@ def invoice():
 
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
-        invoices  = df.to_dict(orient='records')
+
+        if df.empty:
+            last_invoice_row = db_utils.execute("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'app/Credentials/CoreB.json')
+            latest_id = last_invoice_row["id"].iloc[0]
+
+            new_invoice_data = {
+                "id": [latest_id+1], # Get the next incremented number for the table
+                "project_id": [order_num],
+                "service_type": ["ASSIGN"],
+                "service_sample_number": ["0"],
+                "service_sample_price": ["0"],
+                "total_price": ["0"],
+                "discount_sample_number": ["0"],
+                "discount_sample_amount": ["0"],
+                "discount_reason": ["ASSIGN"],
+                "total_discount": ["0"],
+            }
+
+            invoice_to_add = pd.DataFrame(new_invoice_data)
+
+            db_config = db_utils.json_Reader('app/Credentials/CoreB.json')
+            host = db_config['host']
+            database = db_config['database']
+            user = db_config['user']
+            password = db_config['password']
+
+            db_connection_str = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
+            engine = create_engine(db_connection_str)
+
+            invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
+            invoices = invoice_to_add.to_dict(orient='records')
+        else:
+            invoices  = df.to_dict(orient='records')
 
         total_price_sum = sum(inv["total_price"] for inv in invoices if inv["service_type"] != "All services discount")
         discount_row = next((inv for inv in invoices if inv["service_type"] == "All services discount"), None)

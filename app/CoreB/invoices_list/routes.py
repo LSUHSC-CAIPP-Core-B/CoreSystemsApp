@@ -51,9 +51,7 @@ def invoice():
         pi_name = request.form.get('pi_name')
         bm_info = request.form.get('bm_info')
         service_type = request.form.get('service_type')
-        print(f"Given service type: {service_type}")
         services_str = request.form.get('services')
-        print(f"\nservices_str: {services_str}")
         sample_num = request.form.get('sample_num')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
@@ -98,18 +96,22 @@ def invoice():
 
             # If service is not biorender then display the sub service
             service_type_value = service_type if service_type == "BioRender license" else services_str
-            print(f"\nservice type values: {service_type_value}\n")
+
+            # Service price per sample
+            price_per_sample_info = pd.read_csv("services.csv")
+            service_sample_price = price_per_sample_info[price_per_sample_info['Service'] == service_type_value]
+            price_per_sample = service_sample_price.iloc[0, 1]
 
             new_invoice_data = {
                 "id": [latest_id+1], # Get the next incremented number for the table
                 "project_id": [order_num],
                 "service_type": [service_type_value],
                 "service_sample_number": [0],
-                "service_sample_price": [0],
+                "service_sample_price": [price_per_sample],
                 "total_price": [0],
                 "discount_sample_number": [0],
                 "discount_sample_amount": [0],
-                "discount_reason": ["ASSIGN"],
+                "discount_reason": [""],
                 "total_discount": [0],
             }
 

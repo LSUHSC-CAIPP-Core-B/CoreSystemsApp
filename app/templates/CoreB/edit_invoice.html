@@ -59,7 +59,7 @@
                     </div>
                     <div class="updatediv two">
 <!-- Text area is white space sensitive so {{val}} cant have any spacebars before-->
-<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Enter a reason for discount or leave blank if no discount to be given">{{ invoices[val]['discount_reason'] }}</textarea>
+<textarea name="service {{ val }} discount reason" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' onclick='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="">{{ invoices[val]['discount_reason'] }}</textarea>
                     </div>
                     {% if invoices[val]['service_type'] != "All services discount" %}
                     <div class="updatediv one">

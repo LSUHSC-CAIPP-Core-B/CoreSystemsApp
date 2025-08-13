@@ -51,7 +51,9 @@ def invoice():
         pi_name = request.form.get('pi_name')
         bm_info = request.form.get('bm_info')
         service_type = request.form.get('service_type')
+        print(f"Given service type: {service_type}")
         services_str = request.form.get('services')
+        print(f"\nservices_str: {services_str}")
         sample_num = request.form.get('sample_num')
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
@@ -90,14 +92,18 @@ def invoice():
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
 
         if df.empty:
-            #last_invoice_row = db_utils.execute("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'app/Credentials/CoreB.json')
+            # Get the latest id
             last_invoice_row = db_utils.toDataframe("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'app/Credentials/CoreB.json')
             latest_id = last_invoice_row["id"].iloc[0]
+
+            # If service is not biorender then display the sub service
+            service_type_value = service_type if service_type == "BioRender license" else services_str
+            print(f"\nservice type values: {service_type_value}\n")
 
             new_invoice_data = {
                 "id": [latest_id+1], # Get the next incremented number for the table
                 "project_id": [order_num],
-                "service_type": ["ASSIGN"],
+                "service_type": [service_type_value],
                 "service_sample_number": [0],
                 "service_sample_price": [0],
                 "total_price": [0],

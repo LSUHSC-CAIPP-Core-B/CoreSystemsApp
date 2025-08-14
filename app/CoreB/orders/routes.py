@@ -49,7 +49,6 @@ def orders():
             cached_data = cache1.get('cached_dataframe')
         
         if cached_data is None:
-            print(f"Cached data is None")
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
             
@@ -59,7 +58,6 @@ def orders():
             with app.app_context():
                 defaultCache.set('cached_dataframe', data, timeout=3600)
         else:
-            print(f"\nCached data: \n{cached_data}")
             # Try to get cached Dataframe
             with app.app_context():
                 data = cache1.get('cached_dataframe')
@@ -136,7 +134,7 @@ def update():
             cache1.delete('cached_dataframe')
 
         data = db_utils.toDataframe("SELECT * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
-        print(f"data: \n{data}")
+
         with app.app_context():
             cache1.set('cached_dataframe', data.to_dict(orient='records'), timeout=3600)  # Cache for 1 hour (3600 seconds)
         

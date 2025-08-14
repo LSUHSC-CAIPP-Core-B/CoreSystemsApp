@@ -53,7 +53,6 @@ def invoice():
         service_type = request.form.get('service_type')
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
-        print(f"\nsample_num: \n{sample_num}")
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
 
@@ -89,7 +88,21 @@ def invoice():
 
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
-        print(f"\ninvoices: \n{df}")
+
+        all_service_discount_row = df['service_type'] == "All services discount"
+        # If there are discount rows, find the index of the first discount row
+        first_discount_idx = all_service_discount_row.idxmax()
+
+        # Check if all rows from that index to the end are discount rows
+        # ensures that there are no non-discount rows after the first discount row
+        # which would mean the discount rows are not all at the bottom.
+        already_at_bottom = all_service_discount_row.loc[first_discount_idx:].all()
+
+        if not already_at_bottom:
+            df_without_discount = df[~all_service_discount_row]
+            df_with_discount = df[all_service_discount_row]
+            df_reordered = pd.concat([df_without_discount, df_with_discount]).reset_index(drop=True)
+            df = df_reordered
 
         # If Invoice record doesnt already esixt in the database, create one
         if df.empty:
@@ -109,21 +122,15 @@ def invoice():
 
             # If service is not biorender then display the sub service
             service_type_value = service_type if service_type == "BioRender license" else services_str
-
-            print(f"service_type_value: \n{service_type_value}\n")
             
             # Service price per sample
             price_per_sample_info = pd.read_csv("services.csv")
 
-            print(f"\nservices to find: \n{price_per_sample_info['Service']}")
-
             services_data = list_services(service_type_value, price_per_sample_info)
-            print(f"\nservices_data: \n{services_data}")
 
             for service in services_data:
                 service_sample_price = price_per_sample_info[price_per_sample_info['Service'] == service]
                 price_per_sample = service_sample_price.iloc[0, 1]
-                print(f"Latest availble id: {latest_available_id}")
 
                 new_invoice_data = {
                     "id": [latest_available_id], # Get the next incremented number for the table
@@ -147,7 +154,7 @@ def invoice():
                     "project_id": [order_num],
                     "service_type": ["All services discount"],
                     "service_sample_number": [0],
-                    "service_sample_price": [price_per_sample],
+                    "service_sample_price": [0.0],
                     "total_price": [0],
                     "discount_sample_number": [0],
                     "discount_sample_amount": [0],

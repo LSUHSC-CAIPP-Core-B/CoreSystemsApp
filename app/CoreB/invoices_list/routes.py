@@ -33,8 +33,8 @@ def list_services(services_str, services_to_find):
     """
     services = []
 
-    for service_to_find in services_to_find:
-        if services_str.__contains__(service_to_find["Service"]):
+    for service_to_find in services_to_find["Service"]:
+        if services_str.__contains__(service_to_find):
             services.append(service_to_find)
     
     return services
@@ -53,6 +53,7 @@ def invoice():
         service_type = request.form.get('service_type')
         services_str = request.form.get('services')
         sample_num = request.form.get('sample_num')
+        print(f"\nsample_num: \n{sample_num}")
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
 
@@ -88,35 +89,15 @@ def invoice():
 
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        print(f"\ninvoices: \n{df}")
 
+        # If Invoice record doesnt already esixt in the database, create one
         if df.empty:
             # Get the latest id
             last_invoice_row = db_utils.toDataframe("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'app/Credentials/CoreB.json')
-            latest_id = last_invoice_row["id"].iloc[0]
+            latest_available_id = last_invoice_row["id"].iloc[0] + 1
 
-            # If service is not biorender then display the sub service
-            service_type_value = service_type if service_type == "BioRender license" else services_str
-
-            # Service price per sample
-            price_per_sample_info = pd.read_csv("services.csv")
-            service_sample_price = price_per_sample_info[price_per_sample_info['Service'] == service_type_value]
-            price_per_sample = service_sample_price.iloc[0, 1]
-
-            new_invoice_data = {
-                "id": [latest_id+1], # Get the next incremented number for the table
-                "project_id": [order_num],
-                "service_type": [service_type_value],
-                "service_sample_number": [0],
-                "service_sample_price": [price_per_sample],
-                "total_price": [0],
-                "discount_sample_number": [0],
-                "discount_sample_amount": [0],
-                "discount_reason": [""],
-                "total_discount": [0],
-            }
-
-            invoice_to_add = pd.DataFrame(new_invoice_data)
-
+            # Connection Info
             db_config = db_utils.json_Reader('app/Credentials/CoreB.json')
             host = db_config['host']
             database = db_config['database']
@@ -126,8 +107,61 @@ def invoice():
             db_connection_str = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
             engine = create_engine(db_connection_str)
 
+            # If service is not biorender then display the sub service
+            service_type_value = service_type if service_type == "BioRender license" else services_str
+
+            print(f"service_type_value: \n{service_type_value}\n")
+            
+            # Service price per sample
+            price_per_sample_info = pd.read_csv("services.csv")
+
+            print(f"\nservices to find: \n{price_per_sample_info['Service']}")
+
+            services_data = list_services(service_type_value, price_per_sample_info)
+            print(f"\nservices_data: \n{services_data}")
+
+            for service in services_data:
+                service_sample_price = price_per_sample_info[price_per_sample_info['Service'] == service]
+                price_per_sample = service_sample_price.iloc[0, 1]
+                print(f"Latest availble id: {latest_available_id}")
+
+                new_invoice_data = {
+                    "id": [latest_available_id], # Get the next incremented number for the table
+                    "project_id": [order_num],
+                    "service_type": [service],
+                    "service_sample_number": [0],
+                    "service_sample_price": [price_per_sample],
+                    "total_price": [0],
+                    "discount_sample_number": [0],
+                    "discount_sample_amount": [0],
+                    "discount_reason": [""],
+                    "total_discount": [0],
+                }
+                latest_available_id+=1 #Increment latest id for each iteration
+                # Add to the database
+                invoice_to_add = pd.DataFrame(new_invoice_data)
+                invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
+            
+            new_invoice_data_all = {
+                    "id": [latest_available_id], # Get the next incremented number for the table
+                    "project_id": [order_num],
+                    "service_type": ["All services discount"],
+                    "service_sample_number": [0],
+                    "service_sample_price": [price_per_sample],
+                    "total_price": [0],
+                    "discount_sample_number": [0],
+                    "discount_sample_amount": [0],
+                    "discount_reason": [""],
+                    "total_discount": [0],
+                }
+            # Add to the database
+            invoice_to_add = pd.DataFrame(new_invoice_data_all)
             invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
-            invoices = invoice_to_add.to_dict(orient='records')
+            
+            query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
+            df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+            
+            invoices = df.to_dict(orient='records')
         else:
             invoices  = df.to_dict(orient='records')
 

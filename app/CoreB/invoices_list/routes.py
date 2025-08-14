@@ -89,21 +89,6 @@ def invoice():
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
         df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
 
-        all_service_discount_row = df['service_type'] == "All services discount"
-        # If there are discount rows, find the index of the first discount row
-        first_discount_idx = all_service_discount_row.idxmax()
-
-        # Check if all rows from that index to the end are discount rows
-        # ensures that there are no non-discount rows after the first discount row
-        # which would mean the discount rows are not all at the bottom.
-        already_at_bottom = all_service_discount_row.loc[first_discount_idx:].all()
-
-        if not already_at_bottom:
-            df_without_discount = df[~all_service_discount_row]
-            df_with_discount = df[all_service_discount_row]
-            df_reordered = pd.concat([df_without_discount, df_with_discount]).reset_index(drop=True)
-            df = df_reordered
-
         # If Invoice record doesnt already esixt in the database, create one
         if df.empty:
             # Get the latest id
@@ -165,12 +150,26 @@ def invoice():
             invoice_to_add = pd.DataFrame(new_invoice_data_all)
             invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
             
+            # Grab data again but updated
             query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
             df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
-            
-            invoices = df.to_dict(orient='records')
-        else:
-            invoices  = df.to_dict(orient='records')
+
+        all_service_discount_row = df['service_type'] == "All services discount"
+        # If there are discount rows, find the index of the first discount row
+        first_discount_idx = all_service_discount_row.idxmax()
+
+        # Check if all rows from that index to the end are discount rows
+        # ensures that there are no non-discount rows after the first discount row
+        # which would mean the discount rows are not all at the bottom.
+        already_at_bottom = all_service_discount_row.loc[first_discount_idx:].all()
+
+        if not already_at_bottom:
+            df_without_discount = df[~all_service_discount_row]
+            df_with_discount = df[all_service_discount_row]
+            df_reordered = pd.concat([df_without_discount, df_with_discount]).reset_index(drop=True)
+            df = df_reordered
+
+        invoices  = df.to_dict(orient='records')
 
         total_price_sum = sum(inv["total_price"] for inv in invoices if inv["service_type"] != "All services discount")
         discount_row = next((inv for inv in invoices if inv["service_type"] == "All services discount"), None)

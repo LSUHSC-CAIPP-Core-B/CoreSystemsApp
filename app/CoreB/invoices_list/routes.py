@@ -247,7 +247,7 @@ def gen_invoice():
             # Discount row
             if discount_reason:
                 if name == "All services discount":
-                    discount_amt = grand_total * (discount_amt / 100.0)
+                    discount_amt = round(grand_total * (discount_amt / 100.0), 1)
                     discount_qty = 1
                 total_discount = discount_amt * discount_qty
                 dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)

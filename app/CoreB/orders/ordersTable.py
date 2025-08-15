@@ -2,6 +2,7 @@ from typing import IO
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from flask import flash
 
 class ordersTable(BaseDatabaseTable):
     """ Concrete class
@@ -13,6 +14,7 @@ class ordersTable(BaseDatabaseTable):
     """
 
     def display(self, Uinputs: str, sort: str,  service_type: str) -> dict:
+        print(f"\nUinputs: {Uinputs}\n")
         # Maps sorting options to their corresponding SQL names
         sort_orders = {
             'Request Date': 'Request Date',
@@ -45,11 +47,16 @@ class ordersTable(BaseDatabaseTable):
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
             columns_to_check = ["PI Name", "Project ID"]
-            data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
+            # If the Project ID field is used then exact search
+            if Uinputs[1] != '' or Uinputs[1] != None:
+                print("Only Project ID is used")
+                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 99, SqlData, order_by)
+            else: # threshold 50 for fuzz search
+                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
             
             # If no match is found displays empty row
             if not data:
-                dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
+                dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order WHERE `Project ID` = 'N/A';", 'app/Credentials/CoreB.json')
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
             # Converts to a list of dictionaries

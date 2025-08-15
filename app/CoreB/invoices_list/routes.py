@@ -219,7 +219,7 @@ def gen_invoice():
         for i in range(services_num):
             # Get form fields
             name = request.form.get(f"service {i} name")
-            qty = float(request.form.get(f"service {i} qty") or 0)
+            qty = int(request.form.get(f"service {i} qty") or 0)
             discount_reason = request.form.get(f"service {i} discount reason", "")
             discount_qty = float(request.form.get(f"service {i} discount qty") or 0)
             discount_amt = float(request.form.get(f"service {i} discount amount") or 0)

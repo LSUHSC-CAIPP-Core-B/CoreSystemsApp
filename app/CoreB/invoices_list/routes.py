@@ -173,7 +173,7 @@ def invoice():
 
         total_price_sum = sum(inv["total_price"] for inv in invoices if inv["service_type"] != "All services discount")
         discount_row = next((inv for inv in invoices if inv["service_type"] == "All services discount"), None)
-        percent_discount = (discount_row["total_discount"] / total_price_sum * 100.0) if total_price_sum and discount_row else 0
+        percent_discount = (round(discount_row["total_discount"] / total_price_sum * 100.0, 1)) if total_price_sum and discount_row else 0
 
         response = make_response(render_template('CoreB/edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

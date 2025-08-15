@@ -44,7 +44,6 @@ class ordersTable(BaseDatabaseTable):
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
-            print(f"Uinputs: {Uinputs}")
             columns_to_check = ["PI Name", "Project ID"]
             data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
             

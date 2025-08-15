@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory, session
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 import pymysql
@@ -24,23 +24,25 @@ def orders():
     """
     data = []
     if request.method == 'POST':
-        # search vars
-        service_type = request.form.get('service_type') or ""
-        pi_name = request.form.get('pi_name') or ""
-        project_id = request.form.get('project_id') or ""
-        sort = request.form.get('sort') or "Original"
-
-        # Stores all possible Inputs
-        AllUinputs = [pi_name, project_id]
+        # Store filters in session to be used in Update function
+        session['filters'] = {
+            'service_type': request.form.get('service_type') or "",
+            'pi_name': request.form.get('pi_name') or "",
+            'project_id': request.form.get('project_id') or "",
+            'sort': request.form.get('sort') or "Original"
+        }
         
-        # Creates list to store inputs that are being Used
-        Uinputs: list[str] = [i for i in AllUinputs]
+        # Create list to store inputs that are being Used
+        filters = session['filters']
+        Uinputs = [filters['pi_name'], filters['project_id']]
         
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = ordersTable.display(Uinputs, sort, service_type)
+        # Create dataframe with filters to display
+        data = ordersTable.display(Uinputs, filters['sort'], filters['service_type'])
+
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
@@ -129,15 +131,26 @@ def update():
         #Execute SQL query
         db_utils.execute(query, 'app/Credentials/CoreB.json', params=valid_params)
 
+        # Retrieve previously stored filters
+        filters = session.get('filters', {
+            'service_type': "",
+            'pi_name': "",
+            'project_id': "",
+            'sort': "Original"
+        })
+
+        Uinputs = [filters['pi_name'],filters['project_id']]
+
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = db_utils.toDataframe("SELECT * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
+        # Rebuild dataframe with the same filters applied
+        data = ordersTable.display(Uinputs, filters['sort'], filters['service_type'])
 
         with app.app_context():
-            cache1.set('cached_dataframe', data.to_dict(orient='records'), timeout=3600)  # Cache for 1 hour (3600 seconds)
-        
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+
         current_page = request.args.get('page', 1)
 
         return redirect(url_for('orders.orders', page=current_page))

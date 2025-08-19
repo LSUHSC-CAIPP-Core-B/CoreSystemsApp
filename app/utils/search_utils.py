@@ -103,11 +103,9 @@ class search_utils:
             # Drop ratio columns
             SqlData = df.drop(columns=rCol[0:len(rCol)-1])
         else: # inputs not used
-            print(f"\n\nsort by2: {sort_by}\n")
             if sort_by == "Request Date":
                 SqlData.sort_values(by=[sort_by], ascending=False, inplace=True)
             elif sort_by == "Not Sorted":
-                print("\nCondition\n")
                 SqlData.sort_values(by=["Request Date"], ascending=True, inplace=True)
             elif sort_by is None:
                 SqlData

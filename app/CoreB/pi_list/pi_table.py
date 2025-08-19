@@ -28,20 +28,43 @@ class PI_table(BaseDatabaseTable):
 
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
-        print(SqlData)
 
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
         if len(Uinputs) != 0:
-            print(f"len(Uinputs != 0)")
-            print(f"order_by: {order_by}")
             columns_to_check = ["PI full name", "Department"]
             
-            
             if order_by == 'Original':
-                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
+                if Uinputs[0] != '':
+                    names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+
+                    # Create dataframe with PI full name, First Name and Last Name
+                    names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
+                    results = search_utils.find_best_fuzzy_match(Uinputs[0], names, threshold=75) # Adjust threshold as needed
+
+                    # If a match on first, last name or both is found
+                    if results:
+                        Uinputs[0] = results[0][0]
+                    else:
+                        Uinputs[0] = "N/A"
+
+                    data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
+                else:
+                    data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
             else:
+                if Uinputs[0] != '':
+                    names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+
+                    # Create dataframe with PI full name, First Name and Last Name
+                    names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
+                    results = search_utils.find_best_fuzzy_match(Uinputs[0], names, threshold=75) # Adjust threshold as needed
+
+                    # If a match on first, last name or both is found
+                    if results:
+                        Uinputs[0] = results[0][0]
+                    else:
+                        Uinputs[0] = "N/A"
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
             
             # If no match is found displays empty row

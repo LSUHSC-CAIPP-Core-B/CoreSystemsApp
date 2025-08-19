@@ -117,3 +117,53 @@ class search_utils:
             SqlData.rename(columns=columns_rename, inplace=True)
 
         return SqlData.to_dict(orient='records')
+    
+    @staticmethod
+    def find_best_fuzzy_match(search_term, dataframe, threshold=70):
+        """Performs a fuzzy search on a SQL DataFrame using user input and specified columns,
+        returns a dictionary of matching results.
+
+        :param user_input: The user input to search for (a single name).
+        :type user_input: str
+        :param dataframe: The DataFrame to be searched.
+        :type dataframe: pd.DataFrame
+        :param columns_to_check: List of columns in the DataFrame to check for matches.
+        :type columns_to_check: list[str]
+        :param threshold: Minimum similarity score (0-100) required for a match, defaults to 70.
+        :type threshold: int
+        :return: A list of dictionaries, where each dictionary represents a matching row.
+                Each dictionary will contain the original row data, the best score,
+                and the column that provided the best match.
+        :rtype: list[dict[Hashable, Any]]
+        """
+        matches_per_row = []
+
+        for _, row in dataframe.iterrows():
+
+            row_choices = [
+                (row['First Name'], 'First Name'), 
+                (row['Last Name'], 'Last Name'),   
+                (row['PI full name'], 'PI full name') 
+            ]
+
+            best_score_for_row = 0
+            best_matched_column = None
+
+            for choice_str, column_name in row_choices:
+                normalized_search_term = search_term.lower().strip()
+                normalized_choice_str = str(choice_str).lower().strip()
+
+                score = fuzz.token_set_ratio(normalized_search_term, normalized_choice_str)
+
+                if score > best_score_for_row:
+                    best_score_for_row = score
+                    best_matched_column = column_name
+
+            if best_score_for_row >= threshold:
+                matches_per_row.append(
+                    (row['PI full name'], best_score_for_row, best_matched_column, row)
+                )
+
+        matches_per_row.sort(key=lambda x: x[1], reverse=True) # Sort by score (index 1 in tuple)
+
+        return matches_per_row

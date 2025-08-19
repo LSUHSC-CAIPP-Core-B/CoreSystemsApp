@@ -54,9 +54,11 @@ class ordersTable(BaseDatabaseTable):
             elif Uinputs[0] != '': # threshold 50 for fuzz search
                 names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
 
+                # Create dataframe with PI full name, First Name and Last Name
                 names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
                 results = find_best_fuzzy_match(Uinputs[0], names, threshold=75) # Adjust threshold as needed
 
+                # If a match on first, last name or both is found
                 if results:
                     Uinputs[0] = results[0][0]
                 else:

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 from app.CoreB.pi_list import bp
@@ -174,7 +174,6 @@ def delete_pi():
     """
     if request.method == 'GET':
         primary_key = request.args.get('p_key')
-        print(f"pi id: {primary_key}")
 
         PI_table.delete(primary_key)
 
@@ -253,3 +252,22 @@ def update():
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
         return response
+    
+@bp.route('/downloadPIListCSV', methods=['GET'])
+@login_required(role=["coreB"])
+def downloadCSV():
+    with app.app_context():
+        saved_data = cache1.get('cached_dataframe')
+    
+    if saved_data is None:
+        with app.app_context():
+            saved_data = defaultCache.get('cached_dataframe')
+    
+    # Remove index column
+    for d in saved_data:
+        if 'index' in d: 
+            del d['index']
+
+    csv_io = PI_table.download_CSV(saved_data=saved_data)
+    
+    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='PI List.csv')

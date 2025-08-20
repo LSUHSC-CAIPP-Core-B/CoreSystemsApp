@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory
+from flask import Flask, render_template, request, redirect, send_file, session, url_for, flash, make_response, send_from_directory
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 from app.CoreB.pi_list import bp
@@ -56,25 +56,41 @@ def pilist():
     # get PI list data
 
     if request.method == 'GET':
-        dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
-        data = dataFrame.to_dict('records')
+        with app.app_context():
+            cached_data = cache1.get('cached_dataframe')
+        
+        if cached_data is None:
+            with app.app_context():
+                defaultCache.delete('cached_dataframe')
+            
+            dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
+            data = dataFrame.to_dict('records')
+            
+            with app.app_context():
+                defaultCache.set('cached_dataframe', data, timeout=3600)
+        else:
+            # Try to get cached Dataframe
+            with app.app_context():
+                data = cache1.get('cached_dataframe')
 
     if request.method == 'POST':
-        pi_name = request.form.get('pi_name')
-        dept = request.form.get('department')
-        sort = request.form.get('sort')
+        session['pi_list_filters'] = {
+            'pi_name': request.form.get('pi_name') or "",
+            'dept': request.form.get('department') or "",
+            'sort': request.form.get('sort') or "Original"
+        }
+
+        # Create list to store inputs that are being Used
+        filters = session['pi_list_filters']
+        AllUinputs = [filters['pi_name'], filters['dept']]
         
-        # Stores all possible Inputs
-        AllUinputs = [pi_name, dept]
-        
-        # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
 
         # Clear the cache when new filters are applied
         with app.app_context():
             cache1.delete('cached_dataframe')
 
-        data = PI_table.display(Uinputs, sort)
+        data = PI_table.display(Uinputs, filters['sort'])
 
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
@@ -245,6 +261,24 @@ def update():
         valid_params = {k.replace(" ", "_"): v for k, v in params.items()}
 
         PI_table.change(valid_params)
+
+        filters = session.get('pi_list_filters', {
+            'pi_name': "",
+            'dept': "",
+            'sort': "Original"
+        })
+
+        AllUinputs = [filters['pi_name'], filters['dept']]
+        Uinputs: list[str] = [i for i in AllUinputs]
+
+        # Clear the cache when new filters are applied
+        with app.app_context():
+            cache1.delete('cached_dataframe')
+
+        data = PI_table.display(Uinputs, filters['sort'])
+
+        with app.app_context():
+            cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('pi_list.pilist')))

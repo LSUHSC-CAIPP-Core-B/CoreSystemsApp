@@ -332,9 +332,9 @@ def invoices_list():
     })
 
     # Get orders data and merge with Invoice data
-    orders_df = db_utils.toDataframe('SELECT `Project ID`, Bill, Paid, `Request Date` FROM CoreB_Order', 'app/Credentials/CoreB.json')
+    orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'app/Credentials/CoreB.json')
     grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
-    new_column_order = ['Project ID', 'Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
+    new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
     grouped = grouped.reindex(columns=new_column_order)
     grouped = grouped.fillna('-') # replace NaN with '-'
 

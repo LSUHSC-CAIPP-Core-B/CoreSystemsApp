@@ -176,7 +176,7 @@ def build_dashboard(df_raw, html_out):
     <style>
     :root {{ --bg:#f7f7f8; --panel:#fff; --text:#111; --muted:#666; --border:#e6e6e8; --shadow:0 2px 10px rgba(0,0,0,0.06);}}
     .container {{ display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }}
-    .grid {{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); }}
+    .grid {{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill, minmax(640px, 1fr)); }}
     .card {{ background:var(--panel); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:var(--shadow);}}
     .card-header {{ padding:12px 14px; font-weight:600; border-bottom:1px solid var(--border); background:#fafafb;}}
     .card-img {{ width:100%; display:block; height:auto;}}

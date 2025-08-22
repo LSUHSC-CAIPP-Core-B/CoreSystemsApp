@@ -50,8 +50,10 @@ class PI_table(BaseDatabaseTable):
                         Uinputs[0] = "N/A"
 
                     data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
+                    data.to_dict(orient='records')
                 else:
                     data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
+                    data.to_dict(orient='records')
             else:
                 if Uinputs[0] != '':
                     names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
@@ -66,6 +68,7 @@ class PI_table(BaseDatabaseTable):
                     else:
                         Uinputs[0] = "N/A"
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
+                data.to_dict(orient='records')
             
             # If no match is found displays empty row
             if not data:

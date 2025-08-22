@@ -28,15 +28,14 @@ class ordersTable(BaseDatabaseTable):
         order_by = sort_orders.get(sort, 'Not Sorted')
 
         sort_service_type = {
-            'RNA-Seq analysis' : 'RNA',
-            'DNA-Seq analysis' : 'DNA',
-            'Protein analysis' : 'Protein',
-            'Metabolite analysis' : 'Metabolite',
-            'Proteomics analysis' : 'Proteomics',
-            'BioRender license' : 'BioRender'
+            'RNA-Seq analysis' : 'RNA-Seq analysis',
+            'DNA-Seq analysis' : 'DNA-Seq analysis',
+            'Protein analysis' : 'Protein analysis',
+            'Metabolite analysis' : 'Metabolite analysis',
+            'Proteomics analysis' : 'Proteomics analysis',
+            'BioRender license' : 'BioRender license'
         }
-
-        service_order_by = sort_service_type.get(service_type, 'DNA')
+        service_filter = sort_service_type.get(service_type, 'All')
 
         query = "Select * FROM CoreB_Order;"
 
@@ -66,15 +65,16 @@ class ordersTable(BaseDatabaseTable):
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
             else:
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by)
-                
+
                 # If no match is found displays empty row
-                if not data:
-                    dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order WHERE `Project ID` = 'N/A';", 'app/Credentials/CoreB.json')
-                    data = dataFrame.to_dict('records')
-        else: # If no search filters are used
-            # Converts to a list of dictionaries
-            data = SqlData.to_dict(orient='records')
-        return data
+                if data.empty:
+                    data = db_utils.toDataframe("Select * FROM CoreB_Order WHERE `Project ID` = 'N/A';", 'app/Credentials/CoreB.json')
+        else:
+            data = SqlData
+        #filter by service
+        if service_filter != 'All':
+            data = data[data['Service Type'] == service_filter]
+        return data.to_dict(orient='records')
     
     def change(self, params: dict) -> None:
         return super().change(params)

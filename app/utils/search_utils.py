@@ -116,7 +116,7 @@ class search_utils:
         if columns_rename != None:
             SqlData.rename(columns=columns_rename, inplace=True)
 
-        return SqlData.to_dict(orient='records')
+        return SqlData
     
     @staticmethod
     def find_best_fuzzy_match(search_term, dataframe, threshold=70):

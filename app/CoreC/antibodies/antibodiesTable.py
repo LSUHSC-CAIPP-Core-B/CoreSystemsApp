@@ -62,7 +62,7 @@ class antibodiesTable(BaseDatabaseTable):
                 Uinputs.remove(None)
             
             data = search_utils.sort_searched_data(Uinputs, columns_to_check, 50, SqlData, order_by, columns_rename={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'})
-            
+            data = data.to_dict(orient='records')
             # If no match is found displays empty row
             if not data:
                 dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')

@@ -17,8 +17,8 @@ from app.utils.db_utils import db_utils
 def orders_dashboard():
     if request.method == 'GET':
         df = db_utils.toDataframe("SELECT * FROM CoreB_Order", 'app/Credentials/CoreB.json')
-        build_dashboard(df, 'app/templates/CoreB/OrdersDashboard.html')
-        return render_template('CoreB/OrdersDashboard.html')
+        build_dashboard(df, 'app/templates/CoreB/graphs/OrdersDashboard.html')
+        return render_template('CoreB/graphs/OrdersDashboard.html')
 
 def find_col(candidates, cols):
     cols_l = [c.lower() for c in cols]

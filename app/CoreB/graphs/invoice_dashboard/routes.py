@@ -17,8 +17,8 @@ from app.utils.db_utils import db_utils
 def invoice_dashboard():
     if request.method == 'GET':
         df = db_utils.toDataframe("SELECT * FROM Invoice", 'app/Credentials/CoreB.json')
-        build_dashboard(df, 'app/templates/CoreB/InvoiceDashboard.html')
-        return render_template('CoreB/InvoiceDashboard.html')
+        build_dashboard(df, 'app/templates/CoreB/graphs/InvoiceDashboard.html')
+        return render_template('CoreB/graphs/InvoiceDashboard.html')
     
 def find_col(candidates, cols):
     cols_l = [c.lower() for c in cols]

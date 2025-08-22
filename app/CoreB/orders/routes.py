@@ -178,7 +178,29 @@ def delete():
     cursor.close()
     mydb.close()
 
-    return redirect(url_for('orders.orders'))
+    # Retrieve previously stored filters
+    filters = session.get('filters', {
+        'service_type': "",
+        'pi_name': "",
+        'project_id': "",
+        'sort': "Original"
+    })
+
+    Uinputs = [filters['pi_name'],filters['project_id']]
+
+    # Clear the cache when new filters are applied
+    with app.app_context():
+        cache1.delete('cached_dataframe')
+
+    # Rebuild dataframe with the same filters applied
+    data = ordersTable.display(Uinputs, filters['sort'], filters['service_type'])
+
+    with app.app_context():
+        cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
+
+    current_page = request.args.get('page', 1)
+    print(f"\current_page: {current_page}\n")
+    return redirect(url_for('orders.orders', page=current_page))
 
 @bp.route('/downloadOrdersCSV', methods=['GET'])
 @login_required(role=["coreB"])

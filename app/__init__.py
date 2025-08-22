@@ -92,8 +92,11 @@ def create_app(config_class=Config):
     from app.CoreB.pi_list import bp as pi_bp
     app.register_blueprint(pi_bp)
 
-    from app.CoreB.graphs.orders_dashboard import bp as graphs_bp
-    app.register_blueprint(graphs_bp)
+    from app.CoreB.graphs.orders_dashboard import bp as orders_dashboard
+    app.register_blueprint(orders_dashboard)
+
+    from app.CoreB.graphs.invoice_dashboard import bp as invoice_dashboard
+    app.register_blueprint(invoice_dashboard)
 
     from app.CoreC.stock import bp as stock_bp
     app.register_blueprint(stock_bp)

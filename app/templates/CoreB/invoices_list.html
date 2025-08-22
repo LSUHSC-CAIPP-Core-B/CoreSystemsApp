@@ -35,6 +35,17 @@
           <div class="columndiv">
             <form method="POST" action="/invoices_list">
               <div class="leftdiv">
+                <label class="formlabel">Service Type</label>
+                <select class="tableselect" name="service_type" id="service_type">
+                  <option value="All" selected>All</option>
+                  <option value="RNA-Seq analysis">RNA-Seq analysis</option>
+                  <option value="DNA-Seq analysis">DNA-Seq analysis</option>
+                  <option value="Proteomics analysis">Proteomics analysis</option>
+                  <option value="Metabolite analysis">Metabolite analysis</option>
+                  <option value="BioRender license">BioRender license</option>
+                </select>
+              </div>
+              <div class="leftdiv">
                 <label class="formlabel">Project ID</label>
                 <input class="tableinput" type="text" name="project_id" id="project_id"
                   placeholder="Project ID">

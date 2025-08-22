@@ -343,10 +343,16 @@ def invoices_list():
     if request.method == 'POST':
         sort = request.form.get('sort') or "Original"
         project_id = request.form.get('project_id')
+        service_type = request.form.get('service_type')
+        print(f"\nservice type: {service_type}\n")
 
         # Project ID search
         if project_id:
             data = [record for record in data if record.get('Project ID') == project_id]
+        
+        # service type filter
+        if service_type != 'All':
+            data = [record for record in data if record.get('Service Type') == service_type]
 
         # sort dict
         if sort != 'Original':

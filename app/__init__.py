@@ -92,7 +92,7 @@ def create_app(config_class=Config):
     from app.CoreB.pi_list import bp as pi_bp
     app.register_blueprint(pi_bp)
 
-    from app.CoreB.graphs import bp as graphs_bp
+    from app.CoreB.graphs.orders_dashboard import bp as graphs_bp
     app.register_blueprint(graphs_bp)
 
     from app.CoreC.stock import bp as stock_bp

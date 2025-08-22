@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for
 from flask_login import login_required
 import matplotlib
-from app.CoreB.graphs import bp
+from app.CoreB.graphs.orders_dashboard import bp
 
 from app.reader import Reader
 import os
@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 matplotlib.use('agg')
 from app.utils.db_utils import db_utils
 
-@bp.route('/graphs', methods=['GET'])
+@bp.route('/orders_dashboard', methods=['GET'])
 @login_required
-def graphs():
+def orders_dashboard():
     if request.method == 'GET':
         df = db_utils.toDataframe("SELECT * FROM CoreB_Order", 'app/Credentials/CoreB.json')
         build_dashboard(df, 'app/templates/CoreB/OrdersDashboard.html')

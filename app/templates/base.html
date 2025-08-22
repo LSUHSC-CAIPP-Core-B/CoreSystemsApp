@@ -22,9 +22,14 @@
         <a href="/invoices_list">
             <h2 class="base-heading">Invoices</h2>
         </a>
-        <a href="/graphs">
-            <h2 class="base-heading">Graphs</h2>
-        </a>
+        <div class="dropdown">
+            <h2 class="base-heading">Graphs
+            </h2>
+            <div class="dropdown-content">
+                <a href="/orders_dashboard" class="adrop">Orders Dashboard</a>
+                <a href="/invoice_dashboard" class="adrop">Invoice Dashboard</a>
+            </div>
+        </div>
         {% endif %}
         {% if current_user.is_core_c %} <!-- if access to Core C -->
         <a href="/antibodies">
@@ -49,7 +54,6 @@
             <div class="dropdown-content">
                 <a href="/orders" class="adrop">Orders</a>
                 <a href="/invoices_list" class="adrop">Invoices</a>
-                <a href="/graphs" class="adrop">Graphs</a>
             </div>
         </div>
         <div class="dropdown">
@@ -62,6 +66,14 @@
                 {% if current_user.is_admin %}
                 <a href="/stock" class="adrop">Stock</a>
                 {% endif %}
+            </div>
+        </div>
+        <div class="dropdown">
+            <h2 class="base-heading">Graphs
+            </h2>
+            <div class="dropdown-content">
+                <a href="/orders_dashboard" class="adrop">Orders Dashboard</a>
+                <a href="/orders_dashboard" class="adrop">Invoice Dashboard</a>
             </div>
         </div>
         {% endif %}

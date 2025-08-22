@@ -350,9 +350,12 @@ def invoices_list():
 
         # sort dict
         if sort != 'Original':
-            if sort != 'Project ID':
-                reverse = sort != "Project ID"
-                data = sorted(data, key=lambda d: d[sort], reverse=reverse)
+            if sort != 'Service Type':
+                if sort != 'Project ID':
+                    reverse = sort != "Project ID"
+                    data = sorted(data, key=lambda d: d[sort], reverse=reverse)
+            else:
+                data = sorted(data, key=lambda d: d[sort])
     
     with app.app_context():
         cache1.set('cached_data', data, timeout=3600)

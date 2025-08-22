@@ -2,7 +2,7 @@
 
 {% block content %}
 <html>
-  <body onload="loadFilterByKey(['#sort'])">
+  <body onload="loadFilterByKey(['#sort', '#project_id'])">
     <!--FUNCTIONS-->
     <script>
         function saveFilterByKey(keys) {
@@ -35,17 +35,23 @@
           <div class="columndiv">
             <form method="POST" action="/invoices_list">
               <div class="leftdiv">
+                <label class="formlabel">Project ID</label>
+                <input class="tableinput" type="text" name="project_id" id="project_id"
+                  placeholder="Project ID">
+              </div>
+              <div class="leftdiv">
                 <label class="formlabel">Sort by</label>
                 <select class="tableselect" name="sort" id="sort">
                   <option value="Original">Original order</option>
                   <option value="Project ID">Project ID</option>
+                  <option value="Request Date">Request Date</option>
                   <option value="Total price">Total price</option>
                   <option value="Total discount">Total discount</option>
                 </select>
               </div>
               <div class="leftdiv">
                 <button class="filterbutton"
-                  onclick="saveFilterByKey(['#sort'])">Filter</button>
+                  onclick="saveFilterByKey(['#sort', '#project_id'])">Filter</button>
               </div>
             </form>
           </div>

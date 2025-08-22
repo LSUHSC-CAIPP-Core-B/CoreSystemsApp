@@ -342,6 +342,12 @@ def invoices_list():
 
     if request.method == 'POST':
         sort = request.form.get('sort') or "Original"
+        project_id = request.form.get('project_id')
+
+        # Project ID search
+        if project_id:
+            data = [record for record in data if record.get('Project ID') == project_id]
+
         # sort dict
         if sort != 'Original':
             if sort != 'Project ID':

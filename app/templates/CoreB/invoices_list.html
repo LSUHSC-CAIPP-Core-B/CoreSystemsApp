@@ -2,7 +2,7 @@
 
 {% block content %}
 <html>
-  <body onload="loadFilterByKey(['#sort', '#project_id'])">
+  <body onload="loadFilterByKey(['#service_type', '#sort', '#project_id'])">
     <!--FUNCTIONS-->
     <script>
         function saveFilterByKey(keys) {
@@ -64,7 +64,7 @@
               </div>
               <div class="leftdiv">
                 <button class="filterbutton"
-                  onclick="saveFilterByKey(['#sort', '#project_id'])">Filter</button>
+                  onclick="saveFilterByKey(['#service_type', '#sort', '#project_id'])">Filter</button>
               </div>
             </form>
           </div>

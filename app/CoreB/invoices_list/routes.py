@@ -1,5 +1,5 @@
 from io import BytesIO
-from flask import Flask, render_template, request, make_response, send_file, send_from_directory, flash, redirect, url_for
+from flask import Flask, render_template, request, make_response, send_file, send_from_directory, flash, redirect, session, url_for
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
@@ -339,29 +339,55 @@ def invoices_list():
     grouped = grouped.fillna('-') # replace NaN with '-'
 
     data = grouped.to_dict(orient="records")
+    
+    filters = session.get('invoice_filters', {
+            'service_type': "",
+            'pi_name': "",
+            'project_id': "",
+            'sort': "Original"
+        })
+
+    # Project ID search
+    if filters['project_id']:
+        data = [record for record in data if record.get('Project ID') == filters['project_id']]
+    
+    # service type filter
+    if filters['service_type'] != 'All':
+        data = [record for record in data if record.get('Service Type') == filters['service_type']]
+
+    # sort dict
+    if filters['sort'] != 'Original':
+        if filters['sort'] != 'Service Type':
+            if filters['sort'] != 'Project ID':
+                reverse = filters['sort'] != "Project ID"
+                data = sorted(data, key=lambda d: d[filters['sort']], reverse=reverse)
+        else:
+            data = sorted(data, key=lambda d: d[filters['sort']])
 
     if request.method == 'POST':
-        sort = request.form.get('sort') or "Original"
-        project_id = request.form.get('project_id')
-        service_type = request.form.get('service_type')
-        print(f"\nservice type: {service_type}\n")
+        session['invoice_filters'] = {
+            'service_type': request.form.get('service_type') or "",
+            'project_id': request.form.get('project_id') or "",
+            'sort': request.form.get('sort') or "Original"
+        }
+        filters = session['invoice_filters']
 
         # Project ID search
-        if project_id:
-            data = [record for record in data if record.get('Project ID') == project_id]
+        if filters['project_id']:
+            data = [record for record in data if record.get('Project ID') == filters['project_id']]
         
         # service type filter
-        if service_type != 'All':
-            data = [record for record in data if record.get('Service Type') == service_type]
+        if filters['service_type'] != 'All':
+            data = [record for record in data if record.get('Service Type') == filters['service_type']]
 
         # sort dict
-        if sort != 'Original':
-            if sort != 'Service Type':
-                if sort != 'Project ID':
-                    reverse = sort != "Project ID"
-                    data = sorted(data, key=lambda d: d[sort], reverse=reverse)
+        if filters['sort'] != 'Original':
+            if filters['sort'] != 'Service Type':
+                if filters['sort'] != 'Project ID':
+                    reverse = filters['sort'] != "Project ID"
+                    data = sorted(data, key=lambda d: d[filters['sort']], reverse=reverse)
             else:
-                data = sorted(data, key=lambda d: d[sort])
+                data = sorted(data, key=lambda d: d[filters['sort']])
     
     with app.app_context():
         cache1.set('cached_data', data, timeout=3600)

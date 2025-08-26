@@ -1,9 +1,11 @@
 from typing import IO, Hashable, Any
 
+import pandas as pd
 import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
+from rapidfuzz import process, fuzz
 
 class PI_table(BaseDatabaseTable):
     """ Concrete class
@@ -28,6 +30,13 @@ class PI_table(BaseDatabaseTable):
 
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
+
+        # match department
+        if Uinputs[1]:
+            match = department_match(SqlData, Uinputs[1])
+
+            if not match.empty:
+                Uinputs[1] = match.iloc[0,0]
 
         # * Fuzzy Search *
         # Checks whether filters are being used
@@ -133,3 +142,27 @@ class PI_table(BaseDatabaseTable):
         # Close the cursor and connection
         cursor.close()
         mydb.close()
+
+def department_match(df, value):
+    dept_df = pd.DataFrame(df['Department'])
+    # Split Department column by multiple delimiters using a regex
+    dept_df['Department_List'] = dept_df['Department'].str.split(r',\s*|\s+and\s+|\s+', regex=True)
+    df_exploded = dept_df.explode('Department_List')
+
+    # Fuzzy matching
+    choices = df_exploded['Department_List'].unique().tolist()
+    results = process.extract(value, choices, scorer=fuzz.WRatio, score_cutoff=85)
+
+    # Get a list of the department names that matched
+    matched_departments = [item[0] for item in results]
+
+    # Filter the exploded DataFrame to find the original records
+    fuzzy_matched_df = df_exploded[df_exploded['Department_List'].isin(matched_departments)]
+
+    # strip dataframe
+    df_stripped = fuzzy_matched_df.select_dtypes('object')
+    df_stripped['Department'] = df_stripped['Department'].str.strip()
+
+    # drop any duplicates
+    final_results = df_stripped.drop_duplicates(subset=['Department'], keep='first')
+    return final_results

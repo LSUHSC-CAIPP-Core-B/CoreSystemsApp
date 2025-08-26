@@ -17,7 +17,35 @@ from app.utils.db_utils import db_utils
 def invoice_dashboard():
     if request.method == 'GET':
         df = db_utils.toDataframe("SELECT * FROM Invoice", 'app/Credentials/CoreB.json')
-        build_dashboard(df, 'app/templates/CoreB/graphs/InvoiceDashboard.html')
+        
+        if df.empty:
+            grouped = []
+        else:
+            #Group by project_id and compute sums
+            grouped = df.groupby("project_id").agg({
+                "total_price": "sum",
+                "total_discount": "sum"
+            }).reset_index()
+            
+        # Compute final price
+        grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
+
+        #rename for display
+        grouped = grouped.rename(columns={
+            "project_id": "Project ID",
+            "total_price": "Total price",
+            "total_discount": "Total discount",
+            "final_price": "Final price"
+        })
+
+        # Get orders data and merge with Invoice data
+        orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'app/Credentials/CoreB.json')
+        grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
+        new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
+        grouped = grouped.reindex(columns=new_column_order)
+        grouped = grouped.fillna('-') # replace NaN with '-'
+
+        build_dashboard(grouped, 'app/templates/CoreB/graphs/InvoiceDashboard.html')
         return render_template('CoreB/graphs/InvoiceDashboard.html')
     
 def find_col(candidates, cols):
@@ -176,7 +204,7 @@ def build_dashboard(df_raw, html_out):
     <style>
     :root {{ --bg:#f7f7f8; --panel:#fff; --text:#111; --muted:#666; --border:#e6e6e8; --shadow:0 2px 10px rgba(0,0,0,0.06);}}
     .container {{ display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }}
-    .grid {{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill, minmax(640px, 1fr)); }}
+    .grid {{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); }}
     .card {{ background:var(--panel); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:var(--shadow);}}
     .card-header {{ padding:12px 14px; font-weight:600; border-bottom:1px solid var(--border); background:#fafafb;}}
     .card-img {{ width:100%; display:block; height:auto;}}

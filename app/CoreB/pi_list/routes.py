@@ -91,6 +91,7 @@ def pilist():
             cache1.delete('cached_dataframe')
 
         data = PI_table.display(Uinputs, filters['sort'])
+        data = data.to_dict(orient='records')
 
         with app.app_context():
             cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)

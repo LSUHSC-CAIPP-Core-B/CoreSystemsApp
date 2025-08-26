@@ -72,7 +72,7 @@ class PI_table(BaseDatabaseTable):
             
             # If no match is found displays empty row
             if data.empty:
-                dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
+                dataFrame = db_utils.toDataframe("Select * FROM pi_info WHERE Department = 'N/A';", 'app/Credentials/CoreB.json')
                 data = dataFrame.to_dict(orient='records')
         else: # If no search filters are used
             # Converts to a list of dictionaries

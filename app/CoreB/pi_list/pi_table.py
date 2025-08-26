@@ -71,7 +71,7 @@ class PI_table(BaseDatabaseTable):
                 data.to_dict(orient='records')
             
             # If no match is found displays empty row
-            if not data:
+            if data.empty:
                 dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
                 data = dataFrame.to_dict(orient='records')
         else: # If no search filters are used

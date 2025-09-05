@@ -128,7 +128,6 @@ def update():
             `Expected Completion Time`= %(Expected_Completion_Time)s, 
             `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  
             WHERE `Index` = %(Index)s;"""
-        #Execute SQL query
         db_utils.execute(query, 'app/Credentials/CoreB.json', params=valid_params)
 
         # Retrieve previously stored filters
@@ -163,18 +162,14 @@ def delete():
     """
     Index = request.args.get('question_id')
     
+    # Connection
     mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
     cursor = mydb.cursor()
 
     # SQL DELETE query
     query = "DELETE FROM CoreB_Order WHERE `Index` = %s"
-    #Execute SQL query
     cursor.execute(query, (Index,))
-
-    # Commit the transaction
     mydb.commit()
-
-    # Close the cursor and connection
     cursor.close()
     mydb.close()
 
@@ -199,7 +194,6 @@ def delete():
         cache1.set('cached_dataframe', data, timeout=3600)  # Cache for 1 hour (3600 seconds)
 
     current_page = request.args.get('page', 1)
-    print(f"\current_page: {current_page}\n")
     return redirect(url_for('orders.orders', page=current_page))
 
 @bp.route('/downloadOrdersCSV', methods=['GET'])

@@ -31,40 +31,33 @@ class PI_table(BaseDatabaseTable):
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
 
-        # match department
-        if Uinputs[1]:
-            match = department_match(SqlData, Uinputs[1])
-
-            if not match.empty:
-                Uinputs[1] = match.iloc[0,0]
-
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching
-        if len(Uinputs) != 0:
-            columns_to_check = ["PI full name", "Department"]
-            
-            if order_by == 'Original':
-                if Uinputs[0] != '':
-                    names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+        def build_data(Uinputs):
+            # Check if all search filters are unused
+            if Uinputs[0] != '' or Uinputs[1] != '' or order_by == 'Original':
+                columns_to_check = ["PI full name", "Department"]
+                
+                if order_by == 'Original':
+                    if Uinputs[0] != '':
+                        names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
 
-                    # Create dataframe with PI full name, First Name and Last Name
-                    names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
-                    results = search_utils.find_best_fuzzy_match(Uinputs[0], names, threshold=75) # Adjust threshold as needed
+                        # Create dataframe with PI full name, First Name and Last Name
+                        names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
+                        results = search_utils.find_best_fuzzy_match(Uinputs[0], names, threshold=75) # Adjust threshold as needed
 
-                    # If a match on first, last name or both is found
-                    if results:
-                        Uinputs[0] = results[0][0]
-                    else:
-                        Uinputs[0] = "N/A"
+                        # If a match on first, last name or both is found
+                        if results:
+                            Uinputs[0] = results[0][0]
+                        else:
+                            Uinputs[0] = "N/A"
 
-                    data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
-                    data.to_dict(orient='records')
+                        data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
+                        data.to_dict(orient='records')
+                    else: #If dept is searched for
+                        data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
                 else:
-                    data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
-                    data.to_dict(orient='records')
-            else:
-                if Uinputs[0] != '':
                     names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
 
                     # Create dataframe with PI full name, First Name and Last Name
@@ -76,16 +69,40 @@ class PI_table(BaseDatabaseTable):
                         Uinputs[0] = results[0][0]
                     else:
                         Uinputs[0] = "N/A"
-                data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
-                data.to_dict(orient='records')
-            
-            # If no match is found displays empty row
-            if data.empty:
-                dataFrame = db_utils.toDataframe("Select * FROM pi_info WHERE Department = 'N/A';", 'app/Credentials/CoreB.json')
-                data = dataFrame.to_dict(orient='records')
-        else: # If no search filters are used
-            # Converts to a list of dictionaries
-            data = SqlData.to_dict(orient='records')
+                    data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData, order_by)
+                
+                # If no match is found displays empty row
+                if data.empty:
+                    dataFrame = db_utils.toDataframe("Select * FROM pi_info WHERE Department = 'N/A';", 'app/Credentials/CoreB.json')
+                    data = dataFrame.to_dict(orient='records')
+                    return data
+                else:
+                    if Uinputs[1] == '': #If dept is searched for
+                        data = data.to_dict(orient='records')
+                        return data
+                    else:
+                        return data
+            else: # If no search filters are used
+                # Converts to a list of dictionaries
+                data = SqlData.sort_values(by='Department').to_dict(orient='records')
+                return data
+
+        data = pd.DataFrame()
+        # match department
+        if Uinputs[1] != '':
+            match = department_match(SqlData, Uinputs[1])
+
+            if not match.empty:
+                for i in range(len(match)):
+                    Uinputs[1] = match.iloc[i,0]
+                    data = pd.concat([data, build_data(Uinputs)], ignore_index=True)
+                if order_by == "Original":
+                    data = data.to_dict(orient='records')
+                else:
+                    data = data.sort_values(by=order_by).to_dict(orient='records')
+        else:
+            data = build_data(Uinputs)
+
         return data
     
     def change(self, params):

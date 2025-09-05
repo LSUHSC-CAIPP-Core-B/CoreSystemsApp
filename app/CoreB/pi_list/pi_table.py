@@ -1,4 +1,4 @@
-from typing import IO, Hashable, Any
+from typing import IO, Hashable, Any, Union
 
 import pandas as pd
 import pymysql
@@ -31,11 +31,13 @@ class PI_table(BaseDatabaseTable):
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
 
-        # * Fuzzy Search *
-        # Checks whether filters are being used
-        # If filters are used then implements fuzzy matching
-        def build_data(Uinputs):
-            # Check if all search filters are unused
+        def build_data(Uinputs) -> Union[pd.DataFrame, list[dict[Hashable, Any]]]:
+            '''
+            * Fuzzy Search
+            * Checks whether filters are being used
+            * If filters are used then implements fuzzy matching
+            '''
+
             if Uinputs[0] != '' or Uinputs[1] != '' or order_by == 'Original':
                 columns_to_check = ["PI full name", "Department"]
                 

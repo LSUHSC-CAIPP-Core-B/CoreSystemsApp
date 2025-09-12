@@ -5,3 +5,4 @@ my_app/
 .db
 .pdf
 .csv
+.DS_Store

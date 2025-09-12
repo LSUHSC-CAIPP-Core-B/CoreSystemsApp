@@ -89,6 +89,8 @@ Only super admins can add and delete users, including other admins, within the a
 For more details see [CoreB](app/CoreB/README.md)
 
 ###  Core C
+Antibody sharing and tracking system
+
 For more details see [CoreC](app/CoreC/README.md).
 
 ##  Reader

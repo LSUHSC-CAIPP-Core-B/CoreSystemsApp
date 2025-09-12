@@ -3,7 +3,7 @@
 {% block content %}
 <html>
 
-<body>
+<body onload="loadFilterByKey(['#company_name', '#product_name', '#sort'])">
   <div class="header" id="gradheader">
     <h1 class="header_text">Stock</h1>
   </div>
@@ -27,12 +27,12 @@
           <div class="leftdiv">
             <div class="leftdiv">
               <label class="formlabel">Company</label>
-              <input class="tableinput" type="text" name="Company" id="p_name" placeholder="Company Name">
+              <input class="tableinput" type="text" name="Company" id="company_name" placeholder="Company Name">
             </div>
           </div>
           <div class="leftdiv">
             <label class="formlabel">Product</label>
-            <input class="tableinput" type="text" name="Product" id="p_name" placeholder="Product Name">
+            <input class="tableinput" type="text" name="Product" id="product_name" placeholder="Product Name">
           </div>
           <div class="leftdiv">
             <label class="formlabel">Sort by</label>
@@ -43,7 +43,7 @@
               <option value="Cost">Cost</option>
             </select>
           </div>
-          <button class="filterbutton" onclick="saveFilterByKey(['#service_type', '#pi_name', '#sort'])">Filter</button>
+          <button class="filterbutton" onclick="saveFilterByKey(['#company_name', '#product_name', '#sort'])">Filter</button>
         </form>
       </div>
     </div>
@@ -112,7 +112,27 @@
       <button class="filterbutton" style="width: 125px; margin-left: 1195px;">Download</button>
     </form>
   </div>
+  <!--FUNCTIONS-->
+    <script>
+      function saveFilterByKey(keys) {
+        for (key of keys){
+          const $select = document.querySelector(key);
+          localStorage.setItem(key, $select.value);
+        }
+      }
+      function getSavedValue  (v){
+              if (!localStorage.getItem(v)) {
+                  return "";// You can change this to your defualt value. 
+              }
+              return localStorage.getItem(v);
+          }
+      function loadFilterByKey(keys) {
+        for (key of keys){
+          const $select = document.querySelector(key);
+          $select.value = getSavedValue(key);
+        }
+      }
+    </script>
 </body>
-
 </html>
 {% endblock %}

@@ -1,4 +1,4 @@
-from typing import IO, Hashable, Any, Union
+from typing import Hashable, Any, Union
 
 import pandas as pd
 import pymysql

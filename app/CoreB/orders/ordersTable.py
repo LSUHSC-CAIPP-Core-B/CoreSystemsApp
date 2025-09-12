@@ -1,10 +1,7 @@
-from typing import IO
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
-from app.utils.search_utils import search_utils
-from flask import flash
+from app.utils.search_utils import search_utils 
 import pandas as pd
-from rapidfuzz import process, fuzz
 
 class ordersTable(BaseDatabaseTable):
     """ Concrete class

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file, url_for, flash, make_response, send_from_directory, session
+from flask import Flask, render_template, request, redirect, send_file, url_for, make_response, session
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 import pymysql
@@ -7,7 +7,6 @@ from app.CoreB.orders import bp
 from flask_caching import Cache
 from app.utils.db_utils import db_utils
 from app.CoreB.orders.ordersTable import ordersTable
-from werkzeug.datastructures import ImmutableMultiDict
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache

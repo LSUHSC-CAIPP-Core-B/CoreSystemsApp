@@ -7,7 +7,7 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 
-<body>
+<body onload="loadFilterByKey(['#pi_name', '#genotype', '#strain', '#sort'])">
     <div class="header" id="gradheader">
         <h1 class="header_text">Mouse Data</h1>
     </div>
@@ -59,7 +59,7 @@
                         </div>
                         <div class="leftdiv">
                             <button class="filterbutton"
-                                onclick="saveFilterByKey(['#Company', '#target_name', '#sort'])">Filter</button>
+                                onclick="saveFilterByKey(['#pi_name', '#genotype', '#strain', '#sort'])">Filter</button>
                         </div>
                     </form>
                 </div>
@@ -165,7 +165,27 @@
             <button class="filterbutton" style="width: 125px; margin-left: 1195px;">Download</button>
         </form>
     </div>
+    <!--FUNCTIONS-->
+    <script>
+      function saveFilterByKey(keys) {
+        for (key of keys){
+          const $select = document.querySelector(key);
+          localStorage.setItem(key, $select.value);
+        }
+      }
+      function getSavedValue  (v){
+              if (!localStorage.getItem(v)) {
+                  return "";// You can change this to your defualt value. 
+              }
+              return localStorage.getItem(v);
+          }
+      function loadFilterByKey(keys) {
+        for (key of keys){
+          const $select = document.querySelector(key);
+          $select.value = getSavedValue(key);
+        }
+      }
+    </script>
 </body>
-
 </html>
 {% endblock %}

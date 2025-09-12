@@ -48,7 +48,7 @@ def mouse():
         inputDict = rawInputs.to_dict()
         Uinputs = list(inputDict.values())
 
-        sort = inputDict["sort"]
+        sort = inputDict.get("sort", "PI")
 
         Uinputs.pop(-1)
 

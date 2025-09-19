@@ -108,36 +108,14 @@ class PI_table(BaseDatabaseTable):
         return data
     
     def change(self, params):
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
-        cursor = mydb.cursor()
-
         # SQL Change query
         query = "UPDATE pi_info SET `PI full name` = %(PI_full_name)s, `PI ID` = %(PI_ID)s, email = %(email)s, Department = %(Department)s   WHERE `index` = %(index)s;"
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Commit the transaction
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'app/Credentials/CoreB.json', params=params)
     
     def add(self, params):
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
-        cursor = mydb.cursor()
-
         # SQL Add query
         query = "INSERT INTO pi_info VALUES (null, %(PI_full_name)s, %(PI_ID)s, %(email)s, %(Department)s);"
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()   
+        db_utils.execute(query, 'app/Credentials/CoreB.json', params=params)
 
         # Gets newest antibody
         query = f"SELECT * FROM pi_info ORDER BY `index` DESC LIMIT 1;"
@@ -146,21 +124,10 @@ class PI_table(BaseDatabaseTable):
         return df
     
     def delete(self, primary_key):
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
-        cursor = mydb.cursor()
-
         # SQL DELETE query
         query = "DELETE FROM pi_info WHERE `index` = %s"
 
-        #Execute SQL query
-        cursor.execute(query, (primary_key,))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'app/Credentials/CoreB.json', params=(primary_key,))
 
 def department_match(df, value):
     dept_df = pd.DataFrame(df['Department'])

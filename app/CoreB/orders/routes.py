@@ -160,17 +160,11 @@ def delete():
     GET: Delete order
     """
     Index = request.args.get('question_id')
-    
-    # Connection
-    mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
-    cursor = mydb.cursor()
 
     # SQL DELETE query
     query = "DELETE FROM CoreB_Order WHERE `Index` = %s"
-    cursor.execute(query, (Index,))
-    mydb.commit()
-    cursor.close()
-    mydb.close()
+
+    db_utils.execute(query, 'app/Credentials/CoreB.json', params=(Index,))
 
     # Retrieve previously stored filters
     filters = session.get('filters', {

@@ -67,15 +67,7 @@ class mouseTable(BaseDatabaseTable):
         # SQL Add query
         query = f"INSERT INTO Mouse_Stock VALUES (null, %(PI)s, %(Genotype)s, %(Description)s, %(Strain)s, %(Times Back Crossed)s, %(MTA Required)s, {user_id});"
         logger.info(f"Executing query: {query} with params: {params}")
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()   
+        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
 
         # Gets newest antibody
         query = f"SELECT * FROM Mouse_Stock ORDER BY Stock_ID DESC LIMIT 1;"
@@ -84,21 +76,10 @@ class mouseTable(BaseDatabaseTable):
         return df
     
     def change(self, params: dict) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
         # SQL Change query
         query = "UPDATE Mouse_Stock SET PI_Name = %(PI)s, Genotype = %(Genotype)s, Mouse_Description = %(Description)s, Strain = %(Strain)s, Times_Back_Crossed = %(Times Back Crossed)s, MTA_Required = %(MTA Required)s WHERE Stock_ID = %(primaryKey)s;"
         logger.info(f"Executing query: {query} with params: {params}")
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
     
     def delete(self, primary_key) -> None:
         mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
@@ -112,14 +93,5 @@ class mouseTable(BaseDatabaseTable):
             # SQL DELETE query
             query = "DELETE FROM Mouse_Stock WHERE Stock_ID = %s"
             logger.info(f"Executing query: {query} with params: {primary_key}")
-            #Execute SQL query
-            cursor.execute(query, (primary_key,))
-
-            # Commit the transaction
-            mydb.commit()
-
-            # Close the cursor and connection
-            cursor.close()
-            mydb.close()
-
+            db_utils.execute(query, 'app/Credentials/CoreC.json', params=(primary_key,))
             logger.info("Deletion Complete!")

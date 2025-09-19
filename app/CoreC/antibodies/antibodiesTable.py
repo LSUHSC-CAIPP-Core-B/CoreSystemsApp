@@ -76,21 +76,10 @@ class antibodiesTable(BaseDatabaseTable):
         return data
 
     def add(self, params: dict[str, Any]) -> pd.DataFrame:   
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
         # SQL Add query
         query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(volumeParam)s, %(costParam)s, null, %(includedParam)s);"
         logger.info(f"Executing query: {query} with params: {params}")
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()   
+        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
 
         # Gets newest antibody
         query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Stock_ID DESC LIMIT 1;"
@@ -99,38 +88,17 @@ class antibodiesTable(BaseDatabaseTable):
         return df
 
     def change(self, params: dict[str, Any]) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Volume = %(volumeParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
         logger.info(f"Executing query: {query} with params: {params}")
-        #Execute SQL query
-        cursor.execute(query, params)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
     
     def delete(self, primary_key: str) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
         # SQL DELETE query
         query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
         logger.info(f"Executing query: {query} with params: {primary_key}")
         #Execute SQL query
-        cursor.execute(query, (primary_key,))
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'app/Credentials/CoreC.json', params=(primary_key,))
 
         logger.info("Deletion Complete!")
 

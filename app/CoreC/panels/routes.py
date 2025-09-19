@@ -94,14 +94,7 @@ def addPanel():
         db_name = PanelsTable.get_Valid_db_Name(panel_name)
         name_query = f"INSERT INTO predefined_panels VALUES (null, %s, %s);"
 
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        #Execute SQL query
-        cursor.execute(name_query, (panel_name, db_name))
-
-        # Commit the transaction
-        mydb.commit()
+        db_utils.execute(name_query, 'app/Credentials/CoreC.json', params=(panel_name, db_name))
 
         table_query = f"""
             CREATE TABLE {db_name}(
@@ -109,15 +102,7 @@ def addPanel():
                 FOREIGN KEY (stock_id) REFERENCES Antibodies_Stock(Stock_ID)
             );"""
 
-        #Execute SQL query
-        cursor.execute(table_query)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(table_query, 'app/Credentials/CoreC.json')
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panels')))
@@ -153,29 +138,14 @@ def deletePanel():
         name = name_df.iloc[0,0]
 
         drop_query = f" DROP TABLE IF EXISTS {name};"
-
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
-        cursor = mydb.cursor()
-
-        #Execute SQL query
-        cursor.execute(drop_query)
-
-        # Commit the transaction
-        mydb.commit()
+        db_utils.execute(drop_query, 'app/Credentials/CoreC.json')
 
         delete_query = f""" 
             DELETE FROM predefined_panels
             Where Panel_Name = '{panel_name}'
         """
 
-        #Execute SQL query
-        cursor.execute(delete_query)
-
-        # Commit the transaction
-        mydb.commit()
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(delete_query, 'app/Credentials/CoreC.json')
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panels')))

@@ -440,21 +440,9 @@ def delete_invoice():
         project_id = request.args['project_id']
 
         if project_id:
-            mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreB.json'))
-            cursor = mydb.cursor()
-
             # SQL DELETE query
             query = "DELETE FROM Invoice WHERE `project_id` = %s"
-
-            #Execute SQL query
-            cursor.execute(query, (project_id,))
-
-            # Commit the transaction
-            mydb.commit()
-
-            # Close the cursor and connection
-            cursor.close()
-            mydb.close()
+            db_utils.execute(query, 'app/Credentials/CoreB.json', params=(project_id,))
         
         response = make_response(redirect(url_for('invoices_list.invoices_list')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

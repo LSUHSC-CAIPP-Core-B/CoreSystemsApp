@@ -2,7 +2,7 @@ from fillpdf import fillpdfs
 
 class PdfWriter:
     """
-    Class to fill data to PDF
+    Fills data to PDF
 
     input_filename (str): path to input PDF file to fill data into
     input_filename (str): path to which save filled PDF
@@ -18,3 +18,4 @@ class PdfWriter:
         data_dict (dict): dict of field keys to which input provided values
         """
         fillpdfs.write_fillable_pdf(self.input_filename, self.output_filename, data_dict)
+

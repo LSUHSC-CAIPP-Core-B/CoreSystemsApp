@@ -133,7 +133,7 @@ class Reader:
         """
         Delete order in database
 
-        unporcessed_df (DataFrame): Frame in which to delete order
+        unprocessed_df (DataFrame): Frame in which to delete order
         id (int): id at which to erase order
         """
         # get column to delete name rom id
@@ -142,4 +142,3 @@ class Reader:
         unprocessed_df = unprocessed_df.drop(column_to_delete, axis=1)
         unprocessed_df.to_csv(self.filename, header=True, index=False)
         
-    

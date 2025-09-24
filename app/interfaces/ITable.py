@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import IO
 
-
 class ITable(ABC):
     """Abstract base class that acts as an interface for table operations.
 
@@ -34,3 +33,4 @@ class ITable(ABC):
     @abstractmethod
     def download_CSV(self, saved_data: dict) -> IO[bytes]:
         raise NotImplementedError()
+

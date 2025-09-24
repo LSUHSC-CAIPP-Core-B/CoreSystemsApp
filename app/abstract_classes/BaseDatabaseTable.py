@@ -7,9 +7,8 @@ from typing_extensions import override
 
 from app.interfaces.ITable import ITable
 
-
 class BaseDatabaseTable(ITable):
-    """Abstract base class for database tables that display and manage
+    """Abstract class for database tables that display and manage
     database information.
 
     Inherits from `ITable` and provides a framework for implementing
@@ -80,3 +79,4 @@ class BaseDatabaseTable(ITable):
         csv_io = BytesIO(csv_bytes) 
         
         return csv_io
+

@@ -111,3 +111,4 @@ def create_app(config_class=Config):
     app.register_blueprint(mouse_bp)
 
     return app
+

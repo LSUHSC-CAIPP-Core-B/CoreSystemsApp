@@ -3,7 +3,7 @@ class PasswordValidator:
     is correct length and contains a certain number 
     of digits and special characters
 
-    Forces keyword arguments
+    Forces keyword arguments for initialization
 
     :param minChar: minimum characters a password is allowed to have
     :param maxChar: maximum characters a password is allowed to have

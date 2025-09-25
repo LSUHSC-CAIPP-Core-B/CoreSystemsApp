@@ -2,7 +2,6 @@
 
 ## Table of Contents 
 - [Introduction](#Introduction)
-- [Credentials](#Credentials)
 - [Abstraction](#Abstraction)
 - [Utilities](#Utilities)
 
@@ -17,9 +16,6 @@ To register a new `routes.py` file, you need to import the blueprint and add it 
 from app.CoreB.orders import bp as main_bp
 app.register_blueprint(main_bp)
 ```
-
-## Credentials
-The [Credentials](Credentials/) directory houses the database credentials stored in JSON files, facilitating authentication and connection to MySQL databases. Each core module of the application has its own schema credentials stored within this directory, ensuring secure and organized access to the respective databases.
 
 ## Abstraction
 ![Abstraction](../docs/Levels_of_Abstraction.png)

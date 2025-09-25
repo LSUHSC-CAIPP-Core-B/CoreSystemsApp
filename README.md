@@ -18,6 +18,7 @@ Ensures that users have appropriate permissions and can perform operations on th
 - [Setup](#Setup) 
 - [Web App](#Web-App) 
     - [Login](#Login) 
+    - [Database Configuration](#Database-Configuration)
     - [Core B](#Core-B) 
     - [Core C](#Core-C)
 - [Reader](#Reader)
@@ -85,7 +86,12 @@ Only super admins can add and delete users, including other admins, within the a
 
 ![App flow](docs/Core_App_entry_flow.png)
 
+### Database Configuration
+The [db_config](db_config/) directory houses the database credentials stored in JSON files, facilitating authentication and connection to MySQL databases. Each core module of the application has its own schema credentials stored within this directory, ensuring secure and organized access to the respective databases.
+
 ###  Core B
+Order and Invoice System
+
 For more details see [CoreB](app/CoreB/README.md)
 
 ###  Core C

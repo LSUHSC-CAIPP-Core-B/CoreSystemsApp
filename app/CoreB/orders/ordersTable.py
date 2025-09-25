@@ -37,7 +37,7 @@ class ordersTable(BaseDatabaseTable):
         query = "Select * FROM CoreB_Order;"
 
         # Creates Dataframe
-        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
+        SqlData = db_utils.toDataframe(query,'db_config/CoreB.json')
 
         # * Fuzzy Search *
         # Checks whether filters are being used
@@ -48,7 +48,7 @@ class ordersTable(BaseDatabaseTable):
             if Uinputs[1] != '' and Uinputs[0] == '':
                 data = search_utils.sort_searched_data(Uinputs, columns_to_check, 99, SqlData, order_by)
             elif Uinputs[0] != '': # threshold 50 for fuzz search
-                names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+                names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','db_config/CoreB.json')
 
                 # Create dataframe with PI full name, First Name and Last Name
                 names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
@@ -65,7 +65,7 @@ class ordersTable(BaseDatabaseTable):
 
                 # If no match is found displays empty row
                 if data.empty:
-                    data = db_utils.toDataframe("Select * FROM CoreB_Order WHERE `Project ID` = 'N/A';", 'app/Credentials/CoreB.json')
+                    data = db_utils.toDataframe("Select * FROM CoreB_Order WHERE `Project ID` = 'N/A';", 'db_config/CoreB.json')
         else:
             data = SqlData
         #filter by service

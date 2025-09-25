@@ -29,7 +29,7 @@ class PI_table(BaseDatabaseTable):
         query = "Select * FROM pi_info;"
 
         # Creates Dataframe
-        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreB.json')
+        SqlData = db_utils.toDataframe(query,'db_config/CoreB.json')
 
         def build_data(Uinputs) -> Union[pd.DataFrame, list[dict[Hashable, Any]]]:
             '''
@@ -43,7 +43,7 @@ class PI_table(BaseDatabaseTable):
                 
                 if order_by == 'Original':
                     if Uinputs[0] != '':
-                        names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+                        names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','db_config/CoreB.json')
 
                         # Create dataframe with PI full name, First Name and Last Name
                         names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
@@ -60,7 +60,7 @@ class PI_table(BaseDatabaseTable):
                     else: #If dept is searched for
                         data = search_utils.sort_searched_data(Uinputs, columns_to_check, 80, SqlData)
                 else:
-                    names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','app/Credentials/CoreB.json')
+                    names = db_utils.toDataframe('SELECT `PI full name` FROM pi_info','db_config/CoreB.json')
 
                     # Create dataframe with PI full name, First Name and Last Name
                     names[['First Name', 'Last Name']] = names['PI full name'].str.split('_', expand=True, n=1)
@@ -75,7 +75,7 @@ class PI_table(BaseDatabaseTable):
                 
                 # If no match is found displays empty row
                 if data.empty:
-                    dataFrame = db_utils.toDataframe("Select * FROM pi_info WHERE Department = 'N/A';", 'app/Credentials/CoreB.json')
+                    dataFrame = db_utils.toDataframe("Select * FROM pi_info WHERE Department = 'N/A';", 'db_configCoreB.json')
                     data = dataFrame.to_dict(orient='records')
                     return data
                 else:
@@ -110,24 +110,24 @@ class PI_table(BaseDatabaseTable):
     def change(self, params):
         # SQL Change query
         query = "UPDATE pi_info SET `PI full name` = %(PI_full_name)s, `PI ID` = %(PI_ID)s, email = %(email)s, Department = %(Department)s   WHERE `index` = %(index)s;"
-        db_utils.execute(query, 'app/Credentials/CoreB.json', params=params)
+        db_utils.execute(query, 'db_config/CoreB.json', params=params)
     
     def add(self, params):
         # SQL Add query
         query = "INSERT INTO pi_info VALUES (null, %(PI_full_name)s, %(PI_ID)s, %(email)s, %(Department)s);"
-        db_utils.execute(query, 'app/Credentials/CoreB.json', params=params)
+        db_utils.execute(query, 'db_config/CoreB.json', params=params)
 
         # Gets newest antibody
         query = f"SELECT * FROM pi_info ORDER BY `index` DESC LIMIT 1;"
         
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
         return df
     
     def delete(self, primary_key):
         # SQL DELETE query
         query = "DELETE FROM pi_info WHERE `index` = %s"
 
-        db_utils.execute(query, 'app/Credentials/CoreB.json', params=(primary_key,))
+        db_utils.execute(query, 'db_config/CoreB.json', params=(primary_key,))
 
 def department_match(df, value):
     dept_df = pd.DataFrame(df['Department'])

@@ -16,7 +16,7 @@ from app.utils.db_utils import db_utils
 @login_required
 def orders_dashboard():
     if request.method == 'GET':
-        df = db_utils.toDataframe("SELECT * FROM CoreB_Order", 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe("SELECT * FROM CoreB_Order", 'db_config/CoreB.json')
         build_dashboard(df, 'app/templates/CoreB/graphs/OrdersDashboard.html')
         return render_template('CoreB/graphs/OrdersDashboard.html')
 

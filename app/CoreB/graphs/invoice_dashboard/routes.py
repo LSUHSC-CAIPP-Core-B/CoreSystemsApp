@@ -16,7 +16,7 @@ from app.utils.db_utils import db_utils
 @login_required
 def invoice_dashboard():
     if request.method == 'GET':
-        df = db_utils.toDataframe("SELECT * FROM Invoice", 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe("SELECT * FROM Invoice", 'db_config/CoreB.json')
         
         if df.empty:
             grouped = []
@@ -39,7 +39,7 @@ def invoice_dashboard():
         })
 
         # Get orders data and merge with Invoice data
-        orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'app/Credentials/CoreB.json')
+        orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'db_config/CoreB.json')
         grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
         new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
         grouped = grouped.reindex(columns=new_column_order)

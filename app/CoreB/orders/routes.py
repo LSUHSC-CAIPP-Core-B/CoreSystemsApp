@@ -53,7 +53,7 @@ def orders():
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
             
-            dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'app/Credentials/CoreB.json')
+            dataFrame = db_utils.toDataframe("Select * FROM CoreB_Order;", 'db_config/CoreB.json')
             data = dataFrame.to_dict('records')
             
             with app.app_context():
@@ -88,7 +88,7 @@ def update():
     if request.method == "GET":
         question_id = request.args.get('question_id')
         query = "Select * FROM CoreB_Order WHERE `Index` = %s;"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(question_id,))
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json', params=(question_id,))
 
         update_data = df.iloc[0]
 
@@ -127,7 +127,7 @@ def update():
             `Expected Completion Time`= %(Expected_Completion_Time)s, 
             `Questions and Special Requirments` = %(Questions_and_Special_Requirments)s  
             WHERE `Index` = %(Index)s;"""
-        db_utils.execute(query, 'app/Credentials/CoreB.json', params=valid_params)
+        db_utils.execute(query, 'db_config/CoreB.json', params=valid_params)
 
         # Retrieve previously stored filters
         filters = session.get('filters', {
@@ -164,7 +164,7 @@ def delete():
     # SQL DELETE query
     query = "DELETE FROM CoreB_Order WHERE `Index` = %s"
 
-    db_utils.execute(query, 'app/Credentials/CoreB.json', params=(Index,))
+    db_utils.execute(query, 'db_config/CoreB.json', params=(Index,))
 
     # Retrieve previously stored filters
     filters = session.get('filters', {

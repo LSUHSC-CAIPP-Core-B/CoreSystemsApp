@@ -49,7 +49,7 @@ class antibodiesTable(BaseDatabaseTable):
             query = f"SELECT Stock_ID, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype FROM Antibodies_Stock WHERE Included = 1 ORDER BY {order_by};"
 
         # Creates Dataframe
-        SqlData = db_utils.toDataframe(query,'app/Credentials/CoreC.json')
+        SqlData = db_utils.toDataframe(query,'db_config/CoreC.json')
 
         # * Fuzzy Search *
         # Checks whether filters are being used
@@ -65,7 +65,7 @@ class antibodiesTable(BaseDatabaseTable):
             data = data.to_dict(orient='records')
             # If no match is found displays empty row
             if not data:
-                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe("SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock WHERE Included = 0 AND Catalog_Num = 'N/A' ORDER BY Target_Name;", 'db_config/CoreC.json')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -79,26 +79,26 @@ class antibodiesTable(BaseDatabaseTable):
         # SQL Add query
         query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(volumeParam)s, %(costParam)s, null, %(includedParam)s);"
         logger.info(f"Executing query: {query} with params: {params}")
-        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
+        db_utils.execute(query, 'db_config/CoreC.json', params=params)
 
         # Gets newest antibody
         query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Stock_ID DESC LIMIT 1;"
         
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         return df
 
     def change(self, params: dict[str, Any]) -> None:
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Volume = %(volumeParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
         logger.info(f"Executing query: {query} with params: {params}")
-        db_utils.execute(query, 'app/Credentials/CoreC.json', params=params)
+        db_utils.execute(query, 'db_config/CoreC.json', params=params)
     
     def delete(self, primary_key: str) -> None:
         # SQL DELETE query
         query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
         logger.info(f"Executing query: {query} with params: {primary_key}")
         #Execute SQL query
-        db_utils.execute(query, 'app/Credentials/CoreC.json', params=(primary_key,))
+        db_utils.execute(query, 'db_config/CoreC.json', params=(primary_key,))
 
         logger.info("Deletion Complete!")
 

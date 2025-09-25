@@ -36,7 +36,7 @@ def panels():
         dataFrame.rename(columns={'Panel_name': 'Panel', 'antibody_num': 'Number of Antibodies'}, inplace=True)
         data = dataFrame.to_dict('records')
         
-        panels_df = db_utils.toDataframe("SELECT Panel_name, Panel_table_name from predefined_panels;", 'app/Credentials/CoreC.json')
+        panels_df = db_utils.toDataframe("SELECT Panel_name, Panel_table_name from predefined_panels;", 'db_config/CoreC.json')
         with app.app_context():
             cache1.set('cached_dataframe', panels_df, timeout=604_800)
 
@@ -58,7 +58,7 @@ def panels():
 def count_rows() -> pd.DataFrame:
     # Fetches the panel names and table names
     panels_query = "SELECT Panel_name, Panel_table_name FROM predefined_panels"
-    panels_df = db_utils.toDataframe(panels_query, 'app/Credentials/CoreC.json')
+    panels_df = db_utils.toDataframe(panels_query, 'db_config/CoreC.json')
     
     # List to hold the results
     results = []
@@ -70,7 +70,7 @@ def count_rows() -> pd.DataFrame:
         
         # Constructs the COUNT query
         count_query = f"SELECT COUNT(*) as antibody_num FROM `{table_name}`"
-        count_df = db_utils.toDataframe(count_query, 'app/Credentials/CoreC.json')
+        count_df = db_utils.toDataframe(count_query, 'db_config/CoreC.json')
         count = count_df['antibody_num'].iloc[0]
         
         # Appends the result to the list
@@ -94,7 +94,7 @@ def addPanel():
         db_name = PanelsTable.get_Valid_db_Name(panel_name)
         name_query = f"INSERT INTO predefined_panels VALUES (null, %s, %s);"
 
-        db_utils.execute(name_query, 'app/Credentials/CoreC.json', params=(panel_name, db_name))
+        db_utils.execute(name_query, 'db_config/CoreC.json', params=(panel_name, db_name))
 
         table_query = f"""
             CREATE TABLE {db_name}(
@@ -102,7 +102,7 @@ def addPanel():
                 FOREIGN KEY (stock_id) REFERENCES Antibodies_Stock(Stock_ID)
             );"""
 
-        db_utils.execute(table_query, 'app/Credentials/CoreC.json')
+        db_utils.execute(table_query, 'db_config/CoreC.json')
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panels')))
@@ -134,18 +134,18 @@ def deletePanel():
             WHERE Panel_Name = '{panel_name}'
         """
 
-        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
         name = name_df.iloc[0,0]
 
         drop_query = f" DROP TABLE IF EXISTS {name};"
-        db_utils.execute(drop_query, 'app/Credentials/CoreC.json')
+        db_utils.execute(drop_query, 'db_config/CoreC.json')
 
         delete_query = f""" 
             DELETE FROM predefined_panels
             Where Panel_Name = '{panel_name}'
         """
 
-        db_utils.execute(delete_query, 'app/Credentials/CoreC.json')
+        db_utils.execute(delete_query, 'db_config/CoreC.json')
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panels')))
@@ -175,10 +175,10 @@ def panel_details():
 
             # Checks permissions for data display
             if current_user.is_admin:
-                dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Box_Name, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype, a.Size, a.Concentration, DATE_FORMAT(a.Expiration_Date, '%m/%d/%Y') AS Expiration_Date,  a.Titration,  a.Cost FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Box_Name, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype, a.Size, a.Concentration, DATE_FORMAT(a.Expiration_Date, '%m/%d/%Y') AS Expiration_Date,  a.Titration,  a.Cost FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'db_config/CoreC.json')
                 dataFrame.rename(columns={'Box_Name': 'Box Name', 'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone', 'Expiration_Date': 'Expiration Date', 'Cost': 'Cost ($)'}, inplace=True)
             else:
-                dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe(f"SELECT a.Stock_ID, a.Company_name, a.Catalog_Num, a.Target_Name, a.Target_Species, a.Fluorophore, a.Clone_Name, a.Isotype FROM Antibodies_Stock a JOIN `{names}` m ON a.Stock_ID = m.stock_id WHERE a.Included = 1 ORDER BY a.Target_Name;", 'db_config/CoreC.json')
                 dataFrame.rename(columns={'Company_name': 'Company', 'Catalog_Num': 'Catalog number', 'Target_Name': 'Target', 'Target_Species': 'Target Species', 'Clone_Name': 'Clone'}, inplace=True)
             data = dataFrame.to_dict('records')
         else:
@@ -222,7 +222,7 @@ def addPanelAntibody():
         Panel_Name = request.form.get('Panel Name')
 
         query = f"SELECT Catalog_Num FROM Antibodies_Stock;"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreC.json')
 
         results = search_utils.search_data([catalog_num], columns_to_check=['Catalog_Num'], threshold=99, SqlData=df)
         results = pd.DataFrame(results).drop_duplicates()
@@ -236,7 +236,7 @@ def addPanelAntibody():
 			FROM predefined_panels
             WHERE Panel_Name = '{Panel_Name}'
         """
-        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
         name = name_df.iloc[0,0]
 
         insert_Antibody_query = f"""
@@ -247,7 +247,7 @@ def addPanelAntibody():
             LIMIT 1;           
         """
 
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
 
         #Execute SQL query
@@ -293,14 +293,14 @@ def deletePanelAntibody():
 			FROM predefined_panels
             WHERE Panel_Name = '{Panel_Name}'
         """
-        name_df = db_utils.toDataframe(panel_table_name_query, 'app/Credentials/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
         name = name_df.iloc[0,0]
 
         delete_antibody_query = f"""
             DELETE FROM {name}
             where Stock_id = '{primaryKey}'
         """
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
 
         #Execute SQL query
@@ -329,7 +329,7 @@ def changePanelName():
 
         # Gets Panel ID
         changeIDQuery = f"SELECT Panel_id from predefined_panels WHERE Panel_Name = '{panel_name}'"
-        id_dataframe = db_utils.toDataframe(changeIDQuery, 'app/Credentials/CoreC.json')
+        id_dataframe = db_utils.toDataframe(changeIDQuery, 'db_config/CoreC.json')
         panel_id = id_dataframe.loc[0, "Panel_id"]
 
         # Generates a valid panel name and Panel SQL name
@@ -343,11 +343,11 @@ def changePanelName():
 
         # Gets Old SQL Panel Name
         oldDBNameQuery = f"SELECT Panel_table_name from predefined_panels where Panel_Name = '{panel_name}';"
-        Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'app/Credentials/CoreC.json')
+        Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'db_config/CoreC.json')
         Old_Panel_Dbname = Old_Panel_Df.loc[0, "Panel_table_name"]
 
         # SQL connection
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
 
         changeNameQuery = f"RENAME TABLE `{Old_Panel_Dbname}` TO `{New_Panel_Dbname}`"

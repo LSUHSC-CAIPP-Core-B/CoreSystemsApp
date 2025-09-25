@@ -71,7 +71,7 @@ def mouse():
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
 
-            df = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A';", 'app/Credentials/CoreC.json')
+            df = db_utils.toDataframe("SELECT * FROM Mouse_Stock WHERE Genotype != 'N/A';", 'db_config/CoreC.json')
             df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
         
             data = df.to_dict('records')
@@ -216,7 +216,7 @@ def changeMouse():
     if request.method == 'GET':
         primary_key = request.args.get('primaryKey')
         query = "SELECT * FROM Mouse_Stock WHERE Stock_ID = %s;"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json', params=(primary_key,))
+        df = db_utils.toDataframe(query, 'db_config/CoreC.json', params=(primary_key,))
         df.rename(columns={'PI_Name': 'PI', 'Mouse_Description': 'Description', 'Times_Back_Crossed': 'Times Back Crossed', 'MTA_Required': 'MTA Required'}, inplace=True)
 
         data = df.to_dict()

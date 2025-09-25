@@ -53,7 +53,7 @@ class stockTable(BaseDatabaseTable):
         else:
             query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' AND O.Product_Name != '0' ORDER BY {order_by} DESC;"
         
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         SqlData = df
         
         # * Fuzzy Search *
@@ -65,7 +65,7 @@ class stockTable(BaseDatabaseTable):
             data = data.to_dict(orient='records')
             # If no match is found displays empty row
             if not data:
-                dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;", 'app/Credentials/CoreC.json')
+                dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name = 'N/A' ORDER BY Quantity;", 'db_config/CoreC.json')
                 dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
                 data = dataFrame.to_dict('records')
         else: # If no search filters are used
@@ -77,7 +77,7 @@ class stockTable(BaseDatabaseTable):
     
     @override
     def add(self, params: dict, Quantity: any) -> pd.DataFrame:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL Add query
@@ -97,11 +97,11 @@ class stockTable(BaseDatabaseTable):
 
         # Gets newest supply
         query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY S.Product_Num DESC LIMIT 1;"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreC.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         return df
     
     def change(self, params: dict, Quantity: any, primary_key:any) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
         
         # SQL Change query
@@ -120,7 +120,7 @@ class stockTable(BaseDatabaseTable):
         mydb.close()
     
     def delete(self, primary_key) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('app/Credentials/CoreC.json'))
+        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
         cursor = mydb.cursor()
 
         # SQL DELETE query

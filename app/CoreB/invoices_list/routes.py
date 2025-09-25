@@ -83,16 +83,16 @@ def invoice():
             }
 
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
         # If Invoice record doesnt already esixt in the database, create one
         if df.empty:
             # Get the latest id
-            last_invoice_row = db_utils.toDataframe("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'app/Credentials/CoreB.json')
+            last_invoice_row = db_utils.toDataframe("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'db_config/CoreB.json')
             latest_available_id = last_invoice_row["id"].iloc[0] + 1
 
             # Connection Info
-            db_config = db_utils.json_Reader('app/Credentials/CoreB.json')
+            db_config = db_utils.json_Reader('db_config/CoreB.json')
             host = db_config['host']
             database = db_config['database']
             user = db_config['user']
@@ -148,7 +148,7 @@ def invoice():
             
             # Grab data again but updated
             query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
-            df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+            df = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
         all_service_discount_row = df['service_type'] == "All services discount"
         # If there are discount rows, find the index of the first discount row
@@ -266,7 +266,7 @@ def gen_invoice():
                     discount_reason = %(discount_reason)s,
                     total_discount = %(total_discount)s
                 WHERE project_id = %(order_num)s AND service_type = %(service_type)s
-            """, 'app/Credentials/CoreB.json', params={
+            """, 'db_config/CoreB.json', params={
                 "qty": qty,
                 "price": price,
                 "total": total,
@@ -305,7 +305,7 @@ def invoices_list():
         cache1.delete('cached_data')
 
     query = f"SELECT * FROM Invoice"
-    df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+    df = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
     if df.empty:
         data = []
@@ -328,7 +328,7 @@ def invoices_list():
     })
 
     # Get orders data and merge with Invoice data
-    orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'app/Credentials/CoreB.json')
+    orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'db_config/CoreB.json')
     grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
     new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
     grouped = grouped.reindex(columns=new_column_order)
@@ -412,7 +412,7 @@ def invoice_details():
         project_id = request.args['project_id']
 
         query = f"SELECT service_type, total_price, total_discount FROM Invoice WHERE project_id = '{project_id}'"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
         df = df.rename(columns={
             "service_type": "Service",
@@ -442,7 +442,7 @@ def delete_invoice():
         if project_id:
             # SQL DELETE query
             query = "DELETE FROM Invoice WHERE `project_id` = %s"
-            db_utils.execute(query, 'app/Credentials/CoreB.json', params=(project_id,))
+            db_utils.execute(query, 'db_config/CoreB.json', params=(project_id,))
         
         response = make_response(redirect(url_for('invoices_list.invoices_list')))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.

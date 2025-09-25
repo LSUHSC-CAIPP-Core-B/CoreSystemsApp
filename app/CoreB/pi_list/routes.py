@@ -29,7 +29,7 @@ def information():
 
         # get specific PI data
         query = f"SELECT `PI full name`, `PI ID`, email, Department FROM pi_info"
-        data = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        data = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
         if len(data) == 0:
             flash('There is no PI with given ID in Project ID')
@@ -63,7 +63,7 @@ def pilist():
             with app.app_context():
                 defaultCache.delete('cached_dataframe')
             
-            dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'app/Credentials/CoreB.json')
+            dataFrame = db_utils.toDataframe("Select * FROM pi_info;", 'db_config/CoreB.json')
             data = dataFrame.to_dict('records')
             
             with app.app_context():
@@ -148,7 +148,7 @@ def add_pi():
         # get PI data
         query = "Select * FROM pi_info"
 
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
         data = df.to_dict(orient='records')
 
         # check if PI ID already exists
@@ -213,7 +213,7 @@ def update():
         old_pi_full_name = request.args.get('pi_id_old')
         query = "Select * FROM pi_info WHERE `PI full name` = %s"
 
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json', params=(old_pi_full_name,))
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json', params=(old_pi_full_name,))
         update_data = df.iloc[0]
         index = update_data['index']
 
@@ -238,10 +238,10 @@ def update():
 
         index = request.form.get('index')
         pi_query = "SELECT `PI ID` FROM pi_info WHERE `index` = %s"
-        PI_id = db_utils.toDataframe(pi_query, 'app/Credentials/CoreB.json', params=(index,))
+        PI_id = db_utils.toDataframe(pi_query, 'db_config/CoreB.json', params=(index,))
 
         query = "Select `PI ID` FROM pi_info"
-        df = db_utils.toDataframe(query, 'app/Credentials/CoreB.json')
+        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
         
         # Check if the PI ID is available or taken
         for v in df['PI ID']:

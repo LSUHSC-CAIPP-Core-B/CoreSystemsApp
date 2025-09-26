@@ -22,6 +22,7 @@
 
   <form method="POST" action="/changeAntibody">
     <input type="hidden" name="primaryKey" value="{{ pkey }}">
+    <input type="hidden" name="page" value="{{ page }}">
     {% for key, val in fields.items() %}
     <div>
       {% set first_val = val.values() | first %}

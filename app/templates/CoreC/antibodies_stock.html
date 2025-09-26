@@ -123,6 +123,7 @@
                 </form>
                 <form method="GET" action="/changeAntibody">
                   <input type="hidden" name="primaryKey" value="{{ data[row]['Stock_ID'] }}" />
+                  <input type="hidden" name="page" value="{{page}}" />
                   <button class="filterbutton">Change Info</button>
                 </form>
                 {% endif %}

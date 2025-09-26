@@ -358,8 +358,11 @@ def changeAntibody():
         #Executes change query
         antibodiesTable.change(params)
 
+        current_page = request.form.get('page', 1)
+        print(f"\npage: {current_page}\n")
+
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('antibodies.antibodies')))
+        response = make_response(redirect(url_for('antibodies.antibodies', page=current_page)))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -375,9 +378,11 @@ def changeAntibody():
         df.at[0,'Included'] = {1: "Yes", 0: "No"}.get(df.at[0,'Included'], "No")
 
         data = df.to_dict()
+
+        current_page = request.args.get('page', 1)
         
         # use to prevent user from caching pages
-        response = make_response(render_template('CoreC/change_antibody.html', fields = data, pkey = primary_key))
+        response = make_response(render_template('CoreC/change_antibody.html', fields = data, pkey = primary_key, page = current_page))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

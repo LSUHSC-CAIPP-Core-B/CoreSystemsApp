@@ -24,7 +24,7 @@ def orders():
     data = []
     if request.method == 'POST':
         # Store filters in session to be used in Update function
-        session['filters'] = {
+        session['order_filters'] = {
             'service_type': request.form.get('service_type') or "",
             'pi_name': request.form.get('pi_name') or "",
             'project_id': request.form.get('project_id') or "",
@@ -32,7 +32,7 @@ def orders():
         }
         
         # Create list to store inputs that are being Used
-        filters = session['filters']
+        filters = session['order_filters']
         Uinputs = [filters['pi_name'], filters['project_id']]
         
         # Clear the cache when new filters are applied
@@ -130,7 +130,7 @@ def update():
         db_utils.execute(query, 'db_config/CoreB.json', params=valid_params)
 
         # Retrieve previously stored filters
-        filters = session.get('filters', {
+        filters = session.get('order_filters', {
             'service_type': "",
             'pi_name': "",
             'project_id': "",
@@ -167,7 +167,7 @@ def delete():
     db_utils.execute(query, 'db_config/CoreB.json', params=(Index,))
 
     # Retrieve previously stored filters
-    filters = session.get('filters', {
+    filters = session.get('order_filters', {
         'service_type': "",
         'pi_name': "",
         'project_id': "",

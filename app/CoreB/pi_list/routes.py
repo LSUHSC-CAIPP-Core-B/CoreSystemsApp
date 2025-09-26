@@ -28,11 +28,11 @@ def information():
         order_num = request.args.get('order_num').split("_")[0]
 
         # get specific PI data
-        query = f"SELECT `PI full name`, `PI ID`, email, Department FROM pi_info"
+        query = f"SELECT `PI full name`, `PI ID`, email, Department FROM pi_info WHERE `PI ID` = '{order_num}'"
         data = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
-        if len(data) == 0:
-            flash('There is no PI with given ID in Project ID')
+        if data.empty:
+            flash('Incorrect PI Name. Check for misspelling.')
             return redirect(url_for('orders.orders'))
         else:
             filtered_data = data[data['PI ID'] == order_num].iloc[0]

@@ -194,7 +194,7 @@
                 {% if list(data[row].values())[1] == "-" %} <!-- If Project ID assigned -->
                 {{list(data[row].values())[col]}}
                 {% else %}
-                <a href="/information?order_num={{list(data[row].values())[1]}}">{{
+                <a href="/information?order_num={{list(data[row].values())[1]}}&page={{page}}">{{
                   list(data[row].values())[col] }}</a>
                 {% endif %}
                 {% else %}

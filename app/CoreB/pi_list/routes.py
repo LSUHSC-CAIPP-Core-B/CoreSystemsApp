@@ -33,7 +33,8 @@ def information():
 
         if data.empty:
             flash('Incorrect PI Name. Check for misspelling.')
-            return redirect(url_for('orders.orders'))
+            current_page = request.args.get('page', 1)
+            return redirect(url_for('orders.orders', page = current_page))
         else:
             filtered_data = data[data['PI ID'] == order_num].iloc[0]
             filtered_data['PI full name'] = filtered_data['PI full name'].replace("_", " ")

@@ -78,10 +78,6 @@ def create_app(config_class=Config):
     # Register blueprints here
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp)
-    
-    # ! CSV route for core B
-    #from app.CoreB.orders.csv_routes import bp as main_bp
-    #app.register_blueprint(main_bp)
 
     from app.CoreB.orders import bp as main_bp
     app.register_blueprint(main_bp)

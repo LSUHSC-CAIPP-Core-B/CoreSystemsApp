@@ -46,7 +46,7 @@ def create_app(config_class=Config):
 
     # Initialize SQLite database
     db.init_app(app)
-    from .models import User, Role, UserHasRole, Invoice
+    from .models import User, Role, UserHasRole
 
     # Setup login manager
     login_manager.login_view = 'auth.login'
@@ -107,4 +107,3 @@ def create_app(config_class=Config):
     app.register_blueprint(mouse_bp)
 
     return app
-

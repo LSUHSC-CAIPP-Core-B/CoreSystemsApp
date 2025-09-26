@@ -187,8 +187,10 @@ def changeSupply():
 
         stockTable.change(params, Quantity, primary_key)
 
+        current_page = request.form.get('page', 1)
+
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.stock')))
+        response = make_response(redirect(url_for('stock.stock', page=current_page)))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.
@@ -201,8 +203,10 @@ def changeSupply():
         df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
         data = df.to_dict()
         
+        current_page = request.args.get('page', 1)
+
         # use to prevent user from caching pages
-        response = make_response(render_template('CoreC/change_supply.html', fields = data, pkey = primary_key))
+        response = make_response(render_template('CoreC/change_supply.html', fields = data, pkey = primary_key, page = current_page))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
         response.headers["Pragma"] = "no-cache" # HTTP 1.0.
         response.headers["Expires"] = "0" # Proxies.

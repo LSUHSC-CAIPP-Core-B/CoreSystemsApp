@@ -89,6 +89,7 @@
                 </form>
                 <form method="GET" action="/changeSupply">
                   <input type="hidden" name="primaryKey" value="{{ data[row]['Product_Num'] }}" />
+                  <input type="hidden" name="page" value="{{ page }}" />
                   <button class="filterbutton">Change Info</button>
                 </form>
                 {% endif %}

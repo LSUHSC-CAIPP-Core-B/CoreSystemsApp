@@ -352,14 +352,12 @@ def changeAntibody():
                     'titrationParam': titration,
                     'volumeParam': volume, 
                     'costParam': cost, 
-                    'includedParam': included,
                     'Pkey': primary_key}
 
         #Executes change query
         antibodiesTable.change(params)
 
         current_page = request.form.get('page', 1)
-        print(f"\npage: {current_page}\n")
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('antibodies.antibodies', page=current_page)))

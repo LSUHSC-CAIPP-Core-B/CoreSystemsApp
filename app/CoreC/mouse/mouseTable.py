@@ -59,9 +59,6 @@ class mouseTable(BaseDatabaseTable):
         return data
     
     def add(self, params: dict) -> pd.DataFrame:
-        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
-        cursor = mydb.cursor()
-
         user_id = current_user.id
 
         # SQL Add query
@@ -82,9 +79,6 @@ class mouseTable(BaseDatabaseTable):
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
     
     def delete(self, primary_key) -> None:
-        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
-        cursor = mydb.cursor()
-        
         idQuery = f"SELECT user_id FROM Mouse_Stock WHERE Stock_ID = {primary_key}"
 
         userID = db_utils.toDataframe(idQuery, 'db_config/CoreC.json')

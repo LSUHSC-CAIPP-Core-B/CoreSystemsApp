@@ -247,17 +247,7 @@ def addPanelAntibody():
             LIMIT 1;           
         """
 
-        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
-        cursor = mydb.cursor()
-
-        #Execute SQL query
-        cursor.execute(insert_Antibody_query)
-
-        # Commit the transaction
-        mydb.commit()
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(insert_Antibody_query, 'db_config/CoreC.json')
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panel_details')))
@@ -300,17 +290,7 @@ def deletePanelAntibody():
             DELETE FROM {name}
             where Stock_id = '{primaryKey}'
         """
-        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
-        cursor = mydb.cursor()
-
-        #Execute SQL query
-        cursor.execute(delete_antibody_query)
-
-        # Commit the transaction
-        mydb.commit()
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(delete_antibody_query, 'db_config/CoreC.json')
 
     # use to prevent user from caching pages
     response = make_response(redirect(url_for('panels.panels')))
@@ -346,24 +326,13 @@ def changePanelName():
         Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'db_config/CoreC.json')
         Old_Panel_Dbname = Old_Panel_Df.loc[0, "Panel_table_name"]
 
-        # SQL connection
-        mydb = pymysql.connect(**db_utils.json_Reader('db_config/CoreC.json'))
-        cursor = mydb.cursor()
-
+        # SQL rename query
         changeNameQuery = f"RENAME TABLE `{Old_Panel_Dbname}` TO `{New_Panel_Dbname}`"
-        cursor.execute(changeNameQuery)
+        db_utils.execute(changeNameQuery, 'db_config/CoreC.json')
 
         # SQL Change query
         query = f"UPDATE predefined_panels SET Panel_Name = '{New_Valid_Pname}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = '{panel_id}';"
-        #Execute SQL query
-        cursor.execute(query)
-
-        # Commit the transaction
-        mydb.commit()
-
-        # Close the cursor and connection
-        cursor.close()
-        mydb.close()
+        db_utils.execute(query, 'db_config/CoreC.json')
         
 
         # use to prevent user from caching pages

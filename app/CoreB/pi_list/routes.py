@@ -2,13 +2,10 @@ from flask import Flask, render_template, request, redirect, send_file, session,
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 from app.CoreB.pi_list import bp
-from app.reader import Reader, find
 from app import login_required
 from app.utils.db_utils import db_utils
 from app.CoreB.pi_list.pi_table import PI_table
 from flask_caching import Cache
-
-information_reader = Reader("PI_ID - PI_ID.csv")
 
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
@@ -23,8 +20,6 @@ def information():
     GET: Show information on PI with specified ID
     """
     if request.method == 'GET':
-        # get PI list data
-        data = information_reader.getRawDataCSV(headers=True, dict=True)
         order_num = request.args.get('order_num').split("_")[0]
 
         # get specific PI data

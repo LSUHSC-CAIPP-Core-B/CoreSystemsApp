@@ -1,1 +1,0 @@
-from app.reader.Reader import Reader, find

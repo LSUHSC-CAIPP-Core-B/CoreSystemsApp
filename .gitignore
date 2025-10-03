@@ -6,3 +6,4 @@ my_app/
 .pdf
 .csv
 .DS_Store
+.vscode/

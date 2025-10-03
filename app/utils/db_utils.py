@@ -5,6 +5,13 @@ from datetime import datetime
 import pandas as pd
 import pymysql
 
+from app.utils.logging_utils.logGenerator import Logger
+
+# Logging set up
+logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logger = LogGenerator.generateLogger()
+
 
 class db_utils:
     """A utility class for database operations, including reading JSON configurations, executing SQL queries, 
@@ -19,10 +26,14 @@ class db_utils:
         :return: The db_config dictionary from the JSON file, or an empty dictionary if not found.
         :rtype: dict
         """
-        
-        with open(path, 'r') as file:
-            config_data = json.load(file)
-        db_config = config_data.get('db_config', {})
+        try:
+            with open(path, 'r') as file:
+                config_data = json.load(file)
+            db_config = config_data.get('db_config', {})
+            logger.info(f"Successfully loaded database config from {path}")
+        except Exception as e:
+            logger.error(f"Failed to read database config from {path}: {e}")
+            raise
 
         return db_config
     
@@ -39,15 +50,23 @@ class db_utils:
         :return: The DataFrame containing the query results.
         :rtype: pd.DataFrame
         """
-        mydb = pymysql.connect(**db_utils.json_Reader(path))
+        logger.debug(f"Executing query: {query[:100]}...")
+        if params:
+            logger.debug(f"Query Parameters: {params}")
+
+        mydb = None
         try:
+            mydb = pymysql.connect(**db_utils.json_Reader(path))
             result_dataFrame = pd.read_sql_query(query, mydb, params=params)
-            
-            mydb.close()
+
+            logger.info(f"Query Successful, returned {len(result_dataFrame)} rows")
             return result_dataFrame
         except Exception as e:
-            print(str(e))
-            mydb.close()
+            logger.error(f"Query failed: {e}", exc_info=True)
+            raise
+        finally:
+            if mydb:
+                mydb.close()
     
     @staticmethod
     def execute(query: str, path: str, *, params=None):
@@ -60,18 +79,29 @@ class db_utils:
         :param params: Parameters to bind to the SQL statement, defaults to None
         :type params: dict, optional
         """
+        logger.debug(f"Executing write query: {query[:100]}...")
+        if params:
+            logger.debug(f"Query Parameters: {params}")
+
         db_config = db_utils.json_Reader(path)
-        connection = pymysql.connect(**db_config)
+        connection = None
 
         try:
+            connection = pymysql.connect(**db_config)
+
             with connection.cursor() as cursor:
                 cursor.execute(query, params or {})
             connection.commit()
-            connection.close()
+
+            logger.info(f"Write query executed sucessfully, {cursor.rowcount} rows affected")
         except Exception as e:
-            print(f"[DB EXEC ERROR]: {e}")
+            logger.error(f"Write query failed: {e}", exc_info=True)
+
             if connection:
                 connection.rollback()
+                logger.warning("Transaction rolled back")
+        finally:
+            if connection:
                 connection.close()
 
     @staticmethod

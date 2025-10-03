@@ -9,13 +9,7 @@ from typing import Hashable, Any
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
-
-# Logging set up
-logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
-LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
-logger = LogGenerator.generateLogger()
 
 class antibodiesTable(BaseDatabaseTable):
     """ Concrete class
@@ -78,7 +72,6 @@ class antibodiesTable(BaseDatabaseTable):
     def add(self, params: dict[str, Any]) -> pd.DataFrame:   
         # SQL Add query
         query = "INSERT INTO Antibodies_Stock VALUES (null, %(BoxParam)s, %(CompanyParam)s, %(catalogNumParam)s, %(TargetParam)s, %(TargetSpeciesParam)s, %(flourParam)s, %(cloneParam)s, %(isotypeParam)s, %(sizeParam)s, %(concentrationParam)s, %(DateParam)s, %(titrationParam)s, %(volumeParam)s, %(costParam)s, null, %(includedParam)s);"
-        logger.info(f"Executing query: {query} with params: {params}")
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
 
         # Gets newest antibody
@@ -90,17 +83,13 @@ class antibodiesTable(BaseDatabaseTable):
     def change(self, params: dict[str, Any]) -> None:
         # SQL Change query
         query = "UPDATE Antibodies_Stock SET Box_Name = %(BoxParam)s, Company_name = %(CompanyParam)s, Catalog_Num = %(catalogNumParam)s, Target_Name = %(TargetParam)s, Target_Species = %(TargetSpeciesParam)s, Fluorophore = %(flourParam)s, Clone_Name = %(cloneParam)s, Isotype = %(isotypeParam)s, Size = %(sizeParam)s, Concentration = %(concentrationParam)s, Expiration_Date = %(DateParam)s, Titration = %(titrationParam)s, Volume = %(volumeParam)s, Cost = %(costParam)s,  Included = %(includedParam)s WHERE Stock_ID = %(Pkey)s;"
-        logger.info(f"Executing query: {query} with params: {params}")
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
     
     def delete(self, primary_key: str) -> None:
         # SQL DELETE query
         query = "DELETE FROM Antibodies_Stock WHERE Stock_ID = %s"
-        logger.info(f"Executing query: {query} with params: {primary_key}")
         #Execute SQL query
         db_utils.execute(query, 'db_config/CoreC.json', params=(primary_key,))
-
-        logger.info("Deletion Complete!")
 
     def isIncludedValidInput(self, included: str) -> Union[str, bool]:
         """# * Checking to see if included is Yes or No *

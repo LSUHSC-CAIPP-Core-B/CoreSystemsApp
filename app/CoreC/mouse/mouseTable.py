@@ -4,13 +4,7 @@ from flask_login import current_user
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
 from app.utils.search_utils import search_utils
-
-# Logging set up
-logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s - (Line: %(lineno)s [%(filename)s])'
-LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
-logger = LogGenerator.generateLogger()
 
 class mouseTable(BaseDatabaseTable):
     """Concrete class
@@ -63,7 +57,6 @@ class mouseTable(BaseDatabaseTable):
 
         # SQL Add query
         query = f"INSERT INTO Mouse_Stock VALUES (null, %(PI)s, %(Genotype)s, %(Description)s, %(Strain)s, %(Times Back Crossed)s, %(MTA Required)s, {user_id});"
-        logger.info(f"Executing query: {query} with params: {params}")
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
 
         # Gets newest antibody
@@ -75,7 +68,6 @@ class mouseTable(BaseDatabaseTable):
     def change(self, params: dict) -> None:
         # SQL Change query
         query = "UPDATE Mouse_Stock SET PI_Name = %(PI)s, Genotype = %(Genotype)s, Mouse_Description = %(Description)s, Strain = %(Strain)s, Times_Back_Crossed = %(Times Back Crossed)s, MTA_Required = %(MTA Required)s WHERE Stock_ID = %(primaryKey)s;"
-        logger.info(f"Executing query: {query} with params: {params}")
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
     
     def delete(self, primary_key) -> None:
@@ -86,6 +78,4 @@ class mouseTable(BaseDatabaseTable):
         if userID.iloc[0,0] == current_user.id or current_user.is_admin:
             # SQL DELETE query
             query = "DELETE FROM Mouse_Stock WHERE Stock_ID = %s"
-            logger.info(f"Executing query: {query} with params: {primary_key}")
             db_utils.execute(query, 'db_config/CoreC.json', params=(primary_key,))
-            logger.info("Deletion Complete!")

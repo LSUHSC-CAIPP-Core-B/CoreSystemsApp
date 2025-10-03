@@ -9,7 +9,6 @@ from app import login_required
 from app.CoreC.mouse import bp
 from app.CoreC.mouse.mouseTable import mouseTable
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
 
 # mouse object
 mouseTable = mouseTable()
@@ -18,11 +17,6 @@ mouseTable = mouseTable()
 app = Flask(__name__)
 cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
 defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
-
-# Logging set up
-logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
-logger = LogGenerator.generateLogger()
 
 @bp.route('/mouse', methods=['GET', 'POST'])
 @login_required(role=["user", "coreC"])
@@ -242,8 +236,6 @@ def deleteMouse():
         - Prevents client-side caching with appropriate headers.
     """
     primary_key = request.form['primaryKey']
-
-    logger.info("Deletion Attempting...")
 
     mouseTable.delete(primary_key)
 

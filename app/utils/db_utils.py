@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 import pymysql
 
-from app.utils.logging_utils.logGenerator import Logger
+from log_config.logGenerator import Logger
 
 # Logging set up
 logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

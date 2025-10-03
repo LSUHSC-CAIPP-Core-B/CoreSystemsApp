@@ -1,6 +1,6 @@
 import logging
 
-from app.utils.logging_utils.colorFormat import ColoredFormatter
+from log_config.colorFormat import ColoredFormatter
 
 
 class Logger():

@@ -5,7 +5,7 @@ from typing_extensions import override
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
+from log_config.logGenerator import Logger
 from app.utils.search_utils import search_utils
 
 # Logging set up

@@ -10,7 +10,7 @@ from app import login_required
 from app.CoreC.stock import bp
 from app.CoreC.stock.stockTable import stockTable
 from app.utils.db_utils import db_utils
-from app.utils.logging_utils.logGenerator import Logger
+from log_config.logGenerator import Logger
 
 
 app = Flask(__name__)

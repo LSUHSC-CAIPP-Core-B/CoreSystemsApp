@@ -167,9 +167,22 @@ def invoice():
 
         invoices  = df.to_dict(orient='records')
 
-        total_price_sum = sum(inv["total_price"] for inv in invoices if inv["service_type"] != "All services discount")
-        discount_row = next((inv for inv in invoices if inv["service_type"] == "All services discount"), None)
-        percent_discount = (round(discount_row["total_discount"] / total_price_sum * 100.0, 1)) if total_price_sum and discount_row else 0
+        all_services_subtotal = 0.0
+        discount_row = None
+
+        for inv in invoices:
+            if inv["service_type"] == "All services discount":
+                discount_row = inv
+            else:
+                # Calculate the discounted price
+                line_item_discount_amount = inv["discount_sample_number"] * inv["discount_sample_amount"]
+                price_after_line_discount = inv["total_price"] - line_item_discount_amount
+                all_services_subtotal += price_after_line_discount
+        
+        # Calculate the percentage for the All services discount row
+        percent_discount = 0.0
+        if discount_row and all_services_subtotal > 0:
+            percent_discount = round((discount_row["total_discount"] / all_services_subtotal) * 100.0, 1)
 
         response = make_response(render_template('CoreB/edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
@@ -201,89 +214,123 @@ def gen_invoice():
             'DESCRIPTIONRow2': pi_name_line
         }
 
-        # Initialize
         service_row = 4
         item_number = 1
-        grand_total = 0.0
-        grand_total_discount = 0.0
+        
+        # Track the final calculated monetary values
+        all_services_subtotal = 0.0 # Subtotal after line-item discounts
+        final_discount_amount_monetary = 0.0 # Monetary value of the All services discount
 
         # Load service list that should not be charged per sample
         services_no_unit_price_df = pd.read_csv("services_with_no_unit_price.csv")
         services_no_unit_price = services_no_unit_price_df["Service"].tolist()
 
-        # Process each service
+        # Hold items for processing later for correct total calculation order
+        items_to_process = []
+        final_discount_percent_input = 0.0
+        final_discount_reason_input = ""
+
+        # First Pass: Collect Data and Calculate Line Items
         for i in range(services_num):
-            # Get form fields
             name = request.form.get(f"service {i} name")
             qty = int(request.form.get(f"service {i} qty") or 0)
-            discount_reason = request.form.get(f"service {i} discount reason", "")
-            discount_qty = float(request.form.get(f"service {i} discount qty") or 0)
-            discount_amt = float(request.form.get(f"service {i} discount amount") or 0)
+            discount_reason_input = request.form.get(f"service {i} discount reason", "")
+            discount_qty_input = float(request.form.get(f"service {i} discount qty") or 0)
+            discount_amt_input = float(request.form.get(f"service {i} discount amount") or 0)
             price = float(request.form.get(f"service {i} price") or 0)
 
-            # Set the discount row to render last
+            total = price if name in services_no_unit_price else price * qty
+            line_item_discount_monetary = discount_qty_input * discount_amt_input
+
             if name == "All services discount":
-                service_row = 21
-
-            # Fill dict_data for PDF generation
-            if name != "All services discount":
-                # Service row
-                dict_data[f"ITEM Row{service_row}"] = str(item_number)
-                dict_data[f"QTYRow{service_row}"] = str(qty)
-                dict_data[f"UNITRow{service_row}"] = "ea"
-                dict_data[f"DESCRIPTIONRow{service_row}"] = name
-                dict_data[f"UNIT COSTRow{service_row}"] = f"$ {price}"
-
-                total = price if name in services_no_unit_price else price * qty
-                dict_data[f"TOTALRow{service_row}"] = f"$ {total}"
-                grand_total += total
+                final_discount_percent_input = discount_amt_input
+                final_discount_reason_input = discount_reason_input
             else:
-                total = 0
+                items_to_process.append({
+                    'name': name, 'qty': qty, 'price': price, 'total': total,
+                    'discount_reason': discount_reason_input, 
+                    'discount_qty': discount_qty_input, 
+                    'discount_amt': discount_amt_input, # $ amount per sample input
+                    'line_item_discount_monetary': line_item_discount_monetary
+                })
+                all_services_subtotal += (total - line_item_discount_monetary)
 
-            # Discount row
-            if discount_reason:
-                if name == "All services discount":
-                    discount_amt = round(grand_total * (discount_amt / 100.0), 1)
-                    discount_qty = 1
-                total_discount = discount_amt * discount_qty
-                dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
-                dict_data[f"QTYRow{service_row + 1}"] = str(discount_qty)
-                dict_data[f"UNITRow{service_row + 1}"] = "ea"
-                dict_data[f"DESCRIPTIONRow{service_row + 1}"] = discount_reason
-                dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {discount_amt}"
-                dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {total_discount}"
-                grand_total_discount += total_discount
-            else:
-                total_discount = 0
 
+        # Second Pass: Calculate Final Discount and fill PDF
+        
+        # Calculate the final All services discount monetary amount using the correct subtotal
+        if final_discount_percent_input > 0 and all_services_subtotal > 0:
+            final_discount_amount_monetary = round(all_services_subtotal * (final_discount_percent_input / 100.0), 1)
+
+        for item in items_to_process:
+            # PDF Population for regular items
+            dict_data[f"ITEM Row{service_row}"] = str(item_number)
+            dict_data[f"QTYRow{service_row}"] = str(item['qty'])
+            dict_data[f"UNITRow{service_row}"] = "ea"
+            dict_data[f"DESCRIPTIONRow{service_row}"] = item['name']
+            dict_data[f"UNIT COSTRow{service_row}"] = f"$ {item['price']}"
+            dict_data[f"TOTALRow{service_row}"] = f"$ {item['total']}"
+            
+            # Database Update for regular items
             db_utils.execute("""
                 UPDATE Invoice SET
                     service_sample_number = %(qty)s,
                     service_sample_price = %(price)s,
                     total_price = %(total)s,
                     discount_sample_number = %(discount_qty)s,
-                    discount_sample_amount = %(discount_amt)s,
+                    discount_sample_amount = %(discount_amt)s, -- This is $ per sample input
                     discount_reason = %(discount_reason)s,
-                    total_discount = %(total_discount)s
+                    total_discount = %(line_item_discount_monetary)s
                 WHERE project_id = %(order_num)s AND service_type = %(service_type)s
             """, 'db_config/CoreB.json', params={
-                "qty": qty,
-                "price": price,
-                "total": total,
-                "discount_qty": discount_qty,
-                "discount_amt": discount_amt,
-                "discount_reason": discount_reason,
-                "total_discount": total_discount,
-                "order_num": order_num,
-                "service_type": name
+                "qty": item['qty'], "price": item['price'], "total": item['total'],
+                "discount_qty": item['discount_qty'], 
+                "discount_amt": item['discount_amt'], 
+                "discount_reason": item['discount_reason'],
+                "total_discount": item['line_item_discount_monetary'],
+                "order_num": order_num, "service_type": item['name']
             })
 
-
+            # Handle discount row display/DB update if a line item had reason
+            if item['discount_reason']:
+                dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
+                dict_data[f"QTYRow{service_row + 1}"] = str(item['discount_qty'])
+                dict_data[f"UNITRow{service_row + 1}"] = "ea"
+                dict_data[f"DESCRIPTIONRow{service_row + 1}"] = item['discount_reason']
+                dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {item['discount_amt']}"
+                dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {item['line_item_discount_monetary']}"
+            
             service_row += 2
             item_number += 2
 
-        # Final grand total
-        dict_data["TOTALGRAND TOTAL"] = f"$ {grand_total - grand_total_discount}"
+        # Handle the All services discount row
+        if final_discount_amount_monetary > 0 and final_discount_reason_input:
+            service_row = 21 # Reset service row for final placement
+            dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
+            dict_data[f"QTYRow{service_row + 1}"] = "1"
+            dict_data[f"UNITRow{service_row + 1}"] = "ea"
+            dict_data[f"DESCRIPTIONRow{service_row + 1}"] = final_discount_reason_input
+            dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {final_discount_amount_monetary}"
+            dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {final_discount_amount_monetary}"
+            
+            # Database Update for All services discount
+            db_utils.execute("""
+                UPDATE Invoice SET
+                    discount_reason = %(discount_reason)s,
+                    discount_sample_amount = %(discount_amt)s, -- Store the original percentage input here
+                    total_discount = %(total_discount)s
+                WHERE project_id = %(order_num)s AND service_type = 'All services discount'
+            """, 'db_config/CoreB.json', params={
+                "discount_reason": final_discount_reason_input,
+                "discount_amt": final_discount_percent_input, # Store the percentage 
+                "total_discount": final_discount_amount_monetary, # Store the monetary value
+                "order_num": order_num,
+            })
+
+
+        # Final grand total for PDF
+        final_grand_total = all_services_subtotal - final_discount_amount_monetary
+        dict_data["TOTALGRAND TOTAL"] = f"$ {final_grand_total}"
 
         # Add BioRender accounts if any
         if biorender_accounts:

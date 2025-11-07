@@ -280,7 +280,7 @@ def gen_invoice():
                     discount_sample_number = %(discount_qty)s,
                     discount_sample_amount = %(discount_amt)s, -- This is $ per sample input
                     discount_reason = %(discount_reason)s,
-                    total_discount = %(line_item_discount_monetary)s
+                    total_discount = %(total_discount)s
                 WHERE project_id = %(order_num)s AND service_type = %(service_type)s
             """, 'db_config/CoreB.json', params={
                 "qty": item['qty'], "price": item['price'], "total": item['total'],

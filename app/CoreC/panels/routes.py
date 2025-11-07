@@ -92,7 +92,7 @@ def addPanel():
 
         panel_name = PanelsTable.get_Valid_Panel_Name(panel_name)
         db_name = PanelsTable.get_Valid_db_Name(panel_name)
-        name_query = f"INSERT INTO predefined_panels VALUES (null, %s, %s);"
+        name_query = "INSERT INTO predefined_panels VALUES (null, %s, %s);"
 
         db_utils.execute(name_query, 'db_config/CoreC.json', params=(panel_name, db_name))
 
@@ -128,24 +128,24 @@ def deletePanel():
     if request.method == 'GET':
         panel_name = request.args.get('Panel_Name')
 
-        panel_table_name_query = f"""
+        panel_table_name_query = """
             SELECT panel_table_name
 			FROM predefined_panels
-            WHERE Panel_Name = '{panel_name}'
+            WHERE Panel_Name = %s
         """
 
-        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json', params=(panel_name,))
         name = name_df.iloc[0,0]
 
         drop_query = f" DROP TABLE IF EXISTS {name};"
         db_utils.execute(drop_query, 'db_config/CoreC.json')
 
-        delete_query = f""" 
+        delete_query = """ 
             DELETE FROM predefined_panels
-            Where Panel_Name = '{panel_name}'
+            Where Panel_Name = %s
         """
 
-        db_utils.execute(delete_query, 'db_config/CoreC.json')
+        db_utils.execute(delete_query, 'db_config/CoreC.json', params=(panel_name,))
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panels')))
@@ -221,7 +221,7 @@ def addPanelAntibody():
         catalog_num = request.form.get('Catalog Number')
         Panel_Name = request.form.get('Panel Name')
 
-        query = f"SELECT Catalog_Num FROM Antibodies_Stock;"
+        query = "SELECT Catalog_Num FROM Antibodies_Stock;"
         df = db_utils.toDataframe(query, 'db_config/CoreC.json')
 
         results = search_utils.search_data([catalog_num], columns_to_check=['Catalog_Num'], threshold=99, SqlData=df)
@@ -231,23 +231,23 @@ def addPanelAntibody():
             flash('Antibody not found')
             return redirect(url_for('panels.addPanelAntibody'))
 
-        panel_table_name_query = f"""
+        panel_table_name_query = """
             SELECT panel_table_name
 			FROM predefined_panels
-            WHERE Panel_Name = '{Panel_Name}'
+            WHERE Panel_Name = %s
         """
-        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json', params=(Panel_Name))
         name = name_df.iloc[0,0]
 
         insert_Antibody_query = f"""
             INSERT INTO {name} (Stock_id)
             SELECT Stock_id
             FROM Antibodies_Stock
-            WHERE Catalog_Num = '{results.iloc[0,0]}'
+            WHERE Catalog_Num = %s
             LIMIT 1;           
         """
 
-        db_utils.execute(insert_Antibody_query, 'db_config/CoreC.json')
+        db_utils.execute(insert_Antibody_query, 'db_config/CoreC.json', params=(results.iloc[0,0],))
 
         # use to prevent user from caching pages
         response = make_response(redirect(url_for('panels.panel_details')))
@@ -278,19 +278,19 @@ def deletePanelAntibody():
         Panel_Name = request.form.get('Panel Name')
         primaryKey = request.form.get('primaryKey')
 
-        panel_table_name_query = f"""
+        panel_table_name_query = """
             SELECT panel_table_name
 			FROM predefined_panels
-            WHERE Panel_Name = '{Panel_Name}'
+            WHERE Panel_Name = %s
         """
-        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json')
+        name_df = db_utils.toDataframe(panel_table_name_query, 'db_config/CoreC.json', params=(Panel_Name))
         name = name_df.iloc[0,0]
 
         delete_antibody_query = f"""
             DELETE FROM {name}
-            where Stock_id = '{primaryKey}'
+            where Stock_id = %s
         """
-        db_utils.execute(delete_antibody_query, 'db_config/CoreC.json')
+        db_utils.execute(delete_antibody_query, 'db_config/CoreC.json', params=(primaryKey,))
 
     # use to prevent user from caching pages
     response = make_response(redirect(url_for('panels.panels')))
@@ -308,8 +308,8 @@ def changePanelName():
         new_Panel_Name = request.form.get('New Panel Name')
 
         # Gets Panel ID
-        changeIDQuery = f"SELECT Panel_id from predefined_panels WHERE Panel_Name = '{panel_name}'"
-        id_dataframe = db_utils.toDataframe(changeIDQuery, 'db_config/CoreC.json')
+        changeIDQuery = "SELECT Panel_id from predefined_panels WHERE Panel_Name = %s"
+        id_dataframe = db_utils.toDataframe(changeIDQuery, 'db_config/CoreC.json', params=(panel_name,))
         panel_id = id_dataframe.loc[0, "Panel_id"]
 
         # Generates a valid panel name and Panel SQL name
@@ -322,8 +322,8 @@ def changePanelName():
             return redirect(url_for('panels.changePanelName', Panel_Name=panel_name))
 
         # Gets Old SQL Panel Name
-        oldDBNameQuery = f"SELECT Panel_table_name from predefined_panels where Panel_Name = '{panel_name}';"
-        Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'db_config/CoreC.json')
+        oldDBNameQuery = "SELECT Panel_table_name from predefined_panels where Panel_Name = %s;"
+        Old_Panel_Df = db_utils.toDataframe(oldDBNameQuery, 'db_config/CoreC.json', params=(panel_name,))
         Old_Panel_Dbname = Old_Panel_Df.loc[0, "Panel_table_name"]
 
         # SQL rename query
@@ -331,8 +331,8 @@ def changePanelName():
         db_utils.execute(changeNameQuery, 'db_config/CoreC.json')
 
         # SQL Change query
-        query = f"UPDATE predefined_panels SET Panel_Name = '{New_Valid_Pname}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = '{panel_id}';"
-        db_utils.execute(query, 'db_config/CoreC.json')
+        query = f"UPDATE predefined_panels SET Panel_Name = '{New_Valid_Pname}', Panel_table_name = '{New_Panel_Dbname}' WHERE Panel_id = %s;"
+        db_utils.execute(query, 'db_config/CoreC.json', params=(panel_id,))
         
 
         # use to prevent user from caching pages

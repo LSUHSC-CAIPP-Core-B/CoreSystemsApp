@@ -63,3 +63,4 @@ class PanelsTable(BaseDatabaseTable):
         Uinput = re.sub(regex, ' ', Uinput, flags=re.IGNORECASE).strip()
 
         return Uinput
+    

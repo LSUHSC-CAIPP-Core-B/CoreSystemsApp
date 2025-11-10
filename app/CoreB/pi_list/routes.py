@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, send_file, session, url_for, flash, make_response
 from flask_paginate import Pagination, get_page_args
-import pandas as pd
 from app.CoreB.pi_list import bp
 from app import login_required
 from app.utils.db_utils import db_utils

@@ -1,5 +1,4 @@
 import pandas as pd
-import pymysql
 from flask_login import current_user
 
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable

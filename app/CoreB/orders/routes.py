@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, make_response, session
 from flask_paginate import Pagination, get_page_args
-import pandas as pd
-import pymysql
 from app import login_required
 from app.CoreB.orders import bp
 from flask_caching import Cache

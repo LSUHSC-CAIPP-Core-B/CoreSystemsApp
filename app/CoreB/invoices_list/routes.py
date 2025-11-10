@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, make_response, send_file, sen
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
-import pymysql
 from sqlalchemy import create_engine, text
 import urllib
 from app.CoreB.invoices_list import bp

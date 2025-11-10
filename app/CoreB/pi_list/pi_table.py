@@ -1,7 +1,6 @@
 from typing import Hashable, Any, Union
 
 import pandas as pd
-import pymysql
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils

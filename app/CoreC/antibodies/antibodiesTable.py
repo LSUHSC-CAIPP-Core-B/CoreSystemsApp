@@ -1,5 +1,4 @@
 import pandas as pd
-import pymysql
 from flask import flash
 from flask_login import current_user
 from fuzzywuzzy import fuzz

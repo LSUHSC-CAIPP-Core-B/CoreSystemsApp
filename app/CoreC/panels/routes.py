@@ -1,5 +1,4 @@
 import pandas as pd
-import pymysql
 from flask import (Flask, flash, make_response, redirect,
                    render_template, request, url_for)
 from flask_caching import Cache

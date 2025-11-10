@@ -1,7 +1,6 @@
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils 
-import pandas as pd
 
 class ordersTable(BaseDatabaseTable):
     """ Concrete class

@@ -69,7 +69,7 @@ class BaseDatabaseTable(ITable):
         """        
         df = pd.DataFrame.from_dict(saved_data)
 
-        if dropCol != None:
+        if dropCol is not None:
             df.drop(columns=dropCol, inplace=True)
 
         csv = df.to_csv(index=False)

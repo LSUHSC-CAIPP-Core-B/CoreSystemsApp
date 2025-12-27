@@ -1,0 +1,15 @@
+{
+  "name": "core-systems-app",
+  "version": "1.0.0",
+  "description": "LSUHS CAIPP Core Systems Application - Bioinformatics and Modeling",
+  "private": true,
+  "devDependencies": {
+    "htmlhint": "^1.1.4",
+    "stylelint": "^16.26.1",
+    "stylelint-config-standard": "^36.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}

@@ -1,4 +1,3 @@
-my_app/
 **/__pycache__/
 .hintrc
 .log
@@ -7,3 +6,10 @@ my_app/
 .csv
 .DS_Store
 .vscode/
+
+# environments
+my_app/
+venv/
+
+# Dependency directories
+node_modules/

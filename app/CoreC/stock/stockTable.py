@@ -96,7 +96,7 @@ class stockTable(BaseDatabaseTable):
         mydb.close()
 
         # Gets newest supply
-        query = f"SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY S.Product_Num DESC LIMIT 1;"
+        query = "SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num ORDER BY S.Product_Num DESC LIMIT 1;"
         df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         return df
     

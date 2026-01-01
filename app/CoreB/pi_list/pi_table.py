@@ -117,7 +117,7 @@ class PI_table(BaseDatabaseTable):
         db_utils.execute(query, 'db_config/CoreB.json', params=params)
 
         # Gets newest antibody
-        query = f"SELECT * FROM pi_info ORDER BY `index` DESC LIMIT 1;"
+        query = "SELECT * FROM pi_info ORDER BY `index` DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'db_config/CoreB.json')
         return df

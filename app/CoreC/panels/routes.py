@@ -257,7 +257,7 @@ def addPanelAntibody():
     
     if request.method == 'GET':
         panel_name = request.args.get('Panel Name')
-        if panel_name == None:
+        if panel_name is None:
             panel_name = request.args.get('Panel_Name')
 
         data = {
@@ -343,7 +343,7 @@ def changePanelName():
     
     if request.method == 'GET':
         panel_name = request.args.get('Panel Name')
-        if panel_name == None:
+        if panel_name is None:
             panel_name = request.args.get('Panel_Name')
 
         data = {

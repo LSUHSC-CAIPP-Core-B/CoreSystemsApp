@@ -29,7 +29,7 @@ def login():
         
         login_user(user)
 
-        # checl what roles the user has and redirect him to desired page
+        # check what roles the user has and redirect him to desired page
         roles_to_check = []
         for r in user.urole:
             roles_to_check.append(r.role)

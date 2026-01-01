@@ -51,8 +51,6 @@ class PanelsTable(BaseDatabaseTable):
         Returns:
             str: String without the word panel
         """
-        insensitiveUinput = Uinput.casefold()
-
         #patterns to be replaced with a space
         patterns = [' panel ', ' panel', 'panel ', 'panel']
         

@@ -59,7 +59,7 @@ class mouseTable(BaseDatabaseTable):
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
 
         # Gets newest antibody
-        query = f"SELECT * FROM Mouse_Stock ORDER BY Stock_ID DESC LIMIT 1;"
+        query = "SELECT * FROM Mouse_Stock ORDER BY Stock_ID DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         return df

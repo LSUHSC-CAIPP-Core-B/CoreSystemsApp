@@ -74,7 +74,7 @@ class antibodiesTable(BaseDatabaseTable):
         db_utils.execute(query, 'db_config/CoreC.json', params=params)
 
         # Gets newest antibody
-        query = f"SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Stock_ID DESC LIMIT 1;"
+        query = "SELECT Stock_ID, Box_Name, Company_name, Catalog_Num, Target_Name, Target_Species, Fluorophore, Clone_Name, Isotype, Size, Concentration, Expiration_Date, Titration, Volume, Cost FROM Antibodies_Stock ORDER BY Stock_ID DESC LIMIT 1;"
         
         df = db_utils.toDataframe(query, 'db_config/CoreC.json')
         return df

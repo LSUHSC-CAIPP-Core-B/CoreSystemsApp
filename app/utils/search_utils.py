@@ -37,7 +37,7 @@ class search_utils:
         # Finds the intersection of all sets to ensure each input has at least one matching column in the row
         all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
         
-        if columns_rename != None:
+        if columns_rename is not None:
             SqlData.rename(columns=columns_rename, inplace=True)
         
         filtered_df = SqlData.loc[list(all_matches)]
@@ -113,7 +113,7 @@ class search_utils:
                 SqlData.sort_values(by=[sort_by], inplace=True)
 
         # Rename columns
-        if columns_rename != None:
+        if columns_rename is not None:
             SqlData.rename(columns=columns_rename, inplace=True)
 
         return SqlData

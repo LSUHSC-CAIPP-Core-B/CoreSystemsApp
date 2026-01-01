@@ -350,7 +350,7 @@ def invoices_list():
     with app.app_context():
         cache1.delete('cached_data')
 
-    query = f"SELECT * FROM Invoice"
+    query = "SELECT * FROM Invoice"
     df = db_utils.toDataframe(query, 'db_config/CoreB.json')
 
     if df.empty:

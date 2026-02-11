@@ -47,7 +47,7 @@ Pygments==2.19.2
 PyMuPDF==1.23.5
 PyMuPDFb==1.23.5
 PyMySQL==1.1.1
-pyparsing==3.2.3
+pyparsing==3.3.2
 pypdf==6.6.2
 pytest==8.4.2
 python-dateutil==2.8.2

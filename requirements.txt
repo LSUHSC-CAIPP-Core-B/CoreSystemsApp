@@ -46,6 +46,7 @@ PyMySQL==1.1.1
 pyparsing==3.2.3
 pypdf==6.6.2
 python-dateutil==2.8.2
+python-dotenv==1.2.1
 python-Levenshtein==0.25.0
 pytokens==0.1.10
 pytz==2023.3.post1

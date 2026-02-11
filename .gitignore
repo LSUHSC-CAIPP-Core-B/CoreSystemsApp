@@ -13,3 +13,8 @@ venv/
 
 # Dependency directories
 node_modules/
+
+.env
+.env.*
+*.env
+db_config/

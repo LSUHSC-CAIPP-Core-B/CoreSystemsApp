@@ -41,13 +41,13 @@ pdfrw2==0.5.0
 Pillow==12.1.1
 platformdirs==4.4.0
 pluggy==1.6.0
-protobuf==4.21.12
+protobuf==5.29.6
 pycparser==2.21
 Pygments==2.19.2
 PyMuPDF==1.23.5
 PyMuPDFb==1.23.5
 PyMySQL==1.1.1
-pyparsing==3.2.3
+pyparsing==3.3.2
 pypdf==6.6.2
 pytest==8.4.2
 python-dateutil==2.8.2
@@ -64,6 +64,6 @@ SQLAlchemy-Utils==0.41.1
 tomli==2.2.1
 typing_extensions==4.8.0
 tzdata==2023.3
-Werkzeug==2.3.7
+Werkzeug==3.1.5
 WTForms==3.1.0
 zipp==3.17.0

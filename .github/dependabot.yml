@@ -18,3 +18,8 @@ updates:
         patterns:
           - "mysql-connector-python"
           - "protobuf"
+      flask:
+        patterns:
+          - "Flask"
+          - "Flask-*"
+          - "Werkzeug"

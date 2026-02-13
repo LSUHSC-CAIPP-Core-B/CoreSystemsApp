@@ -9,3 +9,12 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    groups:
+      security:
+        patterns:
+        - "cryptography"
+        - "cffi"
+      mysql:
+        patterns:
+          - "mysql-connector-python"
+          - "protobuf"

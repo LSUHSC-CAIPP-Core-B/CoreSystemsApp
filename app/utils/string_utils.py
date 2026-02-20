@@ -2,10 +2,10 @@ from rapidfuzz import fuzz, utils
 
 
 class string_utils:
-    """A collection of utility methods for string operations.
-    """
+    """A collection of utility methods for string operations."""
+
     @staticmethod
-    def isValidInput(string: str, expected: str, *, threshold: int=70) -> bool:
+    def isValidInput(string: str, expected: str, *, threshold: int = 70) -> bool:
         """Checks if the input string matches the expected input
 
         :param string: Input string to be compared

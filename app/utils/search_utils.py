@@ -4,11 +4,17 @@ from typing import Hashable, Any
 
 
 class search_utils:
-    """A utility class for performing and sorting fuzzy searches on a DataFrame.
-    """
+    """A utility class for performing and sorting fuzzy searches on a DataFrame."""
 
     @staticmethod
-    def search_data(Uinputs: list[Any], columns_to_check: list[str], threshold: int, SqlData: pd.DataFrame, *, columns_rename: dict[str]=None) -> list[dict[Hashable, Any]]:
+    def search_data(
+        Uinputs: list[Any],
+        columns_to_check: list[str],
+        threshold: int,
+        SqlData: pd.DataFrame,
+        *,
+        columns_rename: dict[str] = None,
+    ) -> list[dict[Hashable, Any]]:
         """Performs a fuzzy search on a SQL DataFrame using user inputs and specified columns, returning a dictionary of matching results.
 
         :param Uinputs: List of user inputs to search for.
@@ -25,26 +31,40 @@ class search_utils:
         :rtype: list[dict[Hashable, Any]]
         """
 
-        matches_per_input: list = [set() for _ in Uinputs]  # List of sets, one for each input
+        matches_per_input: list = [
+            set() for _ in Uinputs
+        ]  # List of sets, one for each input
 
         for input_index, i in enumerate(Uinputs):
             for index, row in SqlData.iterrows():
                 for column in columns_to_check:
                     if fuzz.ratio(i, row[column]) > threshold:
-                        matches_per_input[input_index].add(index)  # Adds row index to the set for this input
+                        matches_per_input[input_index].add(
+                            index
+                        )  # Adds row index to the set for this input
                         break  # No need to check other columns for this input
 
         # Finds the intersection of all sets to ensure each input has at least one matching column in the row
-        all_matches = set.intersection(*matches_per_input) if matches_per_input else set()
-        
+        all_matches = (
+            set.intersection(*matches_per_input) if matches_per_input else set()
+        )
+
         if columns_rename is not None:
             SqlData.rename(columns=columns_rename, inplace=True)
-        
+
         filtered_df = SqlData.loc[list(all_matches)]
-        return filtered_df.to_dict(orient='records')
-    
+        return filtered_df.to_dict(orient="records")
+
     @staticmethod
-    def sort_searched_data(Uinputs: list[Any], columns_to_check: list[str], threshold: int, SqlData: pd.DataFrame, sort_by: list[str] = None, *, columns_rename: dict[str]=None) -> list[dict[Hashable, Any]]:
+    def sort_searched_data(
+        Uinputs: list[Any],
+        columns_to_check: list[str],
+        threshold: int,
+        SqlData: pd.DataFrame,
+        sort_by: list[str] = None,
+        *,
+        columns_rename: dict[str] = None,
+    ) -> list[dict[Hashable, Any]]:
         """Searches and sorts data from a DataFrame based on user inputs and columns, then returns the sorted data as a dictionary.
 
         :param Uinputs: List of user inputs to search for in the DataFrame.
@@ -74,12 +94,19 @@ class search_utils:
             for i, v in enumerate(columns_to_check):
                 SqlData[v] = SqlData[v].astype(str)
 
-                SqlData[f'{v}_ratio'] = SqlData.apply(
-                    lambda x: round(fuzz.ratio(utils.default_process(x[v]), utils.default_process(Uinputs[i])), 2), axis=1
-                ) # Create the ratio column
+                SqlData[f"{v}_ratio"] = SqlData.apply(
+                    lambda x: round(
+                        fuzz.ratio(
+                            utils.default_process(x[v]),
+                            utils.default_process(Uinputs[i]),
+                        ),
+                        2,
+                    ),
+                    axis=1,
+                )  # Create the ratio column
 
             # Store Ratio column names
-            rCol = [f'{i}_ratio' for i in columns_to_check]
+            rCol = [f"{i}_ratio" for i in columns_to_check]
 
             # Update the condition to include any ratio column exceeding the threshold
             condition = (SqlData[rCol] > threshold).any(axis=1)
@@ -91,7 +118,7 @@ class search_utils:
             asc = [False for i in rCol]
             # adding sort_by column
             rCol.append(sort_by)
-            asc.append(True) # adds sort order for sort_by column
+            asc.append(True)  # adds sort order for sort_by column
 
             if sort_by == "Request Date":
                 df.sort_values(by=rCol, ascending=False, inplace=True)
@@ -101,8 +128,8 @@ class search_utils:
                 df.sort_values(by=rCol, ascending=asc, inplace=True)
 
             # Drop ratio columns
-            SqlData = df.drop(columns=rCol[0:len(rCol)-1])
-        else: # inputs not used
+            SqlData = df.drop(columns=rCol[0 : len(rCol) - 1])
+        else:  # inputs not used
             if sort_by == "Request Date":
                 SqlData.sort_values(by=[sort_by], ascending=False, inplace=True)
             elif sort_by == "Not Sorted":
@@ -117,7 +144,7 @@ class search_utils:
             SqlData.rename(columns=columns_rename, inplace=True)
 
         return SqlData
-    
+
     @staticmethod
     def find_best_fuzzy_match(search_term, dataframe, threshold=70):
         """Performs a fuzzy search on a SQL DataFrame using user input and specified columns,
@@ -139,11 +166,10 @@ class search_utils:
         matches_per_row = []
 
         for _, row in dataframe.iterrows():
-
             row_choices = [
-                (row['First Name'], 'First Name'), 
-                (row['Last Name'], 'Last Name'),   
-                (row['PI full name'], 'PI full name') 
+                (row["First Name"], "First Name"),
+                (row["Last Name"], "Last Name"),
+                (row["PI full name"], "PI full name"),
             ]
 
             best_score_for_row = 0
@@ -153,7 +179,9 @@ class search_utils:
                 normalized_search_term = search_term.lower().strip()
                 normalized_choice_str = str(choice_str).lower().strip()
 
-                score = fuzz.token_set_ratio(normalized_search_term, normalized_choice_str)
+                score = fuzz.token_set_ratio(
+                    normalized_search_term, normalized_choice_str
+                )
 
                 if score > best_score_for_row:
                     best_score_for_row = score
@@ -161,9 +189,11 @@ class search_utils:
 
             if best_score_for_row >= threshold:
                 matches_per_row.append(
-                    (row['PI full name'], best_score_for_row, best_matched_column, row)
+                    (row["PI full name"], best_score_for_row, best_matched_column, row)
                 )
 
-        matches_per_row.sort(key=lambda x: x[1], reverse=True) # Sort by score (index 1 in tuple)
+        matches_per_row.sort(
+            key=lambda x: x[1], reverse=True
+        )  # Sort by score (index 1 in tuple)
 
         return matches_per_row

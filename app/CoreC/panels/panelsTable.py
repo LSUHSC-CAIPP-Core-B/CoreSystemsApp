@@ -4,7 +4,7 @@ import re
 
 class PanelsTable(BaseDatabaseTable):
     """Concrete class
-    
+
     Inherits from abstract class BaseDatabaseTable
 
     :param BaseDatabaseTable: _description_
@@ -13,16 +13,16 @@ class PanelsTable(BaseDatabaseTable):
 
     def display(self, Uinputs: str, sort: str) -> dict:
         return super().display(Uinputs, sort)
-    
+
     def add(self, params: dict) -> None:
         return super().add(params)
-    
+
     def change(self, params: dict) -> None:
         return super().change(params)
-    
+
     def delete(self, primary_key) -> None:
         return super().delete(primary_key)
-    
+
     def get_Valid_db_Name(self, Uinput: str) -> str:
         """Replaces spaces with underscores
 
@@ -38,10 +38,10 @@ class PanelsTable(BaseDatabaseTable):
         Uinput = Uinput.strip()
 
         if " " in Uinput:
-            Uinput = Uinput.replace(' ', '_')
-        
+            Uinput = Uinput.replace(" ", "_")
+
         return Uinput
-    
+
     def get_Valid_Panel_Name(self, Uinput: str) -> str:
         """Removes the word panel from the User Input
 
@@ -51,14 +51,13 @@ class PanelsTable(BaseDatabaseTable):
         Returns:
             str: String without the word panel
         """
-        #patterns to be replaced with a space
-        patterns = [' panel ', ' panel', 'panel ', 'panel']
-        
+        # patterns to be replaced with a space
+        patterns = [" panel ", " panel", "panel ", "panel"]
+
         # Combines patterns into a single regex
-        regex = '|'.join(re.escape(pattern) for pattern in patterns)
-        
-        #Perform case-insensitive replacement while preserving original case
-        Uinput = re.sub(regex, ' ', Uinput, flags=re.IGNORECASE).strip()
+        regex = "|".join(re.escape(pattern) for pattern in patterns)
+
+        # Perform case-insensitive replacement while preserving original case
+        Uinput = re.sub(regex, " ", Uinput, flags=re.IGNORECASE).strip()
 
         return Uinput
-    

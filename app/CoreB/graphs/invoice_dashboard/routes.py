@@ -9,45 +9,63 @@ import base64
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-matplotlib.use('agg')
+
+matplotlib.use("agg")
 from app.utils.db_utils import db_utils
 
-@bp.route('/invoice_dashboard', methods=['GET'])
+
+@bp.route("/invoice_dashboard", methods=["GET"])
 @login_required
 def invoice_dashboard():
-    if request.method == 'GET':
-        df = db_utils.toDataframe("SELECT * FROM Invoice", 'db_config/CoreB.json')
-        
+    if request.method == "GET":
+        df = db_utils.toDataframe("SELECT * FROM Invoice", "db_config/CoreB.json")
+
         if df.empty:
             grouped = []
         else:
-            #Group by project_id and compute sums
-            grouped = df.groupby("project_id").agg({
-                "total_price": "sum",
-                "total_discount": "sum"
-            }).reset_index()
-            
+            # Group by project_id and compute sums
+            grouped = (
+                df.groupby("project_id")
+                .agg({"total_price": "sum", "total_discount": "sum"})
+                .reset_index()
+            )
+
         # Compute final price
         grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
 
-        #rename for display
-        grouped = grouped.rename(columns={
-            "project_id": "Project ID",
-            "total_price": "Total price",
-            "total_discount": "Total discount",
-            "final_price": "Final price"
-        })
+        # rename for display
+        grouped = grouped.rename(
+            columns={
+                "project_id": "Project ID",
+                "total_price": "Total price",
+                "total_discount": "Total discount",
+                "final_price": "Final price",
+            }
+        )
 
         # Get orders data and merge with Invoice data
-        orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'db_config/CoreB.json')
-        grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
-        new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
+        orders_df = db_utils.toDataframe(
+            "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
+            "db_config/CoreB.json",
+        )
+        grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
+        new_column_order = [
+            "Project ID",
+            "Service Type",
+            "Request Date",
+            "Total price",
+            "Total discount",
+            "Final price",
+            "Bill",
+            "Paid",
+        ]
         grouped = grouped.reindex(columns=new_column_order)
-        grouped = grouped.fillna('-') # replace NaN with '-'
+        grouped = grouped.fillna("-")  # replace NaN with '-'
 
-        build_dashboard(grouped, 'app/templates/CoreB/graphs/InvoiceDashboard.html')
-        return render_template('CoreB/graphs/InvoiceDashboard.html')
-    
+        build_dashboard(grouped, "app/templates/CoreB/graphs/InvoiceDashboard.html")
+        return render_template("CoreB/graphs/InvoiceDashboard.html")
+
+
 def find_col(candidates, cols):
     cols_l = [c.lower() for c in cols]
     for cand in candidates:
@@ -60,18 +78,22 @@ def find_col(candidates, cols):
                 return c
     return None
 
+
 def ensure_numeric(series):
     return pd.to_numeric(series, errors="coerce")
+
 
 def save_fig(path):
     plt.tight_layout()
     plt.savefig(path, dpi=160, bbox_inches="tight")
     plt.close()
 
+
 def to_base64_img(path):
     with open(path, "rb") as f:
         b = base64.b64encode(f.read()).decode("utf-8")
     return f"data:image/png;base64,{b}"
+
 
 def df_to_html_table(df, classes="table"):
     headers = "".join(f"<th>{h}</th>" for h in df.columns)
@@ -82,37 +104,58 @@ def df_to_html_table(df, classes="table"):
     <table class="{classes}">
       <thead><tr>{headers}</tr></thead>
       <tbody>
-        {''.join(rows)}
+        {"".join(rows)}
       </tbody>
     </table>
     """
 
+
 def to_bool_counts_yes_no(series):
     """Return counts (yes, no) from a free-form 'Yes/No-ish' column."""
     s = series.astype(str).str.strip().str.lower()
-    yes_set = {"yes","y","true","1","paid","billed","bill"}
-    no_set  = {"no","n","false","0","unpaid","not paid","not billed","unbilled"}
+    yes_set = {"yes", "y", "true", "1", "paid", "billed", "bill"}
+    no_set = {"no", "n", "false", "0", "unpaid", "not paid", "not billed", "unbilled"}
     yes = s.isin(yes_set).sum()
-    no  = s.isin(no_set).sum()
+    no = s.isin(no_set).sum()
     # Treat other non-empty values as No
     ambiguous = (s.notna() & (s != "") & ~s.isin(yes_set | no_set)).sum()
     no += int(ambiguous)
     return int(yes), int(no)
 
+
 def build_dashboard(df_raw, html_out):
     # Exclude BioRender anywhere
-    mask_bio = df_raw.astype(str).apply(lambda col: col.str.contains("biorender", case=False, na=False))
+    mask_bio = df_raw.astype(str).apply(
+        lambda col: col.str.contains("biorender", case=False, na=False)
+    )
     df = df_raw.loc[~mask_bio.any(axis=1)].copy()
     bio_df = df_raw.loc[mask_bio.any(axis=1)].copy()
 
     cols = list(df.columns)
 
     # Key columns (explicit first, then fuzzy)
-    date_col = "Invoice Date" if "Invoice Date" in df.columns else find_col(["invoice date","date","issued","created","invoice_date"], cols)
-    amount_col = "Amount" if "Amount" in df.columns else find_col(["amount","total","invoice amount","grand total","subtotal","balance"], cols)
+    date_col = (
+        "Invoice Date"
+        if "Invoice Date" in df.columns
+        else find_col(
+            ["invoice date", "date", "issued", "created", "invoice_date"], cols
+        )
+    )
+    amount_col = (
+        "Amount"
+        if "Amount" in df.columns
+        else find_col(
+            ["amount", "total", "invoice amount", "grand total", "subtotal", "balance"],
+            cols,
+        )
+    )
     paid_col = "Paid" if "Paid" in df.columns else find_col(["paid"], cols)
-    bill_col = "Bill" if "Bill" in df.columns else find_col(["bill","billed"], cols)
-    service_col = "Service Type" if "Service Type" in df.columns else find_col(["service type","service","category"], cols)
+    bill_col = "Bill" if "Bill" in df.columns else find_col(["bill", "billed"], cols)
+    service_col = (
+        "Service Type"
+        if "Service Type" in df.columns
+        else find_col(["service type", "service", "category"], cols)
+    )
 
     # Normalize
     dfw = df.copy()
@@ -129,62 +172,100 @@ def build_dashboard(df_raw, html_out):
     total_invoices = len(dfw)
     total_amount = float(dfw["_amount"].sum(skipna=True)) if amount_col else 0.0
     excluded_count = len(df_raw) - len(df)
-    bio_amount = float(pd.to_numeric(bio_df[amount_col], errors="coerce").sum()) if amount_col and amount_col in bio_df.columns else 0.0
+    bio_amount = (
+        float(pd.to_numeric(bio_df[amount_col], errors="coerce").sum())
+        if amount_col and amount_col in bio_df.columns
+        else 0.0
+    )
 
     summary_rows = [
         ("Total Invoices", f"{total_invoices:,}"),
         ("Revenue", f"{total_amount:,.2f}"),
         ("BioRender", f"{excluded_count:,}"),
-        ("BioRender Fee ", f"{bio_amount:,.2f}")
+        ("BioRender Fee ", f"{bio_amount:,.2f}"),
     ]
-    summary_df = pd.DataFrame(summary_rows, columns=["Metric","Value"])
+    summary_df = pd.DataFrame(summary_rows, columns=["Metric", "Value"])
     summary_html = df_to_html_table(summary_df, classes="table kpi")
 
     # Figures — dict to avoid duplicates
     out_dir = os.path.dirname(html_out) or "."
     images = {}
-    def add_card(title, data_uri): images[title] = data_uri
-    
+
+    def add_card(title, data_uri):
+        images[title] = data_uri
+
     # Invoices over Time
     if date_col and dfw["_inv_month"].notna().any():
-        ts = dfw.dropna(subset=["_inv_month"]).groupby("_inv_month").size().reset_index(name="invoices")
+        ts = (
+            dfw.dropna(subset=["_inv_month"])
+            .groupby("_inv_month")
+            .size()
+            .reset_index(name="invoices")
+        )
         plt.figure()
         plt.plot(ts["_inv_month"], ts["invoices"])
-        plt.title("Invoices over Time"); plt.xlabel("Month"); plt.ylabel("Invoices")
-        p = os.path.join(out_dir, "inv_over_time.png"); save_fig(p); add_card("Invoices over Time", to_base64_img(p))
+        plt.title("Invoices over Time")
+        plt.xlabel("Month")
+        plt.ylabel("Invoices")
+        p = os.path.join(out_dir, "inv_over_time.png")
+        save_fig(p)
+        add_card("Invoices over Time", to_base64_img(p))
 
     # Billed Amount over Time
     if date_col and amount_col and dfw["_inv_month"].notna().any():
-        ts_amt = dfw.dropna(subset=["_inv_month"]).groupby("_inv_month")["_amount"].sum().reset_index()
+        ts_amt = (
+            dfw.dropna(subset=["_inv_month"])
+            .groupby("_inv_month")["_amount"]
+            .sum()
+            .reset_index()
+        )
         plt.figure()
         plt.plot(ts_amt["_inv_month"], ts_amt["_amount"])
-        plt.title("Billed Amount over Time"); plt.xlabel("Month"); plt.ylabel("Amount")
-        p = os.path.join(out_dir, "billed_over_time.png"); save_fig(p); add_card("Billed Amount over Time", to_base64_img(p))
+        plt.title("Billed Amount over Time")
+        plt.xlabel("Month")
+        plt.ylabel("Amount")
+        p = os.path.join(out_dir, "billed_over_time.png")
+        save_fig(p)
+        add_card("Billed Amount over Time", to_base64_img(p))
 
     # Invoices by Service Type
     if service_col:
         sc = dfw[service_col].astype(str).value_counts()
         if len(sc) > 0:
-            plt.figure(figsize=(6, max(3, 0.3*len(sc))))
+            plt.figure(figsize=(6, max(3, 0.3 * len(sc))))
             sc.sort_values().plot(kind="barh")
-            plt.title("Invoices by Service Type"); plt.xlabel("Invoices")
-            p = os.path.join(out_dir, "invoices_by_service.png"); save_fig(p); add_card("Invoices by Service Type", to_base64_img(p))
+            plt.title("Invoices by Service Type")
+            plt.xlabel("Invoices")
+            p = os.path.join(out_dir, "invoices_by_service.png")
+            save_fig(p)
+            add_card("Invoices by Service Type", to_base64_img(p))
 
     # Billed pie
     if bill_col:
         y, n = to_bool_counts_yes_no(dfw[bill_col])
         plt.figure()
-        plt.pie([y, n], labels=["Billed (Yes)", "Not Billed"], autopct="%1.1f%%", startangle=90)
+        plt.pie(
+            [y, n],
+            labels=["Billed (Yes)", "Not Billed"],
+            autopct="%1.1f%%",
+            startangle=90,
+        )
         plt.title("Billed (Yes) vs Not Billed")
-        p = os.path.join(out_dir, "billed_yes_not.png"); save_fig(p); add_card("Billed (Yes) vs Not Billed", to_base64_img(p))
+        p = os.path.join(out_dir, "billed_yes_not.png")
+        save_fig(p)
+        add_card("Billed (Yes) vs Not Billed", to_base64_img(p))
 
     # Paid pie
     if paid_col:
         y, n = to_bool_counts_yes_no(dfw[paid_col])
         plt.figure()
-        plt.pie([y, n], labels=["Paid (Yes)", "Not Paid"], autopct="%1.1f%%", startangle=90)
+        plt.pie(
+            [y, n], labels=["Paid (Yes)", "Not Paid"], autopct="%1.1f%%", startangle=90
+        )
         plt.title("Paid (Yes) vs Not Paid")
-        p = os.path.join(out_dir, "paid_yes_not.png"); save_fig(p); add_card("Paid (Yes) vs Not Paid", to_base64_img(p))
+        p = os.path.join(out_dir, "paid_yes_not.png")
+        save_fig(p)
+        add_card("Paid (Yes) vs Not Paid", to_base64_img(p))
 
     # Cards HTML
     cards_html = "".join(

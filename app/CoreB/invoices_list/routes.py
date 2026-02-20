@@ -1,21 +1,32 @@
 from io import BytesIO
-from flask import Flask, render_template, request, make_response, send_file, send_from_directory, redirect, session, url_for
+from flask import (
+    Flask,
+    render_template,
+    request,
+    make_response,
+    send_file,
+    send_from_directory,
+    redirect,
+    session,
+    url_for,
+)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 import pandas as pd
 from sqlalchemy import create_engine, text
 import urllib
 from app.CoreB.invoices_list import bp
-from app import login_required 
+from app import login_required
 from datetime import datetime
 from app.pdfwriter import PdfWriter
 from app.utils.db_utils import db_utils
 
 app = Flask(__name__)
-cache1 = Cache(app, config={'CACHE_TYPE': 'simple'}) # Memory-based cache
-defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache1 = Cache(app, config={"CACHE_TYPE": "simple"})  # Memory-based cache
+defaultCache = Cache(app, config={"CACHE_TYPE": "simple"})
 
-pdfWriter = PdfWriter("app/static/invoice-base.pdf","app/static/filled-out-v2.pdf")
+pdfWriter = PdfWriter("app/static/invoice-base.pdf", "app/static/filled-out-v2.pdf")
+
 
 def list_services(services_str, services_to_find):
     """
@@ -24,40 +35,44 @@ def list_services(services_str, services_to_find):
     services_str (str): string with services requested
     services_to_find (list(str)): list of possible services to find
 
-    return (list(str)): list of services found 
+    return (list(str)): list of services found
     """
     services = []
 
     for service_to_find in services_to_find["Service"]:
         if services_str.__contains__(service_to_find):
             services.append(service_to_find)
-    
+
     return services
 
-@bp.route('/invoice', methods=['POST'])
+
+@bp.route("/invoice", methods=["POST"])
 @login_required(role=["admin", "coreB"])
 def invoice():
     """
     POST: Provide data to generate invoice
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         # get order data to input automatically into invoice (passed to POST)
-        order_num = request.form.get('order_num')
-        pi_name = request.form.get('pi_name')
-        bm_info = request.form.get('bm_info')
-        service_type = request.form.get('service_type')
-        services_str = request.form.get('services')
-        sample_num = request.form.get('sample_num')
+        order_num = request.form.get("order_num")
+        pi_name = request.form.get("pi_name")
+        bm_info = request.form.get("bm_info")
+        service_type = request.form.get("service_type")
+        services_str = request.form.get("services")
+        sample_num = request.form.get("sample_num")
         # get account number and manager name from bm_info field (format: acc_num,additional info)
         bm_info_split = bm_info.split(",")
 
         # check if bm info format is correct
         if len(bm_info_split) != 3:
-            return render_template('CoreB/error_invoice.html', error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)")
+            return render_template(
+                "CoreB/error_invoice.html",
+                error_msg="Please correct Account number and billing contact person format (account number, manager name, phone number)",
+            )
         acc_num = bm_info_split[0]
         manager_name = bm_info_split[1]
 
-        # check what services are selected and put them into array       
+        # check what services are selected and put them into array
         # if service is BioRender license then make service_str the same as service_type to work the same way as the other servies
         if service_type == "BioRender license":
             biorender_accounts = services_str
@@ -65,55 +80,66 @@ def invoice():
             # pass dict with hidden data just to pass it to the next request
             hidden_data = {
                 "Account Number": acc_num,
-                "Quantity" : sample_num,
+                "Quantity": sample_num,
                 "Order Number": order_num,
                 "Manager Name": manager_name,
                 "PI Name": pi_name,
-                "BioRender Accounts": biorender_accounts
+                "BioRender Accounts": biorender_accounts,
             }
         else:
             # pass dict with hidden data just to pass it to the next request
             hidden_data = {
                 "Account Number": acc_num,
-                "Quantity" : sample_num,
+                "Quantity": sample_num,
                 "Order Number": order_num,
                 "Manager Name": manager_name,
-                "PI Name": pi_name
+                "PI Name": pi_name,
             }
 
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
-        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
+        df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
         # If Invoice record doesnt already esixt in the database, create one
         if df.empty:
             # Get the latest id
-            last_invoice_row = db_utils.toDataframe("SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;", 'db_config/CoreB.json')
+            last_invoice_row = db_utils.toDataframe(
+                "SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;",
+                "db_config/CoreB.json",
+            )
             latest_available_id = last_invoice_row["id"].iloc[0] + 1
 
             # Connection Info
-            db_config = db_utils.json_Reader('db_config/CoreB.json')
-            host = db_config['host']
-            database = db_config['database']
-            user = db_config['user']
-            password = urllib.parse.quote_plus(db_config['password'])
+            db_config = db_utils.json_Reader("db_config/CoreB.json")
+            host = db_config["host"]
+            database = db_config["database"]
+            user = db_config["user"]
+            password = urllib.parse.quote_plus(db_config["password"])
 
-            db_connection_str = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
+            db_connection_str = (
+                f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
+            )
             engine = create_engine(db_connection_str)
 
             # If service is not biorender then display the sub service
-            service_type_value = service_type if service_type == "BioRender license" else services_str
-            
+            service_type_value = (
+                service_type if service_type == "BioRender license" else services_str
+            )
+
             # Service price per sample
             price_per_sample_info = pd.read_csv("services.csv")
 
             services_data = list_services(service_type_value, price_per_sample_info)
 
             for service in services_data:
-                service_sample_price = price_per_sample_info[price_per_sample_info['Service'] == service]
+                service_sample_price = price_per_sample_info[
+                    price_per_sample_info["Service"] == service
+                ]
                 price_per_sample = service_sample_price.iloc[0, 1]
 
                 new_invoice_data = {
-                    "id": [latest_available_id], # Get the next incremented number for the table
+                    "id": [
+                        latest_available_id
+                    ],  # Get the next incremented number for the table
                     "project_id": [order_num],
                     "service_type": [service],
                     "service_sample_number": [0],
@@ -124,32 +150,38 @@ def invoice():
                     "discount_reason": [""],
                     "total_discount": [0],
                 }
-                latest_available_id+=1 #Increment latest id for each iteration
+                latest_available_id += 1  # Increment latest id for each iteration
                 # Add to the database
                 invoice_to_add = pd.DataFrame(new_invoice_data)
-                invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
-            
+                invoice_to_add.to_sql(
+                    "Invoice", engine, schema="CoreB", if_exists="append", index=False
+                )
+
             new_invoice_data_all = {
-                    "id": [latest_available_id], # Get the next incremented number for the table
-                    "project_id": [order_num],
-                    "service_type": ["All services discount"],
-                    "service_sample_number": [0],
-                    "service_sample_price": [0.0],
-                    "total_price": [0],
-                    "discount_sample_number": [0],
-                    "discount_sample_amount": [0],
-                    "discount_reason": [""],
-                    "total_discount": [0],
-                }
+                "id": [
+                    latest_available_id
+                ],  # Get the next incremented number for the table
+                "project_id": [order_num],
+                "service_type": ["All services discount"],
+                "service_sample_number": [0],
+                "service_sample_price": [0.0],
+                "total_price": [0],
+                "discount_sample_number": [0],
+                "discount_sample_amount": [0],
+                "discount_reason": [""],
+                "total_discount": [0],
+            }
             # Add to the database
             invoice_to_add = pd.DataFrame(new_invoice_data_all)
-            invoice_to_add.to_sql("Invoice", engine, schema='CoreB', if_exists='append', index=False)
-            
+            invoice_to_add.to_sql(
+                "Invoice", engine, schema="CoreB", if_exists="append", index=False
+            )
+
             # Grab data again but updated
             query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
-            df = db_utils.toDataframe(query, 'db_config/CoreB.json')
+            df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
-        all_service_discount_row = df['service_type'] == "All services discount"
+        all_service_discount_row = df["service_type"] == "All services discount"
         # If there are discount rows, find the index of the first discount row
         first_discount_idx = all_service_discount_row.idxmax()
 
@@ -161,10 +193,12 @@ def invoice():
         if not already_at_bottom:
             df_without_discount = df[~all_service_discount_row]
             df_with_discount = df[all_service_discount_row]
-            df_reordered = pd.concat([df_without_discount, df_with_discount]).reset_index(drop=True)
+            df_reordered = pd.concat(
+                [df_without_discount, df_with_discount]
+            ).reset_index(drop=True)
             df = df_reordered
 
-        invoices  = df.to_dict(orient='records')
+        invoices = df.to_dict(orient="records")
 
         all_services_subtotal = 0.0
         discount_row = None
@@ -174,51 +208,73 @@ def invoice():
                 discount_row = inv
             else:
                 # Calculate the discounted price
-                line_item_discount_amount = inv["discount_sample_number"] * inv["discount_sample_amount"]
-                price_after_line_discount = inv["total_price"] - line_item_discount_amount
+                line_item_discount_amount = (
+                    inv["discount_sample_number"] * inv["discount_sample_amount"]
+                )
+                price_after_line_discount = (
+                    inv["total_price"] - line_item_discount_amount
+                )
                 all_services_subtotal += price_after_line_discount
-        
+
         # Calculate the percentage for the All services discount row
         percent_discount = 0.0
         if discount_row and all_services_subtotal > 0:
-            percent_discount = round((discount_row["total_discount"] / all_services_subtotal) * 100.0, 1)
+            percent_discount = round(
+                (discount_row["total_discount"] / all_services_subtotal) * 100.0, 1
+            )
 
-        response = make_response(render_template('CoreB/edit_invoice.html', order_num = order_num, service_type = service_type, sample_num = sample_num, fields_hidden = hidden_data, invoices=invoices, percent_discount=percent_discount, len=len))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(
+            render_template(
+                "CoreB/edit_invoice.html",
+                order_num=order_num,
+                service_type=service_type,
+                sample_num=sample_num,
+                fields_hidden=hidden_data,
+                invoices=invoices,
+                percent_discount=percent_discount,
+                len=len,
+            )
+        )
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
 
-@bp.route('/gen_invoice', methods=['POST'])
+
+@bp.route("/gen_invoice", methods=["POST"])
 @login_required(role=["admin", "coreB"])
-def gen_invoice(): 
+def gen_invoice():
     """
     POST: Generate invoice PDF file
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         order_num = request.form.get("Order Number", "")
-        pi_name = request.form.get('PI Name', "")
+        pi_name = request.form.get("PI Name", "")
         pi_name_line = f"Service for {pi_name}"
-        acc_num = request.form.get('Account Number', "")
-        manager_name = request.form.get('Manager Name', "")
-        services_num = int(request.form.get('Services Number', 0))
-        biorender_accounts = request.form.get('BioRender Accounts', "")
-        date = datetime.now().strftime('%m/%d/%Y')
+        acc_num = request.form.get("Account Number", "")
+        manager_name = request.form.get("Manager Name", "")
+        services_num = int(request.form.get("Services Number", 0))
+        biorender_accounts = request.form.get("BioRender Accounts", "")
+        date = datetime.now().strftime("%m/%d/%Y")
 
         dict_data = {
-            'DEBIT ACCOUNTRow1': acc_num,
-            'DEPT REQUISITION Row1': order_num,
-            'Date5_af_date': date,
-            'CARE OFRow1': manager_name,
-            'DESCRIPTIONRow2': pi_name_line
+            "DEBIT ACCOUNTRow1": acc_num,
+            "DEPT REQUISITION Row1": order_num,
+            "Date5_af_date": date,
+            "CARE OFRow1": manager_name,
+            "DESCRIPTIONRow2": pi_name_line,
         }
 
         service_row = 4
         item_number = 1
-        
+
         # Track the final calculated monetary values
-        all_services_subtotal = 0.0 # Subtotal after line-item discounts
-        final_discount_amount_monetary = 0.0 # Monetary value of the All services discount
+        all_services_subtotal = 0.0  # Subtotal after line-item discounts
+        final_discount_amount_monetary = (
+            0.0  # Monetary value of the All services discount
+        )
 
         # Load service list that should not be charged per sample
         services_no_unit_price_df = pd.read_csv("services_with_no_unit_price.csv")
@@ -234,8 +290,12 @@ def gen_invoice():
             name = request.form.get(f"service {i} name")
             qty = int(request.form.get(f"service {i} qty") or 0)
             discount_reason_input = request.form.get(f"service {i} discount reason", "")
-            discount_qty_input = float(request.form.get(f"service {i} discount qty") or 0)
-            discount_amt_input = float(request.form.get(f"service {i} discount amount") or 0)
+            discount_qty_input = float(
+                request.form.get(f"service {i} discount qty") or 0
+            )
+            discount_amt_input = float(
+                request.form.get(f"service {i} discount amount") or 0
+            )
             price = float(request.form.get(f"service {i} price") or 0)
 
             total = price if name in services_no_unit_price else price * qty
@@ -245,33 +305,40 @@ def gen_invoice():
                 final_discount_percent_input = discount_amt_input
                 final_discount_reason_input = discount_reason_input
             else:
-                items_to_process.append({
-                    'name': name, 'qty': qty, 'price': price, 'total': total,
-                    'discount_reason': discount_reason_input, 
-                    'discount_qty': discount_qty_input, 
-                    'discount_amt': discount_amt_input, # $ amount per sample input
-                    'line_item_discount_monetary': line_item_discount_monetary
-                })
-                all_services_subtotal += (total - line_item_discount_monetary)
-
+                items_to_process.append(
+                    {
+                        "name": name,
+                        "qty": qty,
+                        "price": price,
+                        "total": total,
+                        "discount_reason": discount_reason_input,
+                        "discount_qty": discount_qty_input,
+                        "discount_amt": discount_amt_input,  # $ amount per sample input
+                        "line_item_discount_monetary": line_item_discount_monetary,
+                    }
+                )
+                all_services_subtotal += total - line_item_discount_monetary
 
         # Second Pass: Calculate Final Discount and fill PDF
-        
+
         # Calculate the final All services discount monetary amount using the correct subtotal
         if final_discount_percent_input > 0 and all_services_subtotal > 0:
-            final_discount_amount_monetary = round(all_services_subtotal * (final_discount_percent_input / 100.0), 1)
+            final_discount_amount_monetary = round(
+                all_services_subtotal * (final_discount_percent_input / 100.0), 1
+            )
 
         for item in items_to_process:
             # PDF Population for regular items
             dict_data[f"ITEM Row{service_row}"] = str(item_number)
-            dict_data[f"QTYRow{service_row}"] = str(item['qty'])
+            dict_data[f"QTYRow{service_row}"] = str(item["qty"])
             dict_data[f"UNITRow{service_row}"] = "ea"
-            dict_data[f"DESCRIPTIONRow{service_row}"] = item['name']
+            dict_data[f"DESCRIPTIONRow{service_row}"] = item["name"]
             dict_data[f"UNIT COSTRow{service_row}"] = f"$ {item['price']}"
             dict_data[f"TOTALRow{service_row}"] = f"$ {item['total']}"
-            
+
             # Database Update for regular items
-            db_utils.execute("""
+            db_utils.execute(
+                """
                 UPDATE Invoice SET
                     service_sample_number = %(qty)s,
                     service_sample_price = %(price)s,
@@ -281,51 +348,68 @@ def gen_invoice():
                     discount_reason = %(discount_reason)s,
                     total_discount = %(total_discount)s
                 WHERE project_id = %(order_num)s AND service_type = %(service_type)s
-            """, 'db_config/CoreB.json', params={
-                "qty": item['qty'], "price": item['price'], "total": item['total'],
-                "discount_qty": item['discount_qty'], 
-                "discount_amt": item['discount_amt'], 
-                "discount_reason": item['discount_reason'],
-                "total_discount": item['line_item_discount_monetary'],
-                "order_num": order_num, "service_type": item['name']
-            })
+            """,
+                "db_config/CoreB.json",
+                params={
+                    "qty": item["qty"],
+                    "price": item["price"],
+                    "total": item["total"],
+                    "discount_qty": item["discount_qty"],
+                    "discount_amt": item["discount_amt"],
+                    "discount_reason": item["discount_reason"],
+                    "total_discount": item["line_item_discount_monetary"],
+                    "order_num": order_num,
+                    "service_type": item["name"],
+                },
+            )
 
             # Handle discount row display/DB update if a line item had reason
-            if item['discount_reason']:
+            if item["discount_reason"]:
                 dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
-                dict_data[f"QTYRow{service_row + 1}"] = str(item['discount_qty'])
+                dict_data[f"QTYRow{service_row + 1}"] = str(item["discount_qty"])
                 dict_data[f"UNITRow{service_row + 1}"] = "ea"
-                dict_data[f"DESCRIPTIONRow{service_row + 1}"] = item['discount_reason']
-                dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {item['discount_amt']}"
-                dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {item['line_item_discount_monetary']}"
-            
+                dict_data[f"DESCRIPTIONRow{service_row + 1}"] = item["discount_reason"]
+                dict_data[f"UNIT COSTRow{service_row + 1}"] = (
+                    f"-$ {item['discount_amt']}"
+                )
+                dict_data[f"TOTALRow{service_row + 1}"] = (
+                    f"-$ {item['line_item_discount_monetary']}"
+                )
+
             service_row += 2
             item_number += 2
 
         # Handle the All services discount row
         if final_discount_amount_monetary > 0 and final_discount_reason_input:
-            service_row = 21 # Reset service row for final placement
+            service_row = 21  # Reset service row for final placement
             dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
             dict_data[f"QTYRow{service_row + 1}"] = "1"
             dict_data[f"UNITRow{service_row + 1}"] = "ea"
             dict_data[f"DESCRIPTIONRow{service_row + 1}"] = final_discount_reason_input
-            dict_data[f"UNIT COSTRow{service_row + 1}"] = f"-$ {final_discount_amount_monetary}"
-            dict_data[f"TOTALRow{service_row + 1}"] = f"-$ {final_discount_amount_monetary}"
-            
+            dict_data[f"UNIT COSTRow{service_row + 1}"] = (
+                f"-$ {final_discount_amount_monetary}"
+            )
+            dict_data[f"TOTALRow{service_row + 1}"] = (
+                f"-$ {final_discount_amount_monetary}"
+            )
+
             # Database Update for All services discount
-            db_utils.execute("""
+            db_utils.execute(
+                """
                 UPDATE Invoice SET
                     discount_reason = %(discount_reason)s,
                     discount_sample_amount = %(discount_amt)s, -- Store the original percentage input here
                     total_discount = %(total_discount)s
                 WHERE project_id = %(order_num)s AND service_type = 'All services discount'
-            """, 'db_config/CoreB.json', params={
-                "discount_reason": final_discount_reason_input,
-                "discount_amt": final_discount_percent_input, # Store the percentage 
-                "total_discount": final_discount_amount_monetary, # Store the monetary value
-                "order_num": order_num,
-            })
-
+            """,
+                "db_config/CoreB.json",
+                params={
+                    "discount_reason": final_discount_reason_input,
+                    "discount_amt": final_discount_percent_input,  # Store the percentage
+                    "total_discount": final_discount_amount_monetary,  # Store the monetary value
+                    "order_num": order_num,
+                },
+            )
 
         # Final grand total for PDF
         final_grand_total = all_services_subtotal - final_discount_amount_monetary
@@ -338,9 +422,10 @@ def gen_invoice():
                 dict_data[f"DESCRIPTIONRow{7 + idx}"] = account.strip()
 
         pdfWriter.fillForm(dict_data)
-        return send_from_directory('static', "filled-out-v2.pdf")
+        return send_from_directory("static", "filled-out-v2.pdf")
 
-@bp.route('/invoices_list', methods=['GET', 'POST'])
+
+@bp.route("/invoices_list", methods=["GET", "POST"])
 @login_required(role=["coreB", "admin"])
 def invoices_list():
     """
@@ -348,169 +433,233 @@ def invoices_list():
     POST: Display filtered list of all invoices made
     """
     with app.app_context():
-        cache1.delete('cached_data')
+        cache1.delete("cached_data")
 
     query = "SELECT * FROM Invoice"
-    df = db_utils.toDataframe(query, 'db_config/CoreB.json')
+    df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
     if df.empty:
         data = []
     else:
-        #Group by project_id and compute sums
-        grouped = df.groupby("project_id").agg({
-            "total_price": "sum",
-            "total_discount": "sum"
-        }).reset_index()
-    
+        # Group by project_id and compute sums
+        grouped = (
+            df.groupby("project_id")
+            .agg({"total_price": "sum", "total_discount": "sum"})
+            .reset_index()
+        )
+
     # Compute final price
     grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
 
-    #rename for display
-    grouped = grouped.rename(columns={
-        "project_id": "Project ID",
-        "total_price": "Total price",
-        "total_discount": "Total discount",
-        "final_price": "Final price"
-    })
+    # rename for display
+    grouped = grouped.rename(
+        columns={
+            "project_id": "Project ID",
+            "total_price": "Total price",
+            "total_discount": "Total discount",
+            "final_price": "Final price",
+        }
+    )
 
     # Get orders data and merge with Invoice data
-    orders_df = db_utils.toDataframe('SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order', 'db_config/CoreB.json')
-    grouped = pd.merge(grouped, orders_df, on='Project ID', how='left')
-    new_column_order = ['Project ID', 'Service Type','Request Date', 'Total price', 'Total discount', 'Final price', 'Bill', 'Paid']
+    orders_df = db_utils.toDataframe(
+        "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
+        "db_config/CoreB.json",
+    )
+    grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
+    new_column_order = [
+        "Project ID",
+        "Service Type",
+        "Request Date",
+        "Total price",
+        "Total discount",
+        "Final price",
+        "Bill",
+        "Paid",
+    ]
     grouped = grouped.reindex(columns=new_column_order)
-    grouped = grouped.fillna('-') # replace NaN with '-'
+    grouped = grouped.fillna("-")  # replace NaN with '-'
 
     data = grouped.to_dict(orient="records")
-    
-    filters = session.get('invoice_filters', {
-            'service_type': "",
-            'pi_name': "",
-            'project_id': "",
-            'sort': "Original"
-        })
+
+    filters = session.get(
+        "invoice_filters",
+        {"service_type": "", "pi_name": "", "project_id": "", "sort": "Original"},
+    )
 
     # Project ID search
-    if filters['project_id']:
-        data = [record for record in data if record.get('Project ID') == filters['project_id']]
-    
+    if filters["project_id"]:
+        data = [
+            record
+            for record in data
+            if record.get("Project ID") == filters["project_id"]
+        ]
+
     # service type filter
-    if filters['service_type'] != 'All':
-        data = [record for record in data if record.get('Service Type') == filters['service_type']]
+    if filters["service_type"] != "All":
+        data = [
+            record
+            for record in data
+            if record.get("Service Type") == filters["service_type"]
+        ]
 
     # sort dict
-    if filters['sort'] != 'Original':
-        if filters['sort'] != 'Service Type':
-            if filters['sort'] != 'Project ID':
-                reverse = filters['sort'] != "Project ID"
-                data = sorted(data, key=lambda d: d[filters['sort']], reverse=reverse)
+    if filters["sort"] != "Original":
+        if filters["sort"] != "Service Type":
+            if filters["sort"] != "Project ID":
+                reverse = filters["sort"] != "Project ID"
+                data = sorted(data, key=lambda d: d[filters["sort"]], reverse=reverse)
         else:
-            data = sorted(data, key=lambda d: d[filters['sort']])
+            data = sorted(data, key=lambda d: d[filters["sort"]])
 
-    if request.method == 'POST':
-        session['invoice_filters'] = {
-            'service_type': request.form.get('service_type') or "",
-            'project_id': request.form.get('project_id') or "",
-            'sort': request.form.get('sort') or "Original"
+    if request.method == "POST":
+        session["invoice_filters"] = {
+            "service_type": request.form.get("service_type") or "",
+            "project_id": request.form.get("project_id") or "",
+            "sort": request.form.get("sort") or "Original",
         }
-        filters = session['invoice_filters']
+        filters = session["invoice_filters"]
 
         # Project ID search
-        if filters['project_id']:
-            data = [record for record in data if record.get('Project ID') == filters['project_id']]
-        
+        if filters["project_id"]:
+            data = [
+                record
+                for record in data
+                if record.get("Project ID") == filters["project_id"]
+            ]
+
         # service type filter
-        if filters['service_type'] != 'All':
-            data = [record for record in data if record.get('Service Type') == filters['service_type']]
+        if filters["service_type"] != "All":
+            data = [
+                record
+                for record in data
+                if record.get("Service Type") == filters["service_type"]
+            ]
 
         # sort dict
-        if filters['sort'] != 'Original':
-            if filters['sort'] != 'Service Type':
-                if filters['sort'] != 'Project ID':
-                    reverse = filters['sort'] != "Project ID"
-                    data = sorted(data, key=lambda d: d[filters['sort']], reverse=reverse)
+        if filters["sort"] != "Original":
+            if filters["sort"] != "Service Type":
+                if filters["sort"] != "Project ID":
+                    reverse = filters["sort"] != "Project ID"
+                    data = sorted(
+                        data, key=lambda d: d[filters["sort"]], reverse=reverse
+                    )
             else:
-                data = sorted(data, key=lambda d: d[filters['sort']])
-    
-    with app.app_context():
-        cache1.set('cached_data', data, timeout=3600)
+                data = sorted(data, key=lambda d: d[filters["sort"]])
 
-    page, per_page, offset = get_page_args(page_parameter='page', 
-                                        per_page_parameter='per_page')
+    with app.app_context():
+        cache1.set("cached_data", data, timeout=3600)
+
+    page, per_page, offset = get_page_args(
+        page_parameter="page", per_page_parameter="per_page"
+    )
     total = len(data)
 
-    pagination_users = data[offset: offset + per_page]
+    pagination_users = data[offset : offset + per_page]
     pagination = Pagination(page=page, per_page=per_page, total=total)
 
     # use to prevent user from caching pages
-    response = make_response(render_template("CoreB/invoices_list.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-    response.headers["Expires"] = "0" # Proxies.
+    response = make_response(
+        render_template(
+            "CoreB/invoices_list.html",
+            data=pagination_users,
+            page=page,
+            per_page=per_page,
+            pagination=pagination,
+            list=list,
+            len=len,
+            str=str,
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+    )
+    response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+    response.headers["Expires"] = "0"  # Proxies.
     return response
 
-@bp.route('/invoice_details', methods=['GET'])
+
+@bp.route("/invoice_details", methods=["GET"])
 @login_required(["coreB", "admin"])
 def invoice_details():
     """
     GET: Displays invoice information
     """
-    if request.method == 'GET':
-        project_id = request.args['project_id']
+    if request.method == "GET":
+        project_id = request.args["project_id"]
 
         query = f"SELECT service_type, total_price, total_discount FROM Invoice WHERE project_id = '{project_id}'"
-        df = db_utils.toDataframe(query, 'db_config/CoreB.json')
+        df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
-        df = df.rename(columns={
-            "service_type": "Service",
-            "total_price": "Total price",
-            "total_discount": "Total discount"
-        })
+        df = df.rename(
+            columns={
+                "service_type": "Service",
+                "total_price": "Total price",
+                "total_discount": "Total discount",
+            }
+        )
 
         invoice_details = df.to_dict(orient="records") if not df.empty else []
 
-
         # use to prevent user from caching pages
-        response = make_response(render_template('CoreB/invoice_details.html', data=invoice_details, project_id=project_id, list=list, len=len, str=str))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(
+            render_template(
+                "CoreB/invoice_details.html",
+                data=invoice_details,
+                project_id=project_id,
+                list=list,
+                len=len,
+                str=str,
+            )
+        )
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
 
-@bp.route('/delete_invoice', methods=['GET'])
+
+@bp.route("/delete_invoice", methods=["GET"])
 @login_required(["coreB", "admin"])
 def delete_invoice():
     """
     GET: Delete invoice
     """
-    if request.method == 'GET':
-        project_id = request.args['project_id']
+    if request.method == "GET":
+        project_id = request.args["project_id"]
 
         if project_id:
             # SQL DELETE query
             query = "DELETE FROM Invoice WHERE `project_id` = %s"
-            db_utils.execute(query, 'db_config/CoreB.json', params=(project_id,))
-        
-        response = make_response(redirect(url_for('invoices_list.invoices_list')))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+            db_utils.execute(query, "db_config/CoreB.json", params=(project_id,))
+
+        response = make_response(redirect(url_for("invoices_list.invoices_list")))
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
 
-@bp.route('/downloadInvoicesCSV', methods=['GET'])
+
+@bp.route("/downloadInvoicesCSV", methods=["GET"])
 @login_required(role=["coreB"])
 def downloadCSV():
     with app.app_context():
-        saved_data = cache1.get('cached_data')
-    
+        saved_data = cache1.get("cached_data")
+
     if saved_data is None:
         with app.app_context():
-            saved_data = defaultCache.get('cached_data')
+            saved_data = defaultCache.get("cached_data")
 
     df = pd.DataFrame.from_dict(saved_data)
     csv = df.to_csv(index=False)
-    
+
     # Convert the CSV string to bytes and use BytesIO
-    csv_bytes = csv.encode('utf-8')
+    csv_bytes = csv.encode("utf-8")
     csv_io = BytesIO(csv_bytes)
-    
-    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Invoices.csv')
+
+    return send_file(
+        csv_io, mimetype="text/csv", as_attachment=True, download_name="Invoices.csv"
+    )

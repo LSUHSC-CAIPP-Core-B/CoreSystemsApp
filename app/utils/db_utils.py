@@ -8,15 +8,16 @@ import pymysql
 from log_config.logGenerator import Logger
 
 # Logging set up
-logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logFormat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LogGenerator = Logger(logFormat=logFormat, logFile="application.log")
 logger = LogGenerator.generateLogger()
 
 
 class db_utils:
-    """A utility class for database operations, including reading JSON configurations, executing SQL queries, 
+    """A utility class for database operations, including reading JSON configurations, executing SQL queries,
     and validating date formats.
     """
+
     @staticmethod
     def json_Reader(path: str) -> dict:
         """Reads a JSON file from the given path and extracts the 'db_config' section.
@@ -27,16 +28,16 @@ class db_utils:
         :rtype: dict
         """
         try:
-            with open(path, 'r') as file:
+            with open(path, "r") as file:
                 config_data = json.load(file)
-            db_config = config_data.get('db_config', {})
+            db_config = config_data.get("db_config", {})
             logger.info(f"Successfully loaded database config from {path}")
         except Exception as e:
             logger.error(f"Failed to read database config from {path}: {e}")
             raise
 
         return db_config
-    
+
     @staticmethod
     def toDataframe(query: str, path: str, *, params=None) -> pd.DataFrame:
         """Executes a SQL query on a database and converts the result into a pandas DataFrame.
@@ -67,7 +68,7 @@ class db_utils:
         finally:
             if mydb:
                 mydb.close()
-    
+
     @staticmethod
     def execute(query: str, path: str, *, params=None):
         """Executes a write SQL command (INSERT, UPDATE, DELETE).
@@ -93,7 +94,9 @@ class db_utils:
                 cursor.execute(query, params or {})
             connection.commit()
 
-            logger.info(f"Write query executed sucessfully, {cursor.rowcount} rows affected")
+            logger.info(
+                f"Write query executed sucessfully, {cursor.rowcount} rows affected"
+            )
         except Exception as e:
             logger.error(f"Write query failed: {e}", exc_info=True)
 
@@ -115,11 +118,11 @@ class db_utils:
         """
 
         datePattern = r"^\d{4}-\d{2}-\d{2}$"
-        
+
         # Checks if the string matches the pattern
         if re.match(datePattern, expiration_date):
             return True
-        else: # The string does not match the "YYYY-MM-DD" format
+        else:  # The string does not match the "YYYY-MM-DD" format
             return False
 
     @staticmethod
@@ -132,8 +135,8 @@ class db_utils:
         :rtype: bool
         """
 
-        try: # Tries to convert the string to a datetime object
+        try:  # Tries to convert the string to a datetime object
             datetime.strptime(expiration_date, "%Y-%m-%d")
             return True
-        except ValueError: # The string is in the correct format but not a valid date
+        except ValueError:  # The string is in the correct format but not a valid date
             return False

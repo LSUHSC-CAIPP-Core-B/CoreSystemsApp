@@ -1,8 +1,16 @@
 from io import BytesIO
 
 import pandas as pd
-from flask import (Flask, flash, make_response, redirect,
-                   render_template, request, send_file, url_for)
+from flask import (
+    Flask,
+    flash,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from flask_caching import Cache
 from flask_paginate import Pagination, get_page_args
 
@@ -15,128 +23,180 @@ from log_config.logGenerator import Logger
 
 app = Flask(__name__)
 
-cache1 = Cache(app, config={'CACHE_TYPE': 'simple'})  # Memory-based cache
-defaultCache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache1 = Cache(app, config={"CACHE_TYPE": "simple"})  # Memory-based cache
+defaultCache = Cache(app, config={"CACHE_TYPE": "simple"})
 
 stockTable = stockTable()
 
 # Logging set up
-logFormat = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LogGenerator = Logger(logFormat=logFormat, logFile='application.log')
+logFormat = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LogGenerator = Logger(logFormat=logFormat, logFile="application.log")
 logger = LogGenerator.generateLogger()
 
-@bp.route('/stock', methods=['GET', 'POST'])
+
+@bp.route("/stock", methods=["GET", "POST"])
 @login_required(role=["admin"])
 def stock():
-    if request.method == 'POST':
-        company = request.form.get('Company') or ""
-        product = request.form.get('Product') or ""
-        sort = request.form.get('sort') or "Original"
+    if request.method == "POST":
+        company = request.form.get("Company") or ""
+        product = request.form.get("Product") or ""
+        sort = request.form.get("sort") or "Original"
 
         # Stores all possible Inputs
         AllUinputs = [company, product]
-        
+
         # Creates list to store inputs that are being Used
         Uinputs: list[str] = [i for i in AllUinputs]
 
         # Clear the cache when new filters are applied
         with app.app_context():
-            cache1.delete('cached_dataframe')
+            cache1.delete("cached_dataframe")
 
         # ! For excepting raise ValueError(ValueError: Cannot set a DataFrame with multiple columns to the single column Company_name_ratio
         try:
             data: dict = stockTable.display(Uinputs, sort)
         except ValueError:
-            flash(' No records to filter')
-            return redirect(url_for('mouse.mouse'))
+            flash(" No records to filter")
+            return redirect(url_for("mouse.mouse"))
 
         with app.app_context():
-            cache1.set('cached_dataframe2', data, timeout=3600)
+            cache1.set("cached_dataframe2", data, timeout=3600)
 
-    if request.method == 'GET':
+    if request.method == "GET":
         with app.app_context():
-            cached_data = cache1.get('cached_dataframe2')
+            cached_data = cache1.get("cached_dataframe2")
         if cached_data is None:
             with app.app_context():
-                defaultCache.delete('cached_dataframe')
+                defaultCache.delete("cached_dataframe")
 
-            dataFrame = db_utils.toDataframe("SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' AND O.Product_Name != '0' ORDER BY Quantity;", 'db_config/CoreC.json')
-            dataFrame.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-            data = dataFrame.to_dict('records')
+            dataFrame = db_utils.toDataframe(
+                "SELECT S.Product_Num, O.Product_Name, O.Catalog_Num , O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Company_Name != 'N/A' AND O.Product_Name != '0' ORDER BY Quantity;",
+                "db_config/CoreC.json",
+            )
+            dataFrame.rename(
+                columns={
+                    "Product_Name": "Product",
+                    "Catalog_Num": "Catalog Number",
+                    "Company_Name": "Company Name",
+                    "Unit_Price": "Cost",
+                },
+                inplace=True,
+            )
+            data = dataFrame.to_dict("records")
 
             with app.app_context():
-                defaultCache.set('cached_dataframe', data, timeout=3600)
+                defaultCache.set("cached_dataframe", data, timeout=3600)
         else:
             with app.app_context():
-                data = cache1.get('cached_dataframe2')
-    
-    page, per_page, offset = get_page_args(page_parameter='page', 
-                                           per_page_parameter='per_page')
-    #number of rows in table
+                data = cache1.get("cached_dataframe2")
+
+    page, per_page, offset = get_page_args(
+        page_parameter="page", per_page_parameter="per_page"
+    )
+    # number of rows in table
     num_rows = len(data)
 
-    pagination_users = data[offset: offset + per_page]
+    pagination_users = data[offset : offset + per_page]
     pagination = Pagination(page=page, per_page=per_page, total=num_rows)
 
     # use to prevent user from caching pages
-    response = make_response(render_template("CoreC/stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-    response.headers["Expires"] = "0" # Proxies.
+    response = make_response(
+        render_template(
+            "CoreC/stock.html",
+            data=pagination_users,
+            page=page,
+            per_page=per_page,
+            pagination=pagination,
+            list=list,
+            len=len,
+            str=str,
+            num_rows=num_rows,
+        )
+    )
+    response.headers["Cache-Control"] = (
+        "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+    )
+    response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+    response.headers["Expires"] = "0"  # Proxies.
     return response
 
-@bp.route('/addSupply', methods=['GET', 'POST'])
+
+@bp.route("/addSupply", methods=["GET", "POST"])
 @login_required(role=["admin"])
 def addSupply():
-    if request.method == 'POST':
-        Company_Name = request.form.get('Company Name')
-        catalog_num = request.form.get('Catalog Number')
-        cost = request.form.get('Cost')
-        Product_Name = request.form.get('Product Name')
-        Quantity = request.form.get('Quantity')
+    if request.method == "POST":
+        Company_Name = request.form.get("Company Name")
+        catalog_num = request.form.get("Catalog Number")
+        cost = request.form.get("Cost")
+        Product_Name = request.form.get("Product Name")
+        Quantity = request.form.get("Quantity")
 
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num.lower() == "n/a":
-            flash('Fields cannot be empty')
-            return redirect(url_for('stock.addSupply'))
+            flash("Fields cannot be empty")
+            return redirect(url_for("stock.addSupply"))
 
         if not Quantity.isdigit():
-            flash('Titration must be a number')
-            return redirect(url_for('stock.addSupply'))
-        
+            flash("Titration must be a number")
+            return redirect(url_for("stock.addSupply"))
+
         try:
             float(cost)
         except ValueError:
-            flash('Cost must be a number')
-            return redirect(url_for('stock.addSupply'))
+            flash("Cost must be a number")
+            return redirect(url_for("stock.addSupply"))
 
-        params = {'CompanyParam': Company_Name, 
-                    'catalogNumParam': catalog_num , 
-                    'costParam': cost,
-                    'ProductParam': Product_Name
-                    }
+        params = {
+            "CompanyParam": Company_Name,
+            "catalogNumParam": catalog_num,
+            "costParam": cost,
+            "ProductParam": Product_Name,
+        }
 
         df = stockTable.add(params, Quantity)
-        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
-        data = df.to_dict(orient='records')
+        df.rename(
+            columns={
+                "Product_Name": "Product",
+                "Catalog_Num": "Catalog Number",
+                "Company_Name": "Company Name",
+                "Unit_Price": "Cost",
+            },
+            inplace=True,
+        )
+        data = df.to_dict(orient="records")
 
-        page, per_page, offset = get_page_args(page_parameter='page', 
-                                           per_page_parameter='per_page')
-        
-        #number of rows in table
+        page, per_page, offset = get_page_args(
+            page_parameter="page", per_page_parameter="per_page"
+        )
+
+        # number of rows in table
         num_rows = len(data)
 
-        pagination_users = data[offset: offset + per_page]
+        pagination_users = data[offset : offset + per_page]
         pagination = Pagination(page=page, per_page=per_page, total=num_rows)
-        
+
         # use to prevent user from caching pages
-        response = make_response(render_template("CoreC/stock.html", data=pagination_users, page=page, per_page=per_page, pagination=pagination, list=list, len=len, str=str, num_rows=num_rows))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(
+            render_template(
+                "CoreC/stock.html",
+                data=pagination_users,
+                page=page,
+                per_page=per_page,
+                pagination=pagination,
+                list=list,
+                len=len,
+                str=str,
+                num_rows=num_rows,
+            )
+        )
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
 
-    if request.method == 'GET':
+    if request.method == "GET":
         data = {
             "Company Name": "",
             "Catalog Number": "",
@@ -146,103 +206,132 @@ def addSupply():
         }
 
         # use to prevent user from caching pages
-        response = make_response(render_template('CoreC/add_supply.html', fields = data))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(render_template("CoreC/add_supply.html", fields=data))
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
-    
-@bp.route('/changeSupply', methods=['GET', 'POST'])
+
+
+@bp.route("/changeSupply", methods=["GET", "POST"])
 @login_required(role=["admin"])
 def changeSupply():
-    if request.method == 'POST':
-        primary_key = request.form.get('primaryKey')
-        Company_Name = request.form.get('Company Name')
-        catalog_num = request.form.get('Catalog Number')
-        cost = request.form.get('Cost')
-        Product_Name = request.form.get('Product')
-        Quantity = request.form.get('Quantity')
+    if request.method == "POST":
+        primary_key = request.form.get("primaryKey")
+        Company_Name = request.form.get("Company Name")
+        catalog_num = request.form.get("Catalog Number")
+        cost = request.form.get("Cost")
+        Product_Name = request.form.get("Product")
+        Quantity = request.form.get("Quantity")
 
         # Making sure catalog number field isnt empty
         if catalog_num == "" or catalog_num.lower() == "n/a":
-            flash('Fields cannot be empty')
-            return redirect(url_for('stock.addSupply'))
+            flash("Fields cannot be empty")
+            return redirect(url_for("stock.addSupply"))
 
         if not Quantity.isdigit():
-            flash('Titration must be a number')
-            return redirect(url_for('stock.addSupply'))
-        
+            flash("Titration must be a number")
+            return redirect(url_for("stock.addSupply"))
+
         try:
             float(cost)
         except ValueError:
-            flash('Cost must be a number')
-            return redirect(url_for('stock.addSupply'))
+            flash("Cost must be a number")
+            return redirect(url_for("stock.addSupply"))
 
-        params = {'CompanyParam': Company_Name, 
-                      'catalogNumParam': catalog_num , 
-                      'costParam': cost,
-                      'ProductParam': Product_Name,
-                      'Pkey': primary_key
-                      }
+        params = {
+            "CompanyParam": Company_Name,
+            "catalogNumParam": catalog_num,
+            "costParam": cost,
+            "ProductParam": Product_Name,
+            "Pkey": primary_key,
+        }
 
         stockTable.change(params, Quantity, primary_key)
 
-        current_page = request.form.get('page', 1)
+        current_page = request.form.get("page", 1)
 
         # use to prevent user from caching pages
-        response = make_response(redirect(url_for('stock.stock', page=current_page)))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(redirect(url_for("stock.stock", page=current_page)))
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
 
-    if request.method == 'GET':
-        primary_key = int(request.args.get('primaryKey'))
+    if request.method == "GET":
+        primary_key = int(request.args.get("primaryKey"))
         query = "SELECT O.Product_Name, O.Catalog_Num ,O.Company_Name, O.Unit_Price, S.Quantity FROM  Stock_Info S left join Order_Info O on S.Product_Num = O.Product_Num WHERE O.Product_Num = %s ORDER BY Quantity;"
-        df = db_utils.toDataframe(query, 'db_config/CoreC.json', params=(primary_key,))
-        df.rename(columns={'Product_Name': 'Product', 'Catalog_Num': 'Catalog Number','Company_Name': 'Company Name', 'Unit_Price': 'Cost'}, inplace=True)
+        df = db_utils.toDataframe(query, "db_config/CoreC.json", params=(primary_key,))
+        df.rename(
+            columns={
+                "Product_Name": "Product",
+                "Catalog_Num": "Catalog Number",
+                "Company_Name": "Company Name",
+                "Unit_Price": "Cost",
+            },
+            inplace=True,
+        )
         data = df.to_dict()
-        
-        current_page = request.args.get('page', 1)
+
+        current_page = request.args.get("page", 1)
 
         # use to prevent user from caching pages
-        response = make_response(render_template('CoreC/change_supply.html', fields = data, pkey = primary_key, page = current_page))
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-        response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-        response.headers["Expires"] = "0" # Proxies.
+        response = make_response(
+            render_template(
+                "CoreC/change_supply.html",
+                fields=data,
+                pkey=primary_key,
+                page=current_page,
+            )
+        )
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+        )
+        response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+        response.headers["Expires"] = "0"  # Proxies.
         return response
-    
-@bp.route('/deleteSupply', methods=['POST'])
+
+
+@bp.route("/deleteSupply", methods=["POST"])
 @login_required(role=["admin"])
 def deleteSupply():
-    primary_key = request.form['primaryKey']
+    primary_key = request.form["primaryKey"]
 
     logger.info("Deletion Attempting...")
 
     stockTable.delete(primary_key)
 
     # use to prevent user from caching pages
-    response = make_response(redirect(url_for('stock.stock')))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate" # HTTP 1.1.
-    response.headers["Pragma"] = "no-cache" # HTTP 1.0.
-    response.headers["Expires"] = "0" # Proxies.
+    response = make_response(redirect(url_for("stock.stock")))
+    response.headers["Cache-Control"] = (
+        "no-cache, no-store, must-revalidate"  # HTTP 1.1.
+    )
+    response.headers["Pragma"] = "no-cache"  # HTTP 1.0.
+    response.headers["Expires"] = "0"  # Proxies.
     return response
 
-@bp.route('/downloadStockCSV', methods=['GET'])
+
+@bp.route("/downloadStockCSV", methods=["GET"])
 @login_required(role=["coreC"])
 def downloadCSV():
     with app.app_context():
-        saved_data = cache1.get('cached_dataframe2')
-    
+        saved_data = cache1.get("cached_dataframe2")
+
     if saved_data is None:
         with app.app_context():
-            saved_data = defaultCache.get('cached_dataframe')
+            saved_data = defaultCache.get("cached_dataframe")
 
     df = pd.DataFrame.from_dict(saved_data)
     csv = df.to_csv(index=False)
-    
+
     # Convert the CSV string to bytes and use BytesIO
-    csv_bytes = csv.encode('utf-8')
+    csv_bytes = csv.encode("utf-8")
     csv_io = BytesIO(csv_bytes)
-    
-    return send_file(csv_io, mimetype='text/csv', as_attachment=True, download_name='Stock.csv')
+
+    return send_file(
+        csv_io, mimetype="text/csv", as_attachment=True, download_name="Stock.csv"
+    )

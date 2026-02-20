@@ -12,6 +12,7 @@ db = SQLAlchemy()
 # Initialize login manager
 login_manager = LoginManager()
 
+
 # Overwrite of flask-login @login_required decorator
 # Check if user logged in and if has needed role
 def login_required(role=[]):
@@ -21,6 +22,7 @@ def login_required(role=[]):
 
     role (list(str)): list of roles required to access the endpoint decorated by this function
     """
+
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
@@ -36,8 +38,11 @@ def login_required(role=[]):
                 else:
                     return login_manager.unauthorized()
             return fn(*args, **kwargs)
+
         return decorated_view
+
     return wrapper
+
 
 # App creation function
 def create_app(config_class=Config):
@@ -49,7 +54,7 @@ def create_app(config_class=Config):
     from .models import User, Role, UserHasRole
 
     # Setup login manager
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = "auth.login"
     login_manager.init_app(app)
 
     if database_exists(Config.SQLALCHEMY_DATABASE_URI):
@@ -73,37 +78,46 @@ def create_app(config_class=Config):
         # since the user_id is just the primary key of our user table, use it in the query for the user
         user = User.query.get(int(user_id))
         return user
-    
 
     # Register blueprints here
     from app.auth import bp as auth_bp
+
     app.register_blueprint(auth_bp)
 
     from app.CoreB.orders import bp as main_bp
+
     app.register_blueprint(main_bp)
 
     from app.CoreB.invoices_list import bp as invoices_bp
+
     app.register_blueprint(invoices_bp)
 
     from app.CoreB.pi_list import bp as pi_bp
+
     app.register_blueprint(pi_bp)
 
     from app.CoreB.graphs.orders_dashboard import bp as orders_dashboard
+
     app.register_blueprint(orders_dashboard)
 
     from app.CoreB.graphs.invoice_dashboard import bp as invoice_dashboard
+
     app.register_blueprint(invoice_dashboard)
 
     from app.CoreC.stock import bp as stock_bp
+
     app.register_blueprint(stock_bp)
 
     from app.CoreC.antibodies import bp as antibodies_bp
+
     app.register_blueprint(antibodies_bp)
 
     from app.CoreC.panels import bp as panels_bp
+
     app.register_blueprint(panels_bp)
 
     from app.CoreC.mouse import bp as mouse_bp
+
     app.register_blueprint(mouse_bp)
 
     return app

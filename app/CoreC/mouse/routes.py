@@ -1,4 +1,5 @@
 import os
+import re
 from flask import (
     Flask,
     flash,
@@ -400,8 +401,17 @@ def uploadFile():
 def displayFile():
     primary_key = request.args.get("primaryKey")
 
-    # Path to the PDF file
-    file_path = os.path.join(UPLOAD_FOLDER, f"{primary_key}.pdf")
+    # Validate primary_key to prevent path traversal and invalid filenames
+    if not primary_key or not re.fullmatch(r"\d+", primary_key):
+        flash("Invalid file identifier")
+        return redirect(url_for("mouse.mouse"))
+
+    # Path to the PDF file (use absolute path and ensure it stays within UPLOAD_FOLDER)
+    file_path = os.path.abspath(os.path.join(UPLOAD_FOLDER, f"{primary_key}.pdf"))
+    upload_folder_abs = os.path.abspath(UPLOAD_FOLDER)
+    if not file_path.startswith(upload_folder_abs + os.sep):
+        flash("Invalid file path")
+        return redirect(url_for("mouse.mouse"))
 
     # Check if the file exists
     if not os.path.exists(file_path):

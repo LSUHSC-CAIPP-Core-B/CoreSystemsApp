@@ -47,7 +47,7 @@ PyMuPDF==1.23.5
 PyMuPDFb==1.23.5
 PyMySQL==1.1.1
 pyparsing==3.3.2
-pypdf==6.6.2
+pypdf==6.7.4
 pytest==8.4.2
 python-dateutil==2.8.2
 python-dotenv==1.2.1

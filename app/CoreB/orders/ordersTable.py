@@ -39,6 +39,9 @@ class ordersTable(BaseDatabaseTable):
         # Creates Dataframe
         SqlData = db_utils.toDataframe(query, "db_config/CoreB.json")
 
+        # remove leading whitespace
+        SqlData = SqlData.apply(lambda x: x.str.lstrip() if x.dtype == "object" else x)
+
         # * Fuzzy Search *
         # Checks whether filters are being used
         # If filters are used then implements fuzzy matching

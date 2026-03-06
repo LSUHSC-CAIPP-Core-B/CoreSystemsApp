@@ -125,7 +125,8 @@ def update():
         params = request.form.to_dict()
 
         # replace spaces in the key names with underscores
-        valid_params = {k.replace(" ", "_"): v for k, v in params.items()}
+        # and remove leading whitespace
+        valid_params = {k.replace(" ", "_"): v.lstrip() for k, v in params.items()}
 
         # SQL Change query
         query = """UPDATE CoreB_Order SET `Project ID` = %(Project_ID)s,

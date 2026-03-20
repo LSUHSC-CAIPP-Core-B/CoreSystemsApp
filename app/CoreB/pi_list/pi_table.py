@@ -108,7 +108,7 @@ class PI_table(BaseDatabaseTable):
                         return data
             else:  # If no search filters are used
                 # Converts to a list of dictionaries
-                data = SqlData.sort_values(by="Department").to_dict(orient="records")
+                data = SqlData.sort_values(by=order_by).to_dict(orient="records")
                 return data
 
         data = pd.DataFrame()

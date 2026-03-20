@@ -96,7 +96,7 @@ class PI_table(BaseDatabaseTable):
                 if data.empty:
                     dataFrame = db_utils.toDataframe(
                         "Select * FROM pi_info WHERE Department = 'N/A';",
-                        "db_configCoreB.json",
+                        "db_config/CoreB.json",
                     )
                     data = dataFrame.to_dict(orient="records")
                     return data

@@ -132,6 +132,8 @@ class PI_table(BaseDatabaseTable):
                 for i in range(len(match)):
                     Uinputs[1] = match.iloc[i, 0]
                     data = pd.concat([data, build_data(Uinputs)], ignore_index=True)
+                data.drop_duplicates(subset=["index"], inplace=True)
+                
                 if order_by == "Original":
                     data = data.to_dict(orient="records")
                 else:

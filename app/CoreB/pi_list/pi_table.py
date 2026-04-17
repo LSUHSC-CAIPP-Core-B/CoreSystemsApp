@@ -66,34 +66,43 @@ class PI_table(BaseDatabaseTable):
                                 ["", dept_input], columns_to_check, 80, filtered_SqlData
                             )
                             data.to_dict(orient="records")
+                        else:
+                            data = SqlData.iloc[0:0].copy()
 
                     else:  # If dept is searched for
                         data = search_utils.sort_searched_data(
                             Uinputs, columns_to_check, 80, SqlData
                         )
                 else:
-                    names = db_utils.toDataframe(
-                        "SELECT `PI full name` FROM pi_info", "db_config/CoreB.json"
-                    )
-
-                    # Create dataframe with PI full name, First Name and Last Name
-                    names[["First Name", "Last Name"]] = names[
-                        "PI full name"
-                    ].str.split("_", expand=True, n=1)
-                    results = search_utils.find_best_fuzzy_match(
-                        Uinputs[0], names, threshold=75
-                    )  # Adjust threshold as needed
-
-                    # If a match on first, last name or both is found
-                    if results: 
-                        matched_full_name = [r[0] for r in results]
-                        filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
-
-                        dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
-                        data = search_utils.sort_searched_data(
-                            ["", dept_input], columns_to_check, 80, filtered_SqlData, order_by
+                    if Uinputs[0] != "":
+                        names = db_utils.toDataframe(
+                            "SELECT `PI full name` FROM pi_info", "db_config/CoreB.json"
                         )
-                        data.to_dict(orient="records")
+
+                        # Create dataframe with PI full name, First Name and Last Name
+                        names[["First Name", "Last Name"]] = names[
+                            "PI full name"
+                        ].str.split("_", expand=True, n=1)
+                        results = search_utils.find_best_fuzzy_match(
+                            Uinputs[0], names, threshold=75
+                        )  # Adjust threshold as needed
+
+                        # If a match on first, last name or both is found
+                        if results: 
+                            matched_full_name = [r[0] for r in results]
+                            filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
+
+                            dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
+                            data = search_utils.sort_searched_data(
+                                ["", dept_input], columns_to_check, 80, filtered_SqlData, order_by
+                            )
+                            data.to_dict(orient="records")
+                        else:
+                            data = SqlData.iloc[0:0].copy()
+                    else:
+                        data = search_utils.sort_searched_data(
+                                Uinputs, columns_to_check, 80, SqlData, order_by
+                            )
 
                 # If no match is found displays empty row
                 if data.empty:

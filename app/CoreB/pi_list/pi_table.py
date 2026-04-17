@@ -57,15 +57,16 @@ class PI_table(BaseDatabaseTable):
                         )  # Adjust threshold as needed
 
                         # If a match on first, last name or both is found
-                        if results:
-                            Uinputs[0] = results[0][0]
-                        else:
-                            Uinputs[0] = "N/A"
+                        if results: 
+                            matched_full_name = [r[0] for r in results]
+                            filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
 
-                        data = search_utils.sort_searched_data(
-                            Uinputs, columns_to_check, 80, SqlData
-                        )
-                        data.to_dict(orient="records")
+                            dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
+                            data = search_utils.sort_searched_data(
+                                ["", dept_input], columns_to_check, 80, filtered_SqlData
+                            )
+                            data.to_dict(orient="records")
+
                     else:  # If dept is searched for
                         data = search_utils.sort_searched_data(
                             Uinputs, columns_to_check, 80, SqlData
@@ -84,13 +85,15 @@ class PI_table(BaseDatabaseTable):
                     )  # Adjust threshold as needed
 
                     # If a match on first, last name or both is found
-                    if results:
-                        Uinputs[0] = results[0][0]
-                    else:
-                        Uinputs[0] = "N/A"
-                    data = search_utils.sort_searched_data(
-                        Uinputs, columns_to_check, 80, SqlData, order_by
-                    )
+                    if results: 
+                        matched_full_name = [r[0] for r in results]
+                        filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
+
+                        dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
+                        data = search_utils.sort_searched_data(
+                            ["", dept_input], columns_to_check, 80, filtered_SqlData, order_by
+                        )
+                        data.to_dict(orient="records")
 
                 # If no match is found displays empty row
                 if data.empty:

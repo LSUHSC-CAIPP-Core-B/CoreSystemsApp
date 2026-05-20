@@ -435,6 +435,18 @@ def invoices_list():
     with app.app_context():
         cache1.delete("cached_data")
 
+    if request.method == "POST":
+        session["invoice_filters"] = {
+            "service_type": request.form.get("service_type") or "All",
+            "project_id": request.form.get("project_id") or "",
+            "sort": request.form.get("sort") or "Original",
+        }
+
+    filters = session.get(
+        "invoice_filters",
+        {"service_type": "All", "pi_name": "", "project_id": "", "sort": "Original"},
+    )
+
     query = "SELECT * FROM Invoice"
     df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
@@ -448,77 +460,39 @@ def invoices_list():
             .reset_index()
         )
 
-    # Compute final price
-    grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
+        # Compute final price
+        grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
 
-    # rename for display
-    grouped = grouped.rename(
-        columns={
-            "project_id": "Project ID",
-            "total_price": "Total price",
-            "total_discount": "Total discount",
-            "final_price": "Final price",
-        }
-    )
+        # rename for display
+        grouped = grouped.rename(
+            columns={
+                "project_id": "Project ID",
+                "total_price": "Total price",
+                "total_discount": "Total discount",
+                "final_price": "Final price",
+            }
+        )
 
-    # Get orders data and merge with Invoice data
-    orders_df = db_utils.toDataframe(
-        "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
-        "db_config/CoreB.json",
-    )
-    grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
-    new_column_order = [
-        "Project ID",
-        "Service Type",
-        "Request Date",
-        "Total price",
-        "Total discount",
-        "Final price",
-        "Bill",
-        "Paid",
-    ]
-    grouped = grouped.reindex(columns=new_column_order)
-    grouped = grouped.fillna("-")  # replace NaN with '-'
-
-    data = grouped.to_dict(orient="records")
-
-    filters = session.get(
-        "invoice_filters",
-        {"service_type": "", "pi_name": "", "project_id": "", "sort": "Original"},
-    )
-
-    # Project ID search
-    if filters["project_id"]:
-        data = [
-            record
-            for record in data
-            if record.get("Project ID") == filters["project_id"]
+        # Get orders data and merge with Invoice data
+        orders_df = db_utils.toDataframe(
+            "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
+            "db_config/CoreB.json",
+        )
+        grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
+        new_column_order = [
+            "Project ID",
+            "Service Type",
+            "Request Date",
+            "Total price",
+            "Total discount",
+            "Final price",
+            "Bill",
+            "Paid",
         ]
+        grouped = grouped.reindex(columns=new_column_order)
+        grouped = grouped.fillna("-")  # replace NaN with '-'
 
-    # service type filter
-    if filters["service_type"] != "All":
-        data = [
-            record
-            for record in data
-            if record.get("Service Type") == filters["service_type"]
-        ]
-
-    # sort dict
-    if filters["sort"] != "Original":
-        if filters["sort"] != "Service Type":
-            if filters["sort"] != "Project ID":
-                reverse = filters["sort"] != "Project ID"
-                data = sorted(data, key=lambda d: d[filters["sort"]], reverse=reverse)
-        else:
-            data = sorted(data, key=lambda d: d[filters["sort"]])
-
-    if request.method == "POST":
-        session["invoice_filters"] = {
-            "service_type": request.form.get("service_type") or "",
-            "project_id": request.form.get("project_id") or "",
-            "sort": request.form.get("sort") or "Original",
-        }
-        filters = session["invoice_filters"]
+        data = grouped.to_dict(orient="records")
 
         # Project ID search
         if filters["project_id"]:
@@ -529,7 +503,7 @@ def invoices_list():
             ]
 
         # service type filter
-        if filters["service_type"] != "All":
+        if filters["service_type"] and filters["service_type"] != "All":
             data = [
                 record
                 for record in data
@@ -541,9 +515,7 @@ def invoices_list():
             if filters["sort"] != "Service Type":
                 if filters["sort"] != "Project ID":
                     reverse = filters["sort"] != "Project ID"
-                    data = sorted(
-                        data, key=lambda d: d[filters["sort"]], reverse=reverse
-                    )
+                    data = sorted(data, key=lambda d: d[filters["sort"]], reverse=reverse)
             else:
                 data = sorted(data, key=lambda d: d[filters["sort"]])
 

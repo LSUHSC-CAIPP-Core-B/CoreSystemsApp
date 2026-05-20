@@ -1,11 +1,12 @@
 **/__pycache__/
 .hintrc
-.log
-.db
-.pdf
-.csv
+*.log
+*.db
+*.pdf
+*.csv
 .DS_Store
 .vscode/
+.python-version
 
 # environments
 my_app/
@@ -14,7 +15,6 @@ venv/
 # Dependency directories
 node_modules/
 
-.env
 .env.*
 *.env
 db_config/

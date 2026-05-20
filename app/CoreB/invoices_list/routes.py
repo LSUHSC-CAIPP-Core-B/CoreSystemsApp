@@ -448,39 +448,39 @@ def invoices_list():
             .reset_index()
         )
 
-    # Compute final price
-    grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
+        # Compute final price
+        grouped["final_price"] = grouped["total_price"] - grouped["total_discount"]
 
-    # rename for display
-    grouped = grouped.rename(
-        columns={
-            "project_id": "Project ID",
-            "total_price": "Total price",
-            "total_discount": "Total discount",
-            "final_price": "Final price",
-        }
-    )
+        # rename for display
+        grouped = grouped.rename(
+            columns={
+                "project_id": "Project ID",
+                "total_price": "Total price",
+                "total_discount": "Total discount",
+                "final_price": "Final price",
+            }
+        )
 
-    # Get orders data and merge with Invoice data
-    orders_df = db_utils.toDataframe(
-        "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
-        "db_config/CoreB.json",
-    )
-    grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
-    new_column_order = [
-        "Project ID",
-        "Service Type",
-        "Request Date",
-        "Total price",
-        "Total discount",
-        "Final price",
-        "Bill",
-        "Paid",
-    ]
-    grouped = grouped.reindex(columns=new_column_order)
-    grouped = grouped.fillna("-")  # replace NaN with '-'
+        # Get orders data and merge with Invoice data
+        orders_df = db_utils.toDataframe(
+            "SELECT `Project ID`, `Service Type`, Bill, Paid, `Request Date` FROM CoreB_Order",
+            "db_config/CoreB.json",
+        )
+        grouped = pd.merge(grouped, orders_df, on="Project ID", how="left")
+        new_column_order = [
+            "Project ID",
+            "Service Type",
+            "Request Date",
+            "Total price",
+            "Total discount",
+            "Final price",
+            "Bill",
+            "Paid",
+        ]
+        grouped = grouped.reindex(columns=new_column_order)
+        grouped = grouped.fillna("-")  # replace NaN with '-'
 
-    data = grouped.to_dict(orient="records")
+        data = grouped.to_dict(orient="records")
 
     filters = session.get(
         "invoice_filters",

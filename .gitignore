@@ -1,11 +1,11 @@
 **/__pycache__/
-.hintrc
-.log
-.db
-.pdf
-.csv
-.DS_Store
-.vscode/
+*.hintrc
+*.log
+*.db
+*.pdf
+*.csv
+*.DS_Store
+*.vscode/
 
 # environments
 my_app/

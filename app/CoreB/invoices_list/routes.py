@@ -484,7 +484,7 @@ def invoices_list():
 
     filters = session.get(
         "invoice_filters",
-        {"service_type": "", "pi_name": "", "project_id": "", "sort": "Original"},
+        {"service_type": "All", "pi_name": "", "project_id": "", "sort": "Original"},
     )
 
     # Project ID search
@@ -496,7 +496,7 @@ def invoices_list():
         ]
 
     # service type filter
-    if filters["service_type"] != "All":
+    if filters["service_type"] and filters["service_type"] != "All":
         data = [
             record
             for record in data
@@ -514,7 +514,7 @@ def invoices_list():
 
     if request.method == "POST":
         session["invoice_filters"] = {
-            "service_type": request.form.get("service_type") or "",
+            "service_type": request.form.get("service_type") or "All",
             "project_id": request.form.get("project_id") or "",
             "sort": request.form.get("sort") or "Original",
         }

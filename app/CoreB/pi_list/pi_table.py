@@ -23,125 +23,84 @@ class PI_table(BaseDatabaseTable):
             "PI ID": "PI ID",
             "Department": "Department",
         }
-
-        # Check if sort is in the dictionary, if not then uses default value
         order_by = sort_orders.get(sort, "Original")
 
-        query = "Select * FROM pi_info;"
+        SqlData = db_utils.toDataframe("Select * FROM pi_info;", "db_config/CoreB.json")
 
-        # Creates Dataframe
-        SqlData = db_utils.toDataframe(query, "db_config/CoreB.json")
+        def build_data(Uinputs) -> pd.DataFrame:
+            """Always returns a DataFrame."""
+            # No search and no real sort: return as is
+            if Uinputs[0] == "" and Uinputs[1] == "" and order_by != "Original":
+                return SqlData.sort_values(by=order_by)
 
-        def build_data(Uinputs) -> Union[pd.DataFrame, list[dict[Hashable, Any]]]:
-            """
-            * Fuzzy Search
-            * Checks whether filters are being used
-            * If filters are used then implements fuzzy matching
-            """
+            columns_to_check = ["PI full name", "Department"]
+            sort_arg = None if order_by == "Original" else order_by
 
-            if Uinputs[0] != "" or Uinputs[1] != "" or order_by == "Original":
-                columns_to_check = ["PI full name", "Department"]
+            if Uinputs[0] != "":
+                names = db_utils.toDataframe(
+                    "SELECT `PI full name` FROM pi_info", "db_config/CoreB.json"
+                )
+                names[["First Name", "Last Name"]] = names["PI full name"].str.split(
+                    "_", expand=True, n=1
+                )
+                results = search_utils.find_best_fuzzy_match(
+                    Uinputs[0], names, threshold=75
+                )
 
-                if order_by == "Original":
-                    if Uinputs[0] != "":
-                        names = db_utils.toDataframe(
-                            "SELECT `PI full name` FROM pi_info", "db_config/CoreB.json"
-                        )
+                if results:
+                    matched_full_name = [r[0] for r in results]
+                    filtered_SqlData = SqlData[
+                        SqlData["PI full name"].isin(matched_full_name)
+                    ].copy()
 
-                        # Create dataframe with PI full name, First Name and Last Name
-                        names[["First Name", "Last Name"]] = names[
-                            "PI full name"
-                        ].str.split("_", expand=True, n=1)
-                        results = search_utils.find_best_fuzzy_match(
-                            Uinputs[0], names, threshold=75
-                        )  # Adjust threshold as needed
-
-                        # If a match on first, last name or both is found
-                        if results: 
-                            matched_full_name = [r[0] for r in results]
-                            filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
-
-                            dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
-                            data = search_utils.sort_searched_data(
-                                ["", dept_input], columns_to_check, 80, filtered_SqlData
-                            )
-                            data.to_dict(orient="records")
-                        else:
-                            data = SqlData.iloc[0:0].copy()
-
-                    else:  # If dept is searched for
-                        data = search_utils.sort_searched_data(
-                            Uinputs, columns_to_check, 80, SqlData
-                        )
-                else:
-                    if Uinputs[0] != "":
-                        names = db_utils.toDataframe(
-                            "SELECT `PI full name` FROM pi_info", "db_config/CoreB.json"
-                        )
-
-                        # Create dataframe with PI full name, First Name and Last Name
-                        names[["First Name", "Last Name"]] = names[
-                            "PI full name"
-                        ].str.split("_", expand=True, n=1)
-                        results = search_utils.find_best_fuzzy_match(
-                            Uinputs[0], names, threshold=75
-                        )  # Adjust threshold as needed
-
-                        # If a match on first, last name or both is found
-                        if results: 
-                            matched_full_name = [r[0] for r in results]
-                            filtered_SqlData = SqlData[SqlData["PI full name"].isin(matched_full_name)].copy()
-
-                            dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
-                            data = search_utils.sort_searched_data(
-                                ["", dept_input], columns_to_check, 80, filtered_SqlData, order_by
-                            )
-                            data.to_dict(orient="records")
-                        else:
-                            data = SqlData.iloc[0:0].copy()
-                    else:
-                        data = search_utils.sort_searched_data(
-                                Uinputs, columns_to_check, 80, SqlData, order_by
-                            )
-
-                # If no match is found displays empty row
-                if data.empty:
-                    dataFrame = db_utils.toDataframe(
-                        "Select * FROM pi_info WHERE Department = 'N/A';",
-                        "db_config/CoreB.json",
+                    dept_input = Uinputs[1] if len(Uinputs) > 1 else ""
+                    data = search_utils.sort_searched_data(
+                        ["", dept_input],
+                        columns_to_check,
+                        80,
+                        filtered_SqlData,
+                        sort_arg,
                     )
-                    data = dataFrame.to_dict(orient="records")
-                    return data
                 else:
-                    if Uinputs[1] == "":  # If dept is searched for
-                        data = data.to_dict(orient="records")
-                        return data
-                    else:
-                        return data
-            else:  # If no search filters are used
-                # Converts to a list of dictionaries
-                data = SqlData.sort_values(by=order_by).to_dict(orient="records")
-                return data
+                    data = SqlData.iloc[0:0].copy()
+            else:
+                data = search_utils.sort_searched_data(
+                    Uinputs, columns_to_check, 80, SqlData, sort_arg
+                )
 
-        data = pd.DataFrame()
-        # match department
+            # No matches: return "N/A" placeholder row as a DataFrame
+            if data.empty:
+                return db_utils.toDataframe(
+                    "Select * FROM pi_info WHERE Department = 'N/A';",
+                    "db_config/CoreB.json",
+                )
+            return data
+
+        # Department search: fuzzy expand and union the results
         if Uinputs[1] != "":
             match = department_match(SqlData, Uinputs[1])
 
-            if not match.empty:
-                for i in range(len(match)):
-                    Uinputs[1] = match.iloc[i, 0]
-                    data = pd.concat([data, build_data(Uinputs)], ignore_index=True)
-                data.drop_duplicates(subset=["index"], inplace=True)
-                
-                if order_by == "Original":
-                    data = data.to_dict(orient="records")
-                else:
-                    data = data.sort_values(by=order_by).to_dict(orient="records")
-        else:
-            data = build_data(Uinputs)
+            if match.empty:
+                # No department fuzzy-match at all -> return N/A placeholder
+                empty = db_utils.toDataframe(
+                    "Select * FROM pi_info WHERE Department = 'N/A';",
+                    "db_config/CoreB.json",
+                )
+                return empty.to_dict(orient="records")
 
-        return data
+            data = pd.DataFrame()
+            for i in range(len(match)):
+                Uinputs[1] = match.iloc[i, 0]
+                data = pd.concat([data, build_data(Uinputs)], ignore_index=True)
+
+            data.drop_duplicates(subset=["index"], inplace=True)
+
+            if order_by != "Original":
+                data = data.sort_values(by=order_by)
+            return data.to_dict(orient="records")
+
+        # No department search
+        return build_data(Uinputs).to_dict(orient="records")
 
     def change(self, params):
         # SQL Change query

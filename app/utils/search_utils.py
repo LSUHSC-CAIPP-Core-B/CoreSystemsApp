@@ -83,18 +83,25 @@ class search_utils:
         :return: A dictionary of sorted search results.
         :rtype: list[dict[Hashable, Any]]
         """
+        # Treat whitespace-only inputs as empty.
+        result = any(str(s).strip() for s in Uinputs)
 
-        result = any(s for s in Uinputs)
-        # Checks if inputs are used
-        # If inputs are used then search the df for a match
-        # Then sort according to fuzz ratio
+        # If inputs are used, search the df for matches then sort.
         if result:
-            condition = False
+            # Only score the columns the user actually filled in. Scoring a
+            # column whose input is blank makes fuzz.ratio(value, "") return 100
+            # for rows whose value is ALSO blank, which would pull unassigned
+            # rows (Ex. an order with no Project ID, shown as "ASSIGN") into the
+            # results regardless of what was searched.
+            active = [
+                (i, v)
+                for i, v in enumerate(columns_to_check)
+                if str(Uinputs[i]).strip() != ""
+            ]
 
-            # Iterate over each column and its corresponding user input
-            for i, v in enumerate(columns_to_check):
+            # Create a ratio column for each active search column
+            for i, v in active:
                 SqlData[v] = SqlData[v].astype(str)
-
                 SqlData[f"{v}_ratio"] = SqlData.apply(
                     lambda x: round(
                         fuzz.ratio(
@@ -104,39 +111,35 @@ class search_utils:
                         2,
                     ),
                     axis=1,
-                )  # Create the ratio column
+                )
 
-            # Store Ratio column names
-            rCol = [f"{i}_ratio" for i in columns_to_check]
+            rCol = [f"{v}_ratio" for _, v in active]
 
-            # Update the condition to include any ratio column exceeding the threshold
+            # Keep rows where any searched column clears the threshold
             condition = (SqlData[rCol] > threshold).any(axis=1)
+            df = SqlData[condition].copy()
 
-            # filtered dataframe
-            df = SqlData[condition]
-
-            # Creating list for ascending/descending
-            asc = [False for i in rCol]
-            # adding sort_by column
-            rCol.append(sort_by)
-            asc.append(True)  # adds sort order for sort_by column
+            # Sort by match quality (desc), then by the requested column (asc)
+            asc = [False for _ in rCol]
+            sort_cols = rCol + [sort_by]
+            asc.append(True)
 
             if sort_by == "Request Date":
-                df.sort_values(by=rCol, ascending=False, inplace=True)
+                df.sort_values(by=sort_cols, ascending=False, inplace=True)
             elif sort_by == "Not Sorted" or sort_by is None:
-                df
+                pass
             else:
-                df.sort_values(by=rCol, ascending=asc, inplace=True)
+                df.sort_values(by=sort_cols, ascending=asc, inplace=True)
 
-            # Drop ratio columns
-            SqlData = df.drop(columns=rCol[0 : len(rCol) - 1])
+            # Drop the temporary ratio columns
+            SqlData = df.drop(columns=rCol)
         else:  # inputs not used
             if sort_by == "Request Date":
                 SqlData.sort_values(by=[sort_by], ascending=False, inplace=True)
             elif sort_by == "Not Sorted":
                 SqlData.sort_values(by=["Request Date"], ascending=True, inplace=True)
             elif sort_by is None:
-                SqlData
+                pass
             else:
                 SqlData.sort_values(by=[sort_by], inplace=True)
 

@@ -1,4 +1,6 @@
 from flask_login import UserMixin
+from sqlalchemy.orm import validates
+
 from . import db
 
 # Database models used for user credentials
@@ -14,6 +16,10 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(100))
     name = db.Column(db.String(100))
     urole = db.relationship("Role", secondary="userhasrole", back_populates="user")
+
+    @validates("email")
+    def normalize_email(self, key, address):
+        return address.strip().lower() if address else address
 
     def get_role(self):
         return self.urole

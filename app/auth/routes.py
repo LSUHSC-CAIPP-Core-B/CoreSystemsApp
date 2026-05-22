@@ -1,10 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash, make_response
-from flask_paginate import Pagination, get_page_args
+from flask import flash, make_response, redirect, render_template, request, url_for
 from flask_login import login_user, logout_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, Role
-from app.auth import bp
+from flask_paginate import Pagination, get_page_args
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import db, login_required
+from app.auth import bp
+from app.models import Role, User
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -17,7 +18,7 @@ def login():
         return render_template("auth/login.html")
 
     if request.method == "POST":
-        email = request.form.get("email")
+        email = request.form.get("email").strip().lower()
         password = request.form.get("password")
 
         user = User.query.filter_by(email=email).first()
@@ -80,7 +81,7 @@ def signup():
         return response
 
     elif request.method == "POST":
-        email = request.form.get("email")
+        email = request.form.get("email").strip().lower()
         name = request.form.get("name")
         password = request.form.get("password")
         core = request.form.get("core")

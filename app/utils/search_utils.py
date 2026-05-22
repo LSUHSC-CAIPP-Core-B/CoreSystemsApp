@@ -1,6 +1,7 @@
+from typing import Any, Hashable
+
 import pandas as pd
 from rapidfuzz import fuzz, utils
-from typing import Hashable, Any
 
 
 class search_utils:
@@ -163,37 +164,19 @@ class search_utils:
                 and the column that provided the best match.
         :rtype: list[dict[Hashable, Any]]
         """
-        matches_per_row = []
+        matches = []
 
         for _, row in dataframe.iterrows():
-            row_choices = [
-                (row["First Name"], "First Name"),
-                (row["Last Name"], "Last Name"),
-                (row["PI full name"], "PI full name"),
-            ]
+            full_name = str(row["PI full name"]).replace("_", " ")
 
-            best_score_for_row = 0
-            best_matched_column = None
+            score = fuzz.token_set_ratio(
+                search_term,
+                full_name,
+                processor=utils.default_process,  # lowercases, strips, normalizes punctuation
+            )
 
-            for choice_str, column_name in row_choices:
-                normalized_search_term = search_term.lower().strip()
-                normalized_choice_str = str(choice_str).lower().strip()
+            if score >= threshold:
+                matches.append((row["PI full name"], score, row))
 
-                score = fuzz.token_set_ratio(
-                    normalized_search_term, normalized_choice_str
-                )
-
-                if score > best_score_for_row:
-                    best_score_for_row = score
-                    best_matched_column = column_name
-
-            if best_score_for_row >= threshold:
-                matches_per_row.append(
-                    (row["PI full name"], best_score_for_row, best_matched_column, row)
-                )
-
-        matches_per_row.sort(
-            key=lambda x: x[1], reverse=True
-        )  # Sort by score (index 1 in tuple)
-
-        return matches_per_row
+        matches.sort(key=lambda x: x[1], reverse=True)
+        return matches

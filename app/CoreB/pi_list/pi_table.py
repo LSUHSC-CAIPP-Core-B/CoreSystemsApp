@@ -1,10 +1,11 @@
-from typing import Hashable, Any, Union
+from typing import Any, Hashable, Union
 
 import pandas as pd
+from rapidfuzz import fuzz, process, utils
+
 from app.abstract_classes.BaseDatabaseTable import BaseDatabaseTable
 from app.utils.db_utils import db_utils
 from app.utils.search_utils import search_utils
-from rapidfuzz import process, fuzz
 
 
 class PI_table(BaseDatabaseTable):
@@ -125,30 +126,32 @@ class PI_table(BaseDatabaseTable):
         db_utils.execute(query, "db_config/CoreB.json", params=(primary_key,))
 
 
-def department_match(df, value):
-    dept_df = pd.DataFrame(df["Department"])
-    # Split Department column by multiple delimiters using a regex
-    dept_df["Department_List"] = dept_df["Department"].str.split(
-        r",\s*|\s+and\s+|\s+", regex=True
+def department_match(df, value, threshold=85):
+    """Find department strings that fuzzily match a search value.
+
+    :param df: DataFrame containing a "Department" column.
+    :type df: pd.DataFrame
+    :param value: The department search term.
+    :type value: str
+    :param threshold: Minimum match score (0-100), defaults to 85.
+    :type threshold: int
+    :return: DataFrame with a single "Department" column, best match first;
+                empty if nothing clears the threshold.
+    :rtype: pd.DataFrame
+    """
+    # Unique, non-empty department strings to score against
+    departments = df["Department"].dropna().str.strip()
+    departments = departments[departments != ""].unique().tolist()
+
+    # process.extract returns (choice, score, index) tuples sorted best-first
+    matches = process.extract(
+        value,
+        departments,
+        scorer=fuzz.token_set_ratio,
+        processor=utils.default_process,
+        score_cutoff=threshold,
+        limit=None,
     )
-    df_exploded = dept_df.explode("Department_List")
 
-    # Fuzzy matching
-    choices = df_exploded["Department_List"].unique().tolist()
-    results = process.extract(value, choices, scorer=fuzz.WRatio, score_cutoff=85)
-
-    # Get a list of the department names that matched
-    matched_departments = [item[0] for item in results]
-
-    # Filter the exploded DataFrame to find the original records
-    fuzzy_matched_df = df_exploded[
-        df_exploded["Department_List"].isin(matched_departments)
-    ]
-
-    # strip dataframe
-    df_stripped = fuzzy_matched_df.select_dtypes("object")
-    df_stripped["Department"] = df_stripped["Department"].str.strip()
-
-    # drop any duplicates
-    final_results = df_stripped.drop_duplicates(subset=["Department"], keep="first")
-    return final_results
+    matched_departments = [m[0] for m in matches]
+    return pd.DataFrame({"Department": matched_departments})

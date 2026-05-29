@@ -34,7 +34,7 @@ class PasswordValidator:
             return False
 
         string = string.strip()
-        if len(string) < self.minChar and len(string) > self.maxChar:
+        if len(string) < self.minChar or len(string) > self.maxChar:
             return False
 
         return self.__containsSpecialChar(string) and self.__containsDigit(string)

@@ -8,6 +8,8 @@
 .vscode/
 .python-version
 
+app/templates/CoreB/graphs/
+
 # environments
 my_app/
 venv/

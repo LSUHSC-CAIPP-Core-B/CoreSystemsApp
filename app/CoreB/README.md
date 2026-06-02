@@ -5,7 +5,8 @@
 - [Database Configuration](#database-configuration)
 
 ## Introduction
-In progress...
+Core B is the Bioinformatics and Modeling service module of the application. It manages the full lifecycle of analysis service requests - from intake through billing - for the LSUHSC-CAIPP Bioinformatics and Modeling Core. The module ingests order data originating from the CAIPP request Google Form and gives staff tools to track orders, manage Principal Investigator (PI) records, and generate itemized invoice PDFs for completed services. Supported service types include RNA-Seq, DNA-Seq, proteomics, and metabolite analysis, as well as BioRender license billing. Invoices support per-line and whole-order discounts, and all order and invoice data can be filtered, sorted, exported to CSV, and visualized through the Orders and Invoice dashboards.
+
 ## Key Features
 
 This section highlights every system that Core B uses which includes the following:

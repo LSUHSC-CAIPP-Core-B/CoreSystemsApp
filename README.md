@@ -1,13 +1,9 @@
-# Core Systems Application
-
 <div align="center">
-
-[![][black-shield]][black] [![Made with Python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg?style=flat&logo=python)](https://www.python.org/) [![Made with Flask](https://img.shields.io/badge/Made%20with-Flask-000000.svg?style=flat&logo=flask)](https://flask.palletsprojects.com/) [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat)](LICENSE) [![GitHub commit activity](https://img.shields.io/github/commit-activity/t/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github&style=flat)](https://github.com/LSUHSC-CAIPP-Core-B/CoreSystemsApp/commits/main/)
-
+<img src="docs/banner.png" alt="CoreSystemsApp" width="100%">
+    
+[![CAIPP Modelling Core](https://img.shields.io/badge/LSUHS-CAIPP_Modelling_Core-FFBF00.svg?style=flat&labelColor=purple)](https://www.lsuhs.edu/centers/center-for-applied-immunology-and-pathological-processes/bioinformatics-modeling-core) [![Made with Python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg?style=flat&logo=python)](https://www.python.org/) [![Made with Flask](https://img.shields.io/badge/Made%20with-Flask-000000.svg?style=flat&logo=flask)](https://flask.palletsprojects.com/) [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat)](LICENSE) [![GitHub commit activity](https://img.shields.io/github/commit-activity/t/LSUHSC-CAIPP-Core-B/CoreSystemsApp?logo=github&style=flat)](https://github.com/LSUHSC-CAIPP-Core-B/CoreSystemsApp/commits/main/)
+ 
 </div>
-
-[black]: https://www.lsuhs.edu/centers/center-for-applied-immunology-and-pathological-processes/bioinformatics-modeling-core
-[black-shield]: https://img.shields.io/badge/LSUHS-CAIPP_Modelling_Core-FFBF00.svg?style=flat&labelColor=purple
 
 A lightweight, customizable web system built with Flask for managing the operations of the LSUHSC-CAIPP Bioinformatics and Modeling Cores (Core B and Core C). CoreSystemsApp centralizes order management, invoicing, inventory, and reporting behind a role-based access system, with safe database operations across client-side logic, server-side processing, and API communication.
 

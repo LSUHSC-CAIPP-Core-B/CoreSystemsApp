@@ -20,10 +20,6 @@ In the interest of fostering an open and welcoming environment, contributors and
 
 Project maintainers may remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are inconsistent with this Code of Conduct.
 
-## Reporting
-
-If you experience or witness unacceptable behavior, contact repository maintainers through the project's official communication channel. All reports will be reviewed and investigated promptly and fairly.
-
 ## Attribution
 
 This Code of Conduct is adapted from the Contributor Covenant, version 2.1:

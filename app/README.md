@@ -32,3 +32,6 @@ The [utils](utils/)  directory contains all utility classes and functions essent
 
 #### Search Utilities
 [search_utils](utils/search_utils.py) includes a search function designed to perform fuzzy matching within a dataframe, enhancing search accuracy and flexibility.
+
+#### String Utilities
+[string_utils](utils/string_utils.py) provides helper methods for string comparison, including fuzzy input validation against expected values.

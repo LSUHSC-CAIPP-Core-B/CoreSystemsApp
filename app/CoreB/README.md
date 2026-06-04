@@ -5,7 +5,7 @@
 - [Database Configuration](#database-configuration)
 
 ## Introduction
-Core B is the Bioinformatics and Modeling service module of the application. It manages the full lifecycle of analysis service requests - from intake through billing - for the LSUHSC-CAIPP Bioinformatics and Modeling Core. The module ingests order data originating from the CAIPP request Google Form and gives staff tools to track orders, manage Principal Investigator (PI) records, and generate itemized invoice PDFs for completed services. Supported service types include RNA-Seq, DNA-Seq, proteomics, and metabolite analysis, as well as BioRender license billing. Invoices support per-line and whole-order discounts, and all order and invoice data can be filtered, sorted, exported to CSV, and visualized through the Orders and Invoice dashboards.
+Core B is the Bioinformatics and Modeling service module of the application. It manages the full lifecycle of analysis service requests - from intake through billing - for the LSUHSC-CAIPP Bioinformatics and Modeling Core. The module ingests order data originating from the CAIPP request Google Form and gives staff tools to track orders, manage Principal Investigator (PI) records, and generate itemized invoice PDFs for completed services. Invoices support per-line and whole-order discounts, and all order and invoice data can be filtered, sorted, exported to CSV, and visualized through the Orders and Invoice dashboards.
 
 ## Key Features
 
@@ -22,6 +22,10 @@ This page presents a history of invoices, consolidating records of past services
 #####  PI list
 
 Section dedicated to showcasing Principal Investigator (PI) information. Users can add new PIs and edit existing ones. The section also includes filtering and deletion functionalities.
+
+#####  Dashboards
+ 
+The Orders and Invoice dashboards summarize order and billing data into key metrics and charts (such as orders over time, billing status, service-type breakdowns, and funding-source analysis). BioRender entries are reported separately. Dashboards are generated server-side and rendered within the app.
 
 ## Database Configuration
 To ensure proper data manipulation, the database schema must adhere to the following structure:

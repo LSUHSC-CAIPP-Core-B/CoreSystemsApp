@@ -15,9 +15,8 @@ from pathlib import Path
 
 from pathspec import PathSpec
 
-# --- config ---------------------------------------------------------------
+# === config ===============================================================
 SOURCE = os.environ.get("BACKUP_SOURCE")
-# Backups land next to this script.
 # For the server, point this at a different disk / off-machine path.
 DEST_ROOT = os.environ.get("BACKUP_DEST")
 
@@ -27,8 +26,7 @@ DEST_ROOT = Path(DEST_ROOT)
 
 # Files that ARE gitignored but you don't want in the backup anyway:
 # regenerable bulk (deps, bytecode, virtualenvs) and noise. Same
-# gitignore-style syntax as .gitignore. Anything matching here is skipped
-# even though git ignores it.
+# gitignore-style syntax as .gitignore.
 SKIP_PATTERNS = [
     "**/__pycache__/",
     "venv/",
@@ -37,7 +35,7 @@ SKIP_PATTERNS = [
     "*.log",
     ".DS_Store",
 ]
-# --------------------------------------------------------------------------
+# ==========================================================================
 
 
 def load_spec(source: str):

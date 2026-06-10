@@ -13,6 +13,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from backup_common import prune
 from pathspec import PathSpec
 
 # === config ===============================================================
@@ -35,6 +36,10 @@ SKIP_PATTERNS = [
     "*.log",
     ".DS_Store",
 ]
+
+# Delete snapshots older than this many days (~2 months). Pruning runs only
+# after a successful backup, so a failed run never removes anything.
+KEEP_DAYS = 60
 # ==========================================================================
 
 
@@ -81,6 +86,11 @@ def backup() -> None:
         copied += 1
 
     print(f"[{stamp}] backed up {copied} file(s), skipped {skipped} -> {snapshot}")
+
+    # Prune after a successful backup, never before
+    removed = prune(DEST_ROOT, KEEP_DAYS)
+    if removed:
+        print(f"[{stamp}] pruned {removed} snapshot(s) older than {KEEP_DAYS} days")
 
 
 if __name__ == "__main__":

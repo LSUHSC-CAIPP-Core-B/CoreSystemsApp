@@ -5,16 +5,16 @@ prune(): deletes old timestamped snapshot folders from a backup destination.
 
 Safety design — this function deletes directories, so it is deliberately
 conservative:
-  * It only ever looks at *direct children* of `dest` (no recursion into the
+  - It only ever looks at *direct children* of `dest` (no recursion into the
     tree, so it can't wander into unrelated places).
-  * It only considers entries whose name parses as a timestamp in the exact
+  - It only considers entries whose name parses as a timestamp in the exact
     STAMP_FORMAT below. Anything that doesn't match that format is left
     completely alone; so a stray file, a README, or a mis-set `dest` full of
     unrelated folders won't be touched.
-  * It decides age from the *name's* timestamp, not the filesystem mtime, so
+  - It decides age from the *name's* timestamp, not the filesystem mtime, so
     copying/moving a backup (which changes mtime) can't make it look younger
     or older than it really is.
-  * The caller is expected to run this only AFTER a successful backup, so a
+  - The caller is expected to run this only AFTER a successful backup, so a
     failed run never deletes anything.
 """
 

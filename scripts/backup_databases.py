@@ -63,6 +63,7 @@ def dump_one(db: str, snapshot: Path, stamp: str) -> bool:
         MYSQLDUMP_BIN,
         f"--defaults-extra-file={MYSQL_CNF}",  # credentials, kept off the CLI
         "--single-transaction",  # consistent snapshot of InnoDB without locking writers
+        "--no-tablespaces",  # avoid needing the global PROCESS privilege
         "--databases",
         db,  # records CREATE DATABASE so a restore recreates the schema
     ]

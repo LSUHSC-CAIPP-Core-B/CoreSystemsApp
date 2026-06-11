@@ -4,11 +4,11 @@ Back up MySQL/MariaDB schemas to timestamped .sql dumps.
 One dump file per schema (CoreB_<stamp>.sql, CoreC_<stamp>.sql)
 
 Safety:
-  * Credentials come from a chmod 600 file (MYSQL_CNF)
-  * Each dump is checked: mysqldump must exit 0 AND the file must be non-empty.
+  - Credentials come from a chmod 600 file (MYSQL_CNF)
+  - Each dump is checked: mysqldump must exit 0 AND the file must be non-empty.
     A failed/partial dump is deleted and counted as a failure, so you never
     keep a truncated .sql that looks like a real backup.
-  * Old dumps are pruned only AFTER all dumps succeed (see prune call).
+  - Old dumps are pruned only AFTER all dumps succeed (see prune call).
 
 Per-machine config is via environment variables (set them in the crontab):
   MYSQLDUMP_BIN  - dump binary. Default "mysqldump". MariaDB boxes that lack
@@ -32,7 +32,7 @@ from pathlib import Path
 
 from backup_common import prune
 
-# --- config ---------------------------------------------------------------
+# === config ================================================================
 # Schemas to back up. Same on every machine, so a constant rather than env var.
 DATABASES = ["CoreB", "CoreC"]
 
@@ -47,7 +47,7 @@ if not MYSQL_CNF or not DB_BACKUP_DEST:
     raise SystemExit("Set MYSQL_CNF and DB_BACKUP_DEST environment variables.")
 
 DB_BACKUP_DEST = Path(DB_BACKUP_DEST)
-# --------------------------------------------------------------------------
+# ==========================================================================
 
 
 def dump_one(db: str, snapshot: Path, stamp: str) -> bool:
@@ -107,7 +107,7 @@ def backup() -> None:
     print(f"[{stamp}] {len(succeeded)} ok, {len(failed)} failed")
 
     # Only prune when EVERYTHING succeeded. If any dump failed this run, keep
-    # all old backups — they may be the only good copy of the failed schema.
+    # all old backups - they may be the only good copy of the failed schema.
     if failed:
         print(f"[{stamp}] skipping prune; failed: {', '.join(failed)}")
         raise SystemExit(1)  # non-zero so cron logs/alerts see the failure

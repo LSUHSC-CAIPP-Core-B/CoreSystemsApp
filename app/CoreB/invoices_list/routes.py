@@ -46,6 +46,40 @@ def list_services(services_str, services_to_find):
     return services
 
 
+def find_missing_services(current_services, existing_service_types):
+    """
+    Services now on the order that do not yet have an Invoice row
+
+    current_services (iterable(str)): services currently selected on the order
+    existing_service_types (iterable(str)): service_type values already invoiced
+
+    return (list(str)): service names that need a new Invoice row (and field)
+    """
+    existing = set(existing_service_types)
+
+    return [service for service in current_services if service not in existing]
+
+
+def find_stale_services(existing_service_types, current_services, known_services):
+    """
+    Recognised services that have an Invoice row but are no longer on the order
+
+    existing_service_types (iterable(str)): service_type values already invoiced
+    current_services (iterable(str)): services currently selected on the order
+    known_services (iterable(str)): every recognised service name
+
+    return (list(str)): service names whose Invoice rows should be removed
+    """
+    known = set(known_services)
+    current = set(current_services)
+
+    return [
+        service
+        for service in existing_service_types
+        if service in known and service not in current
+    ]
+
+
 @bp.route("/invoice", methods=["POST"])
 @login_required(role=["admin", "coreB"])
 def invoice():
@@ -99,14 +133,52 @@ def invoice():
         query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"
         df = db_utils.toDataframe(query, "db_config/CoreB.json")
 
-        # If Invoice record doesnt already esixt in the database, create one
-        if df.empty:
+        # If service is not biorender then display the sub service
+        service_type_value = (
+            service_type if service_type == "BioRender license" else services_str
+        )
+
+        # Service price per sample
+        price_per_sample_info = pd.read_csv("services.csv")
+
+        # Full set of services this order should be invoiced for, based on the
+        # order's current service selections.
+        services_data = list_services(service_type_value, price_per_sample_info)
+
+        # Figure out which service rows are missing. This runs whether or not an
+        # Invoice record already exists so that services added to the order after
+        # the invoice was first generated still get a row (and therefore a field
+        # on the edit page).
+        existing_service_types = set(df["service_type"]) if not df.empty else set()
+        missing_services = find_missing_services(services_data, existing_service_types)
+        discount_row_missing = "All services discount" not in existing_service_types
+
+        # Services no longer on the order, whose Invoice rows (and edit-page
+        # fields) should be removed.
+        stale_services = find_stale_services(
+            existing_service_types, services_data, price_per_sample_info["Service"]
+        )
+
+        if missing_services or discount_row_missing or stale_services:
+            if stale_services:
+                placeholders = ", ".join(["%s"] * len(stale_services))
+                db_utils.execute(
+                    f"DELETE FROM Invoice WHERE project_id = %s "
+                    f"AND service_type IN ({placeholders})",
+                    "db_config/CoreB.json",
+                    params=(order_num, *stale_services),
+                )
+
             # Get the latest id
             last_invoice_row = db_utils.toDataframe(
                 "SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;",
                 "db_config/CoreB.json",
             )
-            latest_available_id = last_invoice_row["id"].iloc[0] + 1
+            latest_available_id = (
+                last_invoice_row["id"].iloc[0] + 1
+                if not last_invoice_row.empty
+                else 1
+            )
 
             # Connection Info
             db_config = db_utils.json_Reader("db_config/CoreB.json")
@@ -120,17 +192,7 @@ def invoice():
             )
             engine = create_engine(db_connection_str)
 
-            # If service is not biorender then display the sub service
-            service_type_value = (
-                service_type if service_type == "BioRender license" else services_str
-            )
-
-            # Service price per sample
-            price_per_sample_info = pd.read_csv("services.csv")
-
-            services_data = list_services(service_type_value, price_per_sample_info)
-
-            for service in services_data:
+            for service in missing_services:
                 service_sample_price = price_per_sample_info[
                     price_per_sample_info["Service"] == service
                 ]
@@ -157,25 +219,26 @@ def invoice():
                     "Invoice", engine, schema="CoreB", if_exists="append", index=False
                 )
 
-            new_invoice_data_all = {
-                "id": [
-                    latest_available_id
-                ],  # Get the next incremented number for the table
-                "project_id": [order_num],
-                "service_type": ["All services discount"],
-                "service_sample_number": [0],
-                "service_sample_price": [0.0],
-                "total_price": [0],
-                "discount_sample_number": [0],
-                "discount_sample_amount": [0],
-                "discount_reason": [""],
-                "total_discount": [0],
-            }
-            # Add to the database
-            invoice_to_add = pd.DataFrame(new_invoice_data_all)
-            invoice_to_add.to_sql(
-                "Invoice", engine, schema="CoreB", if_exists="append", index=False
-            )
+            if discount_row_missing:
+                new_invoice_data_all = {
+                    "id": [
+                        latest_available_id
+                    ],  # Get the next incremented number for the table
+                    "project_id": [order_num],
+                    "service_type": ["All services discount"],
+                    "service_sample_number": [0],
+                    "service_sample_price": [0.0],
+                    "total_price": [0],
+                    "discount_sample_number": [0],
+                    "discount_sample_amount": [0],
+                    "discount_reason": [""],
+                    "total_discount": [0],
+                }
+                # Add to the database
+                invoice_to_add = pd.DataFrame(new_invoice_data_all)
+                invoice_to_add.to_sql(
+                    "Invoice", engine, schema="CoreB", if_exists="append", index=False
+                )
 
             # Grab data again but updated
             query = f"SELECT * FROM Invoice WHERE project_id = '{order_num}'"

@@ -123,7 +123,25 @@ def invoice():
         ]
         discount_row_missing = "All services discount" not in existing_service_types
 
-        if missing_services or discount_row_missing:
+        # Recognised services that are no longer selected on the order, so their
+        # Invoice rows (and edit-page fields) should be removed.
+        known_services = set(price_per_sample_info["Service"])
+        stale_services = [
+            service
+            for service in existing_service_types
+            if service in known_services and service not in services_data
+        ]
+
+        if missing_services or discount_row_missing or stale_services:
+            if stale_services:
+                placeholders = ", ".join(["%s"] * len(stale_services))
+                db_utils.execute(
+                    f"DELETE FROM Invoice WHERE project_id = %s "
+                    f"AND service_type IN ({placeholders})",
+                    "db_config/CoreB.json",
+                    params=(order_num, *stale_services),
+                )
+
             # Get the latest id
             last_invoice_row = db_utils.toDataframe(
                 "SELECT * FROM Invoice ORDER BY id DESC LIMIT 1;",

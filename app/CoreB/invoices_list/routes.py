@@ -46,6 +46,40 @@ def list_services(services_str, services_to_find):
     return services
 
 
+def find_missing_services(current_services, existing_service_types):
+    """
+    Services now on the order that do not yet have an Invoice row
+
+    current_services (iterable(str)): services currently selected on the order
+    existing_service_types (iterable(str)): service_type values already invoiced
+
+    return (list(str)): service names that need a new Invoice row (and field)
+    """
+    existing = set(existing_service_types)
+
+    return [service for service in current_services if service not in existing]
+
+
+def find_stale_services(existing_service_types, current_services, known_services):
+    """
+    Recognised services that have an Invoice row but are no longer on the order
+
+    existing_service_types (iterable(str)): service_type values already invoiced
+    current_services (iterable(str)): services currently selected on the order
+    known_services (iterable(str)): every recognised service name
+
+    return (list(str)): service names whose Invoice rows should be removed
+    """
+    known = set(known_services)
+    current = set(current_services)
+
+    return [
+        service
+        for service in existing_service_types
+        if service in known and service not in current
+    ]
+
+
 @bp.route("/invoice", methods=["POST"])
 @login_required(role=["admin", "coreB"])
 def invoice():
@@ -116,21 +150,14 @@ def invoice():
         # the invoice was first generated still get a row (and therefore a field
         # on the edit page).
         existing_service_types = set(df["service_type"]) if not df.empty else set()
-        missing_services = [
-            service
-            for service in services_data
-            if service not in existing_service_types
-        ]
+        missing_services = find_missing_services(services_data, existing_service_types)
         discount_row_missing = "All services discount" not in existing_service_types
 
-        # Recognised services that are no longer selected on the order, so their
-        # Invoice rows (and edit-page fields) should be removed.
-        known_services = set(price_per_sample_info["Service"])
-        stale_services = [
-            service
-            for service in existing_service_types
-            if service in known_services and service not in services_data
-        ]
+        # Services no longer on the order, whose Invoice rows (and edit-page
+        # fields) should be removed.
+        stale_services = find_stale_services(
+            existing_service_types, services_data, price_per_sample_info["Service"]
+        )
 
         if missing_services or discount_row_missing or stale_services:
             if stale_services:

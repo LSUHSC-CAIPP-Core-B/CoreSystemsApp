@@ -7,6 +7,10 @@
 .DS_Store
 .vscode/
 .python-version
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
 app/templates/CoreB/graphs/
 

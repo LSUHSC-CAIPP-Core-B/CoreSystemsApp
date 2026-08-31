@@ -1,4 +1,4 @@
-.PHONY: run setup lint lint-all lint-html lint-css format
+.PHONY: run setup lint lint-all lint-html lint-css format coverage
 
 setup:
 	@echo "Installing Python requirements..."
@@ -30,3 +30,8 @@ format:
 	@echo "Formatting Python code..."
 	ruff format
 	@echo "Python formatting complete!"
+
+coverage:
+	@echo "Running tests with coverage..."
+	uv run pytest --cov=app --cov-report=html --cov-report=term-missing
+	@echo "Coverage report: htmlcov/index.html"	

@@ -84,3 +84,8 @@ docstring-code-line-length = "dynamic"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]

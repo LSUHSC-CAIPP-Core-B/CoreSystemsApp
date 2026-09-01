@@ -398,6 +398,7 @@ def gen_invoice():
             dict_data[f"DESCRIPTIONRow{service_row}"] = item["name"]
             dict_data[f"UNIT COSTRow{service_row}"] = f"$ {item['price']}"
             dict_data[f"TOTALRow{service_row}"] = f"$ {item['total']}"
+            item_number += 1
 
             # Database Update for regular items
             db_utils.execute(
@@ -428,7 +429,7 @@ def gen_invoice():
 
             # Handle discount row display/DB update if a line item had reason
             if item["discount_reason"]:
-                dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
+                dict_data[f"ITEM Row{service_row + 1}"] = str(item_number)
                 dict_data[f"QTYRow{service_row + 1}"] = str(item["discount_qty"])
                 dict_data[f"UNITRow{service_row + 1}"] = "ea"
                 dict_data[f"DESCRIPTIONRow{service_row + 1}"] = item["discount_reason"]
@@ -438,14 +439,14 @@ def gen_invoice():
                 dict_data[f"TOTALRow{service_row + 1}"] = (
                     f"-$ {item['line_item_discount_monetary']}"
                 )
+                item_number += 1
 
             service_row += 2
-            item_number += 2
 
         # Handle the All services discount row
         if final_discount_amount_monetary > 0 and final_discount_reason_input:
             service_row = 21  # Reset service row for final placement
-            dict_data[f"ITEM Row{service_row + 1}"] = str(item_number + 1)
+            dict_data[f"ITEM Row{service_row + 1}"] = str(item_number)
             dict_data[f"QTYRow{service_row + 1}"] = "1"
             dict_data[f"UNITRow{service_row + 1}"] = "ea"
             dict_data[f"DESCRIPTIONRow{service_row + 1}"] = final_discount_reason_input

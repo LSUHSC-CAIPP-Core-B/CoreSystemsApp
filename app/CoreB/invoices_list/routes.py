@@ -361,7 +361,7 @@ def gen_invoice():
             )
             price = float(request.form.get(f"service {i} price") or 0)
 
-            total = price if name in services_no_unit_price else price * qty
+            total = (price if name in services_no_unit_price else price) * qty
             line_item_discount_monetary = discount_qty_input * discount_amt_input
 
             if name == "All services discount":

@@ -17,6 +17,15 @@ def login(client, email, password):
     )
 
 
+def force_login(client, app, email):
+    """Log a user in directly via the session, bypassing the password check."""
+    with app.app_context():
+        user = User.query.filter_by(email=email).first()
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user.id)
+        sess["_fresh"] = True
+
+
 def register_probe_route(app, rule, endpoint, role):
     """Attach a trivial role-gated route to the app for decorator testing.
 

@@ -89,3 +89,17 @@ testpaths = ["tests"]
 dev = [
     "pytest-cov>=7.1.0",
 ]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+precision = 2
+sort = "Cover"
+exclude_lines = [                # regex patterns that mark a line as not-needing-coverage
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

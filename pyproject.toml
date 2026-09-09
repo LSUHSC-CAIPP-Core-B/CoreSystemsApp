@@ -84,3 +84,33 @@ docstring-code-line-length = "dynamic"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/venv/*",
+]
+
+[tool.coverage.html]
+title = "CoreSystemsApp coverage"
+
+[tool.coverage.report]
+skip_empty = true
+precision = 2
+sort = "Cover"
+exclude_lines = [                # regex patterns that mark a line as not-needing-coverage
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

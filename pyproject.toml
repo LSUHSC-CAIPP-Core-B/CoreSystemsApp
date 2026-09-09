@@ -90,8 +90,19 @@ dev = [
     "pytest-cov>=7.1.0",
 ]
 
+[tool.coverage.run]
+branch = true
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/venv/*",
+]
+
+[tool.coverage.html]
+title = "CoreSystemsApp coverage"
+
 [tool.coverage.report]
-show_missing = true
 skip_empty = true
 precision = 2
 sort = "Cover"

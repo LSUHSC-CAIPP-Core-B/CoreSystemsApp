@@ -33,5 +33,5 @@ format:
 
 coverage:
 	@echo "Running tests with coverage..."
-	uv run pytest --cov=app --cov-report=html --cov-report=term
+	uv run pytest --cov --cov-report=html --cov-report=term
 	@echo "Coverage report: htmlcov/index.html"	

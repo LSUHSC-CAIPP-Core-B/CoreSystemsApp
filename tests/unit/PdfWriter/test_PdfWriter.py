@@ -11,7 +11,12 @@ class TestPdfWriterInit:
 
 
 class TestFillForm:
-    @patch("app.pdfwriter.PdfWriter.fillpdfs.write_fillable_pdf")
+    """Patches fillpdf.fillpdfs directly (not app.pdfwriter.PdfWriter.fillpdfs)
+    since app/pdfwriter/__init__.py shadows the PdfWriter submodule with the
+    PdfWriter class, which breaks dotted-path patch resolution on Python <3.12.
+    """
+
+    @patch("fillpdf.fillpdfs.write_fillable_pdf")
     def test_calls_write_fillable_pdf_with_filenames_and_data(self, mock_write):
         writer = PdfWriter("input.pdf", "output.pdf")
         data = {"Name": "John Smith", "Date": "2024-01-01"}
@@ -20,7 +25,7 @@ class TestFillForm:
 
         mock_write.assert_called_once_with("input.pdf", "output.pdf", data)
 
-    @patch("app.pdfwriter.PdfWriter.fillpdfs.write_fillable_pdf")
+    @patch("fillpdf.fillpdfs.write_fillable_pdf")
     def test_empty_data_dict_still_calls_write(self, mock_write):
         writer = PdfWriter("input.pdf", "output.pdf")
 
